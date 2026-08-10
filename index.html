@@ -161,10 +161,14 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- FORMULAIRE PRONOSTIC -->
         <div class="glassmorphism p-6 rounded-3xl border border-white/50 h-fit">
-          <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
-            <i class="fa-solid fa-pen-to-square text-pink-500"></i> Faire un pronostic
-          </h3>
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2" id="formPredTitle">
+              <i class="fa-solid fa-pen-to-square text-pink-500"></i> Faire un pronostic
+            </h3>
+            <button id="btnCancelPredEdit" onclick="cancelPredEdit()" class="hidden text-xs text-red-500 hover:underline font-bold">Annuler modification</button>
+          </div>
           <form id="predictionForm" onsubmit="addPrediction(event)" class="space-y-4">
+            <input type="hidden" id="editPredIndex" value="-1">
             <div id="adminUserOverride" class="hidden">
               <label class="block text-xs font-bold text-purple-600 mb-1">Nom du participant (Mode Admin)</label>
               <input type="text" id="predUserAdmin" placeholder="Saisir pour quelqu'un d'autre..." class="w-full px-3 py-2 rounded-xl border border-purple-300 bg-purple-50/50 text-sm focus:ring-2 focus:ring-purple-400 outline-none">
@@ -202,7 +206,7 @@
                 <input type="date" id="predDate" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
               </div>
             </div>
-            <button type="submit" class="w-full py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl shadow-md transition text-sm">
+            <button type="submit" id="btnSubmitPred" class="w-full py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl shadow-md transition text-sm">
               Enregistrer le pronostic
             </button>
           </form>
@@ -225,7 +229,7 @@
                   <th class="pb-3 font-semibold">Poids</th>
                   <th class="pb-3 font-semibold">Taille</th>
                   <th class="pb-3 font-semibold">Date</th>
-                  <th class="pb-3 font-semibold text-right admin-only hidden">Action</th>
+                  <th class="pb-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody id="predictionsTableBody" class="divide-y divide-slate-100"></tbody>
@@ -416,10 +420,16 @@
       <!-- TRANSMISSIONS & JOURNAL DE SOINS -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="glassmorphism p-6 rounded-3xl border border-white/50 h-fit">
-          <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
-            <i class="fa-solid fa-notes-medical text-emerald-500"></i> Nouvelle Transmission Soin
-          </h3>
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2" id="formCareTitle">
+              <i class="fa-solid fa-notes-medical text-emerald-500"></i> Nouvelle Transmission Soin
+            </h3>
+            <button id="btnCancelCareEdit" onclick="cancelCareEdit()" class="hidden text-xs text-red-500 hover:underline font-bold">Annuler modification</button>
+          </div>
+
           <form id="careForm" onsubmit="addCareEntry(event)" class="space-y-3">
+            <input type="hidden" id="editCareIndex" value="-1">
+
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Heure du soin</label>
               <input type="time" id="careTime" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-300 outline-none">
@@ -457,7 +467,7 @@
               <textarea id="careNotes" rows="2" placeholder="Bébé tonique, bien bu, peau saine..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-300 outline-none"></textarea>
             </div>
 
-            <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-md transition text-sm">
+            <button type="submit" id="btnSubmitCare" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-md transition text-sm">
               Enregistrer l'observation
             </button>
           </form>
@@ -484,7 +494,7 @@
                   <th class="pb-3 font-semibold">Repas</th>
                   <th class="pb-3 font-semibold">Observations</th>
                   <th class="pb-3 font-semibold">Auteur</th>
-                  <th class="pb-3 font-semibold text-right no-pdf">Action</th>
+                  <th class="pb-3 font-semibold text-right no-pdf">Actions</th>
                 </tr>
               </thead>
               <tbody id="careTableBody" class="divide-y divide-slate-100"></tbody>
@@ -686,6 +696,7 @@
       document.getElementById('loginPage').classList.add('hidden');
 
       renderPredictions();
+      renderCareEntries();
     }
 
     function logout() {
@@ -695,6 +706,7 @@
       document.getElementById('adminUserOverride').classList.add('hidden');
       document.getElementById('loginPage').classList.remove('hidden');
       renderPredictions();
+      renderCareEntries();
     }
 
     function switchTab(tab) {
@@ -716,16 +728,19 @@
       }
     }
 
+    /* MODIFICATION & AJOUT PRONOSTIC */
     function addPrediction(e) {
       e.preventDefault();
       if (!currentUser) return;
 
+      const editIdx = parseInt(document.getElementById('editPredIndex').value);
+
       let targetUser = currentUser;
-      if (isAdmin) {
+      if (isAdmin && editIdx === -1) {
         const adminOverride = document.getElementById('predUserAdmin').value.trim();
-        if (adminOverride) {
-          targetUser = adminOverride;
-        }
+        if (adminOverride) targetUser = adminOverride;
+      } else if (editIdx !== -1) {
+        targetUser = predictions[editIdx].user;
       }
 
       const newPred = {
@@ -738,46 +753,67 @@
         date: document.getElementById('predDate').value
       };
 
-      predictions.push(newPred);
-      saveAllToStorage();
-      
-      if (typeof window.syncPredictionToFirebase === 'function') {
-        window.syncPredictionToFirebase(newPred);
+      if (editIdx >= 0) {
+        predictions[editIdx] = newPred;
+      } else {
+        predictions.push(newPred);
+        if (typeof window.syncPredictionToFirebase === 'function') {
+          window.syncPredictionToFirebase(newPred);
+        }
       }
 
+      saveAllToStorage();
       renderPredictions();
+      cancelPredEdit();
+    }
+
+    function editPrediction(index) {
+      const p = predictions[index];
+      if (!isAdmin && p.user !== currentUser) {
+        alert("Vous ne pouvez modifier que votre propre pronostic !");
+        return;
+      }
+
+      document.getElementById('editPredIndex').value = index;
+      document.getElementById('predName').value = p.name;
+      document.getElementById('predHobby').value = p.hobby === 'Non renseigné' ? '' : p.hobby;
+      document.getElementById('predGender').value = p.gender;
+      document.getElementById('predWeight').value = p.weight;
+      document.getElementById('predHeight').value = p.height;
+      document.getElementById('predDate').value = p.date;
+
+      document.getElementById('formPredTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Modifier le pronostic (${p.user})`;
+      document.getElementById('btnSubmitPred').innerText = "Mettre à jour le pronostic";
+      document.getElementById('btnSubmitPred').className = "w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition text-sm";
+      document.getElementById('btnCancelPredEdit').classList.remove('hidden');
+    }
+
+    function cancelPredEdit() {
+      document.getElementById('editPredIndex').value = "-1";
       document.getElementById('predictionForm').reset();
       document.getElementById('predUserAdmin').value = '';
-      const todayStr = new Date().toISOString().split('T')[0];
-      document.getElementById('predDate').value = todayStr;
+      document.getElementById('predDate').value = new Date().toISOString().split('T')[0];
+
+      document.getElementById('formPredTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-pink-500"></i> Faire un pronostic`;
+      document.getElementById('btnSubmitPred').innerText = "Enregistrer le pronostic";
+      document.getElementById('btnSubmitPred').className = "w-full py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl shadow-md transition text-sm";
+      document.getElementById('btnCancelPredEdit').classList.add('hidden');
     }
 
     function deletePrediction(index) {
-      if (!isAdmin) return;
-      if (confirm(`Voulez-vous vraiment supprimer le pronostic de "${predictions[index].user}" ?`)) {
+      const p = predictions[index];
+      if (!isAdmin && p.user !== currentUser) return;
+
+      if (confirm(`Voulez-vous vraiment supprimer le pronostic de "${p.user}" ?`)) {
         predictions.splice(index, 1);
         saveAllToStorage();
         renderPredictions();
       }
     }
 
-    function deleteCareEntry(index) {
-      if (confirm("Voulez-vous vraiment supprimer cette entrée de la fiche de soins ?")) {
-        careEntries.splice(index, 1);
-        saveAllToStorage();
-        renderCareEntries();
-      }
-    }
-
     function renderPredictions() {
       const tbody = document.getElementById('predictionsTableBody');
       tbody.innerHTML = '';
-
-      const adminHeaders = document.querySelectorAll('.admin-only');
-      adminHeaders.forEach(el => {
-        if (isAdmin) el.classList.remove('hidden');
-        else el.classList.add('hidden');
-      });
 
       let countFille = 0;
       let totalWeight = 0;
@@ -787,6 +823,8 @@
         if (p.gender === 'Fille') countFille++;
         totalWeight += p.weight;
         totalHeight += p.height;
+
+        const isOwnerOrAdmin = isAdmin || (currentUser && p.user === currentUser);
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/50 transition';
@@ -798,7 +836,12 @@
           <td class="py-3 font-medium">${p.weight.toFixed(3)} kg</td>
           <td class="py-3 font-medium">${p.height} cm</td>
           <td class="py-3 text-slate-500">${p.date}</td>
-          ${isAdmin ? `<td class="py-3 text-right"><button onclick="deletePrediction(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50" title="Supprimer ce pronostic"><i class="fa-solid fa-trash-can"></i></button></td>` : ''}
+          <td class="py-3 text-right">
+            ${isOwnerOrAdmin ? `
+              <button onclick="editPrediction(${idx})" class="p-1.5 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-amber-50" title="Modifier ce pronostic"><i class="fa-solid fa-pen text-xs"></i></button>
+              <button onclick="deletePrediction(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50" title="Supprimer ce pronostic"><i class="fa-solid fa-trash-can text-xs"></i></button>
+            ` : '<span class="text-xs text-slate-300">-</span>'}
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -817,43 +860,11 @@
       }
     }
 
-    function saveOfficialResults(e) {
-      e.preventDefault();
-      const name = document.getElementById('officialName').value.trim();
-      const gender = document.getElementById('officialGender').value;
-      const weight = parseFloat(document.getElementById('officialWeight').value);
-      const height = parseFloat(document.getElementById('officialHeight').value);
-
-      officialResult = { name, gender, weight, height };
-      saveAllToStorage();
-      displayOfficialBanner();
-    }
-
-    function displayOfficialBanner() {
-      if (!officialResult) return;
-
-      let bestWinner = null;
-      let minDiff = Infinity;
-
-      predictions.forEach(p => {
-        const diffW = Math.abs(p.weight - officialResult.weight);
-        const diffH = Math.abs(p.height - officialResult.height);
-        const score = diffW * 10 + diffH;
-
-        if (score < minDiff) {
-          minDiff = score;
-          bestWinner = p.user;
-        }
-      });
-
-      document.getElementById('resBabyName').innerText = `Bienvenue à ${officialResult.name} !`;
-      document.getElementById('resBabyDetails').innerText = `Sexe : ${officialResult.gender} | Poids : ${officialResult.weight} kg | Taille : ${officialResult.height} cm`;
-      document.getElementById('resWinnerName').innerText = bestWinner ? bestWinner : 'Égalité !';
-      document.getElementById('resultBanner').classList.remove('hidden');
-    }
-
+    /* MODIFICATION & AJOUT SOIN */
     function addCareEntry(e) {
       e.preventDefault();
+      const editIdx = parseInt(document.getElementById('editCareIndex').value);
+
       const time = document.getElementById('careTime').value;
       const tempBaby = parseFloat(document.getElementById('careTempBaby').value) || null;
       const tempIncubator = parseFloat(document.getElementById('careTempIncubator').value) || null;
@@ -868,12 +879,16 @@
         diaper,
         feeding,
         notes: notes || 'RAS',
-        author: currentUser || 'Soignant'
+        author: editIdx >= 0 ? careEntries[editIdx].author : (currentUser || 'Soignant')
       };
 
-      careEntries.push(entry);
+      if (editIdx >= 0) {
+        careEntries[editIdx] = entry;
+      } else {
+        careEntries.push(entry);
+      }
 
-      if (tempBaby !== null) {
+      if (tempBaby !== null && editIdx === -1) {
         tempHistory.push({ time, tempBaby, tempIncubator });
         renderTempList();
         updateTempChart();
@@ -881,10 +896,42 @@
 
       saveAllToStorage();
       renderCareEntries();
+      cancelCareEdit();
+    }
 
+    function editCareEntry(index) {
+      const c = careEntries[index];
+      document.getElementById('editCareIndex').value = index;
+      document.getElementById('careTime').value = c.time;
+      document.getElementById('careTempBaby').value = c.tempBaby || '';
+      document.getElementById('careTempIncubator').value = c.tempIncubator || '';
+      document.getElementById('careDiaper').value = c.diaper;
+      document.getElementById('careFeeding').value = c.feeding || '';
+      document.getElementById('careNotes').value = c.notes === 'RAS' ? '' : c.notes;
+
+      document.getElementById('formCareTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Modifier l'observation`;
+      document.getElementById('btnSubmitCare').innerText = "Mettre à jour l'observation";
+      document.getElementById('btnSubmitCare').className = "w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition text-sm";
+      document.getElementById('btnCancelCareEdit').classList.remove('hidden');
+    }
+
+    function cancelCareEdit() {
+      document.getElementById('editCareIndex').value = "-1";
       document.getElementById('careForm').reset();
-      const now = new Date();
-      document.getElementById('careTime').value = now.toTimeString().substring(0, 5);
+      document.getElementById('careTime').value = new Date().toTimeString().substring(0, 5);
+
+      document.getElementById('formCareTitle').innerHTML = `<i class="fa-solid fa-notes-medical text-emerald-500"></i> Nouvelle Transmission Soin`;
+      document.getElementById('btnSubmitCare').innerText = "Enregistrer l'observation";
+      document.getElementById('btnSubmitCare').className = "w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-md transition text-sm";
+      document.getElementById('btnCancelCareEdit').classList.add('hidden');
+    }
+
+    function deleteCareEntry(index) {
+      if (confirm("Voulez-vous vraiment supprimer cette entrée de la fiche de soins ?")) {
+        careEntries.splice(index, 1);
+        saveAllToStorage();
+        renderCareEntries();
+      }
     }
 
     function renderCareEntries() {
@@ -924,9 +971,12 @@
           <td class="py-3 font-bold text-emerald-600">${c.feeding > 0 ? c.feeding + ' ml' : '--'}</td>
           <td class="py-3 text-slate-600 text-xs italic">${c.notes}</td>
           <td class="py-3 text-slate-400 text-xs">${c.author}</td>
-          <td class="py-3 text-right no-pdf">
+          <td class="py-3 text-right no-pdf flex justify-end gap-1">
+            <button onclick="editCareEntry(${idx})" class="p-1.5 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-amber-50" title="Modifier ce soin">
+              <i class="fa-solid fa-pen text-xs"></i>
+            </button>
             <button onclick="deleteCareEntry(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50" title="Supprimer ce soin">
-              <i class="fa-solid fa-trash-can"></i>
+              <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
           </td>
         `;
@@ -955,7 +1005,7 @@
       document.getElementById('nextFeedingTimer').innerHTML = `Dernier repas : <strong>${lastFeeding.time}</strong> (${lastFeeding.feeding} ml) — Prochain estimé : <strong class="text-amber-600">${formattedNext}</strong>`;
     }
 
-    /* GESTION TEMPÉRATURES */
+    /* GESTION TEMPÉRATURES ET MODIFICATION RAPIDE */
     function addTempPoint(e) {
       e.preventDefault();
       const timeVal = document.getElementById('tempPointTime').value.trim();
@@ -972,6 +1022,20 @@
 
       document.getElementById('tempPointBaby').value = '';
       document.getElementById('tempPointIncubator').value = '';
+    }
+
+    function editTempPoint(index) {
+      const item = tempHistory[index];
+      const newTemp = prompt("Nouvelle température du bébé (°C) :", item.tempBaby);
+      if (newTemp !== null) {
+        const val = parseFloat(newTemp);
+        if (!isNaN(val)) {
+          tempHistory[index].tempBaby = val;
+          saveAllToStorage();
+          updateTempChart();
+          renderTempList();
+        }
+      }
     }
 
     function removeTempPoint(index) {
@@ -1000,9 +1064,14 @@
             ${item.tempIncubator ? `<span class="text-[11px] text-slate-400">(Couv: ${item.tempIncubator}°C)</span>` : ''}
             <span class="text-[11px] text-slate-400">à ${item.time}</span>
           </div>
-          <button onclick="removeTempPoint(${index})" class="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition" title="Supprimer ce point">
-            <i class="fa-solid fa-trash-can"></i>
-          </button>
+          <div class="flex gap-1">
+            <button onclick="editTempPoint(${index})" class="text-slate-400 hover:text-amber-500 p-1 rounded-lg hover:bg-amber-50 transition" title="Modifier la température">
+              <i class="fa-solid fa-pen text-xs"></i>
+            </button>
+            <button onclick="removeTempPoint(${index})" class="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition" title="Supprimer ce point">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
         `;
         container.appendChild(div);
       });
@@ -1044,7 +1113,7 @@
       }
     }
 
-    /* GESTION POIDS */
+    /* GESTION POIDS ET MODIFICATION RAPIDE */
     function addWeightPoint(e) {
       e.preventDefault();
       const dateVal = document.getElementById('weightPointDate').value;
@@ -1060,6 +1129,20 @@
       renderWeightList();
 
       document.getElementById('weightPointVal').value = '';
+    }
+
+    function editWeightPoint(index) {
+      const item = weightHistory[index];
+      const newWeight = prompt("Nouveau poids (kg) :", item.weight);
+      if (newWeight !== null) {
+        const val = parseFloat(newWeight);
+        if (!isNaN(val)) {
+          weightHistory[index].weight = val;
+          saveAllToStorage();
+          updateWeightChart();
+          renderWeightList();
+        }
+      }
     }
 
     function removeWeightPoint(index) {
@@ -1113,9 +1196,14 @@
             <span class="font-bold text-slate-700">${item.weight.toFixed(3)} kg</span>
             <span class="text-[11px] text-slate-400">(${item.date})</span>
           </div>
-          <button onclick="removeWeightPoint(${index})" class="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition" title="Supprimer ce point">
-            <i class="fa-solid fa-trash-can"></i>
-          </button>
+          <div class="flex gap-1">
+            <button onclick="editWeightPoint(${index})" class="text-slate-400 hover:text-amber-500 p-1 rounded-lg hover:bg-amber-50 transition" title="Modifier le poids">
+              <i class="fa-solid fa-pen text-xs"></i>
+            </button>
+            <button onclick="removeWeightPoint(${index})" class="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition" title="Supprimer ce point">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
         `;
         container.appendChild(div);
       });
@@ -1197,6 +1285,41 @@
       html2pdf().set(opt).from(element).save().then(() => {
         element.classList.remove('pdf-compact');
       });
+    }
+
+    function saveOfficialResults(e) {
+      e.preventDefault();
+      const name = document.getElementById('officialName').value.trim();
+      const gender = document.getElementById('officialGender').value;
+      const weight = parseFloat(document.getElementById('officialWeight').value);
+      const height = parseFloat(document.getElementById('officialHeight').value);
+
+      officialResult = { name, gender, weight, height };
+      saveAllToStorage();
+      displayOfficialBanner();
+    }
+
+    function displayOfficialBanner() {
+      if (!officialResult) return;
+
+      let bestWinner = null;
+      let minDiff = Infinity;
+
+      predictions.forEach(p => {
+        const diffW = Math.abs(p.weight - officialResult.weight);
+        const diffH = Math.abs(p.height - officialResult.height);
+        const score = diffW * 10 + diffH;
+
+        if (score < minDiff) {
+          minDiff = score;
+          bestWinner = p.user;
+        }
+      });
+
+      document.getElementById('resBabyName').innerText = `Bienvenue à ${officialResult.name} !`;
+      document.getElementById('resBabyDetails').innerText = `Sexe : ${officialResult.gender} | Poids : ${officialResult.weight} kg | Taille : ${officialResult.height} cm`;
+      document.getElementById('resWinnerName').innerText = bestWinner ? bestWinner : 'Égalité !';
+      document.getElementById('resultBanner').classList.remove('hidden');
     }
   </script>
 </body>
