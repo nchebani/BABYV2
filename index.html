@@ -31,6 +31,10 @@
     .pdf-compact th, .pdf-compact td {
       padding: 4px 6px !important;
     }
+    /* Masquer les éléments non souhaités lors de l'export PDF */
+    .pdf-compact .no-pdf {
+      display: none !important;
+    }
   </style>
 </head>
 <body class="bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 min-h-screen text-slate-800 font-sans pb-12">
@@ -437,6 +441,7 @@
                   <th class="pb-3 font-semibold">Repas</th>
                   <th class="pb-3 font-semibold">Observations</th>
                   <th class="pb-3 font-semibold">Auteur</th>
+                  <th class="pb-3 font-semibold text-right no-pdf">Action</th>
                 </tr>
               </thead>
               <tbody id="careTableBody" class="divide-y divide-slate-100"></tbody>
@@ -703,6 +708,15 @@
       }
     }
 
+    function deleteCareEntry(index) {
+      if (confirm("Voulez-vous vraiment supprimer cette entrée de la fiche de soins ?")) {
+        careEntries.splice(index, 1);
+        saveAllToStorage();
+        renderCareEntries();
+        updateTempChart();
+      }
+    }
+
     function renderPredictions() {
       const tbody = document.getElementById('predictionsTableBody');
       tbody.innerHTML = '';
@@ -823,7 +837,7 @@
       let totalDiapers = 0;
       let lastTemp = null;
 
-      careEntries.forEach(c => {
+      careEntries.forEach((c, idx) => {
         if (c.feeding > 0) {
           totalMeals++;
           totalVolume += c.feeding;
@@ -855,6 +869,11 @@
           <td class="py-3 font-bold text-emerald-600">${c.feeding > 0 ? c.feeding + ' ml' : '--'}</td>
           <td class="py-3 text-slate-600 text-xs italic">${c.notes}</td>
           <td class="py-3 text-slate-400 text-xs">${c.author}</td>
+          <td class="py-3 text-right no-pdf">
+            <button onclick="deleteCareEntry(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50" title="Supprimer ce soin">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
