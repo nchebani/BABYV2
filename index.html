@@ -505,11 +505,10 @@
     </div>
   </main>
 
-  <!-- INTÉGRATION FIREBASE + LOGIQUE APPLICATIVE -->
+  <!-- INTÉGRATION FIREBASE TEMPS RÉEL + LOGIQUE APPLICATIVE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB3vygYO0r0Q8Wx7lMiLARyuj99h1urHXA",
@@ -518,67 +517,103 @@
       projectId: "babypredictv2",
       storageBucket: "babypredictv2.firebasestorage.app",
       messagingSenderId: "682802850327",
-      appId: "1:682802850327:web:ac161252e0997d3ad64a52",
-      measurementId: "G-7C78NKMTDT"
+      appId: "1:682802850327:web:ac161252e0997d3ad64a52"
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const db = getDatabase(app);
 
+    // Fonction globale d'écriture en base
+    window.syncDatabase = function(node, data) {
+      set(ref(db, node), data);
+    };
+
+    // Écouteurs Temps Réel (Synchronisation dynamique multi-utilisateurs)
     onValue(ref(db, 'predictions'), (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        window.predictions = Object.values(data);
-        localStorage.setItem('bp_predictions', JSON.stringify(window.predictions));
-      }
-      renderPredictions();
+      window.predictions = data ? data : [];
+      localStorage.setItem('bp_predictions', JSON.stringify(window.predictions));
+      if (typeof window.renderPredictions === 'function') window.renderPredictions();
+      if (window.officialResult && typeof window.displayOfficialBanner === 'function') window.displayOfficialBanner();
     });
 
-    window.syncPredictionToFirebase = function(newPred) {
-      const predictionsRef = ref(db, 'predictions');
-      const newRef = push(predictionsRef);
-      set(newRef, newPred);
-    };
+    onValue(ref(db, 'careEntries'), (snapshot) => {
+      const data = snapshot.val();
+      window.careEntries = data ? data : [];
+      localStorage.setItem('bp_care', JSON.stringify(window.careEntries));
+      if (typeof window.renderCareEntries === 'function') window.renderCareEntries();
+    });
+
+    onValue(ref(db, 'tempHistory'), (snapshot) => {
+      const data = snapshot.val();
+      window.tempHistory = data ? data : [];
+      localStorage.setItem('bp_temp', JSON.stringify(window.tempHistory));
+      if (typeof window.renderTempList === 'function') window.renderTempList();
+      if (typeof window.updateTempChart === 'function') window.updateTempChart();
+    });
+
+    onValue(ref(db, 'weightHistory'), (snapshot) => {
+      const data = snapshot.val();
+      window.weightHistory = data ? data : [];
+      localStorage.setItem('bp_weight', JSON.stringify(window.weightHistory));
+      if (typeof window.renderWeightList === 'function') window.renderWeightList();
+      if (typeof window.updateWeightChart === 'function') window.updateWeightChart();
+    });
+
+    onValue(ref(db, 'officialResult'), (snapshot) => {
+      const data = snapshot.val();
+      window.officialResult = data ? data : null;
+      localStorage.setItem('bp_official', JSON.stringify(window.officialResult));
+      if (window.officialResult && typeof window.displayOfficialBanner === 'function') {
+        window.displayOfficialBanner();
+      }
+    });
   </script>
 
   <script>
     let currentUser = null;
     let isAdmin = false;
 
-    let predictions = JSON.parse(localStorage.getItem('bp_predictions')) || [
+    window.predictions = JSON.parse(localStorage.getItem('bp_predictions')) || [
       { user: "Mamie Chantal", name: "Alice", hobby: "Jardinage & Chant", gender: "Fille", weight: 3.200, height: 49.5, date: "2026-08-15" },
       { user: "Oncle Lucas", name: "Hugo", hobby: "Football", gender: "Garçon", weight: 3.600, height: 51.0, date: "2026-08-18" }
     ];
 
-    let officialResult = JSON.parse(localStorage.getItem('bp_official')) || null;
+    window.officialResult = JSON.parse(localStorage.getItem('bp_official')) || null;
 
-    let tempHistory = JSON.parse(localStorage.getItem('bp_temp')) || [
+    window.tempHistory = JSON.parse(localStorage.getItem('bp_temp')) || [
       { time: "08:00", tempBaby: 36.7, tempIncubator: 31.0 },
       { time: "12:00", tempBaby: 36.9, tempIncubator: 30.5 }
     ];
 
-    let careEntries = JSON.parse(localStorage.getItem('bp_care')) || [
+    window.careEntries = JSON.parse(localStorage.getItem('bp_care')) || [
       { time: "08:00", tempBaby: 36.7, tempIncubator: 31.0, diaper: "Urine", feeding: 60, notes: "Réveil calme, bon biberon.", author: "Infirmière Sophie" }
     ];
 
-    let weightHistory = JSON.parse(localStorage.getItem('bp_weight')) || [
+    window.weightHistory = JSON.parse(localStorage.getItem('bp_weight')) || [
       { date: "2026-08-01", weight: 3.10 },
       { date: "2026-08-05", weight: 3.28 }
     ];
 
     let chartTempInstance = null;
     let chartWeightInstance = null;
-
     let timerInterval = null;
     let timerSeconds = 0;
 
     function saveAllToStorage() {
-      localStorage.setItem('bp_predictions', JSON.stringify(predictions));
-      localStorage.setItem('bp_official', JSON.stringify(officialResult));
-      localStorage.setItem('bp_care', JSON.stringify(careEntries));
-      localStorage.setItem('bp_weight', JSON.stringify(weightHistory));
-      localStorage.setItem('bp_temp', JSON.stringify(tempHistory));
+      localStorage.setItem('bp_predictions', JSON.stringify(window.predictions));
+      localStorage.setItem('bp_official', JSON.stringify(window.officialResult));
+      localStorage.setItem('bp_care', JSON.stringify(window.careEntries));
+      localStorage.setItem('bp_weight', JSON.stringify(window.weightHistory));
+      localStorage.setItem('bp_temp', JSON.stringify(window.tempHistory));
+
+      if (typeof window.syncDatabase === 'function') {
+        window.syncDatabase('predictions', window.predictions);
+        window.syncDatabase('officialResult', window.officialResult);
+        window.syncDatabase('careEntries', window.careEntries);
+        window.syncDatabase('weightHistory', window.weightHistory);
+        window.syncDatabase('tempHistory', window.tempHistory);
+      }
     }
 
     function toggleTimer() {
@@ -635,7 +670,7 @@
       const now = new Date();
       const timeStr = now.toTimeString().substring(0, 5);
 
-      careEntries.push({
+      window.careEntries.push({
         time: timeStr,
         tempBaby: null,
         tempIncubator: null,
@@ -669,7 +704,7 @@
       updateWeightChart();
       updateTempChart();
 
-      if (officialResult) {
+      if (window.officialResult) {
         displayOfficialBanner();
       }
     });
@@ -740,7 +775,7 @@
         const adminOverride = document.getElementById('predUserAdmin').value.trim();
         if (adminOverride) targetUser = adminOverride;
       } else if (editIdx !== -1) {
-        targetUser = predictions[editIdx].user;
+        targetUser = window.predictions[editIdx].user;
       }
 
       const newPred = {
@@ -754,12 +789,9 @@
       };
 
       if (editIdx >= 0) {
-        predictions[editIdx] = newPred;
+        window.predictions[editIdx] = newPred;
       } else {
-        predictions.push(newPred);
-        if (typeof window.syncPredictionToFirebase === 'function') {
-          window.syncPredictionToFirebase(newPred);
-        }
+        window.predictions.push(newPred);
       }
 
       saveAllToStorage();
@@ -768,7 +800,7 @@
     }
 
     function editPrediction(index) {
-      const p = predictions[index];
+      const p = window.predictions[index];
       if (!isAdmin && p.user !== currentUser) {
         alert("Vous ne pouvez modifier que votre propre pronostic !");
         return;
@@ -801,11 +833,11 @@
     }
 
     function deletePrediction(index) {
-      const p = predictions[index];
+      const p = window.predictions[index];
       if (!isAdmin && p.user !== currentUser) return;
 
       if (confirm(`Voulez-vous vraiment supprimer le pronostic de "${p.user}" ?`)) {
-        predictions.splice(index, 1);
+        window.predictions.splice(index, 1);
         saveAllToStorage();
         renderPredictions();
       }
@@ -819,7 +851,7 @@
       let totalWeight = 0;
       let totalHeight = 0;
 
-      predictions.forEach((p, idx) => {
+      window.predictions.forEach((p, idx) => {
         if (p.gender === 'Fille') countFille++;
         totalWeight += p.weight;
         totalHeight += p.height;
@@ -846,13 +878,13 @@
         tbody.appendChild(tr);
       });
 
-      document.getElementById('predCount').innerText = `${predictions.length} participation(s)`;
+      document.getElementById('predCount').innerText = `${window.predictions.length} participation(s)`;
 
-      if (predictions.length > 0) {
-        const girlPct = Math.round((countFille / predictions.length) * 100);
+      if (window.predictions.length > 0) {
+        const girlPct = Math.round((countFille / window.predictions.length) * 100);
         document.getElementById('statGender').innerText = `${girlPct}% Fille / ${100 - girlPct}% Garçon`;
-        document.getElementById('statAvgWeight').innerText = `${(totalWeight / predictions.length).toFixed(3)} kg`;
-        document.getElementById('statAvgHeight').innerText = `${(totalHeight / predictions.length).toFixed(1)} cm`;
+        document.getElementById('statAvgWeight').innerText = `${(totalWeight / window.predictions.length).toFixed(3)} kg`;
+        document.getElementById('statAvgHeight').innerText = `${(totalHeight / window.predictions.length).toFixed(1)} cm`;
       } else {
         document.getElementById('statGender').innerText = `--`;
         document.getElementById('statAvgWeight').innerText = `-- kg`;
@@ -879,17 +911,17 @@
         diaper,
         feeding,
         notes: notes || 'RAS',
-        author: editIdx >= 0 ? careEntries[editIdx].author : (currentUser || 'Soignant')
+        author: editIdx >= 0 ? window.careEntries[editIdx].author : (currentUser || 'Soignant')
       };
 
       if (editIdx >= 0) {
-        careEntries[editIdx] = entry;
+        window.careEntries[editIdx] = entry;
       } else {
-        careEntries.push(entry);
+        window.careEntries.push(entry);
       }
 
       if (tempBaby !== null && editIdx === -1) {
-        tempHistory.push({ time, tempBaby, tempIncubator });
+        window.tempHistory.push({ time, tempBaby, tempIncubator });
         renderTempList();
         updateTempChart();
       }
@@ -900,7 +932,7 @@
     }
 
     function editCareEntry(index) {
-      const c = careEntries[index];
+      const c = window.careEntries[index];
       document.getElementById('editCareIndex').value = index;
       document.getElementById('careTime').value = c.time;
       document.getElementById('careTempBaby').value = c.tempBaby || '';
@@ -928,7 +960,7 @@
 
     function deleteCareEntry(index) {
       if (confirm("Voulez-vous vraiment supprimer cette entrée de la fiche de soins ?")) {
-        careEntries.splice(index, 1);
+        window.careEntries.splice(index, 1);
         saveAllToStorage();
         renderCareEntries();
       }
@@ -942,7 +974,7 @@
       let totalVolume = 0;
       let totalDiapers = 0;
 
-      careEntries.forEach((c, idx) => {
+      window.careEntries.forEach((c, idx) => {
         if (c.feeding > 0) {
           totalMeals++;
           totalVolume += c.feeding;
@@ -991,9 +1023,9 @@
     }
 
     function updateNextFeedingReminder() {
-      if (careEntries.length === 0) return;
+      if (window.careEntries.length === 0) return;
 
-      const lastFeeding = [...careEntries].reverse().find(c => c.feeding > 0);
+      const lastFeeding = [...window.careEntries].reverse().find(c => c.feeding > 0);
       if (!lastFeeding) return;
 
       const intervalHours = parseInt(document.getElementById('feedingInterval').value);
@@ -1014,7 +1046,7 @@
 
       if (!timeVal || isNaN(tempBabyVal)) return;
 
-      tempHistory.push({ time: timeVal, tempBaby: tempBabyVal, tempIncubator: tempIncVal });
+      window.tempHistory.push({ time: timeVal, tempBaby: tempBabyVal, tempIncubator: tempIncVal });
 
       saveAllToStorage();
       updateTempChart();
@@ -1025,12 +1057,12 @@
     }
 
     function editTempPoint(index) {
-      const item = tempHistory[index];
+      const item = window.tempHistory[index];
       const newTemp = prompt("Nouvelle température du bébé (°C) :", item.tempBaby);
       if (newTemp !== null) {
         const val = parseFloat(newTemp);
         if (!isNaN(val)) {
-          tempHistory[index].tempBaby = val;
+          window.tempHistory[index].tempBaby = val;
           saveAllToStorage();
           updateTempChart();
           renderTempList();
@@ -1039,7 +1071,7 @@
     }
 
     function removeTempPoint(index) {
-      tempHistory.splice(index, 1);
+      window.tempHistory.splice(index, 1);
       saveAllToStorage();
       updateTempChart();
       renderTempList();
@@ -1049,12 +1081,12 @@
       const container = document.getElementById('tempPointsList');
       container.innerHTML = '';
 
-      if (tempHistory.length === 0) {
+      if (window.tempHistory.length === 0) {
         container.innerHTML = `<p class="text-slate-400 italic">Aucune mesure enregistrée.</p>`;
         return;
       }
 
-      tempHistory.forEach((item, index) => {
+      window.tempHistory.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm hover:border-red-200 transition';
         div.innerHTML = `
@@ -1080,16 +1112,16 @@
     function updateTempChart() {
       if (!chartTempInstance) return;
 
-      chartTempInstance.data.labels = tempHistory.map(c => c.time);
-      chartTempInstance.data.datasets[0].data = tempHistory.map(c => c.tempBaby);
-      chartTempInstance.data.datasets[1].data = tempHistory.map(c => c.tempIncubator);
+      chartTempInstance.data.labels = window.tempHistory.map(c => c.time);
+      chartTempInstance.data.datasets[0].data = window.tempHistory.map(c => c.tempBaby);
+      chartTempInstance.data.datasets[1].data = window.tempHistory.map(c => c.tempIncubator);
       chartTempInstance.update();
 
       const cardTemp = document.getElementById('cardTempStatus');
       const statTempStatus = document.getElementById('statTempStatus');
 
-      if (tempHistory.length > 0) {
-        const lastTemp = tempHistory[tempHistory.length - 1].tempBaby;
+      if (window.tempHistory.length > 0) {
+        const lastTemp = window.tempHistory[window.tempHistory.length - 1].tempBaby;
         document.getElementById('statLastTemp').innerText = `${lastTemp} °C`;
 
         if (lastTemp >= 37.5) {
@@ -1121,8 +1153,8 @@
 
       if (!dateVal || isNaN(weightVal)) return;
 
-      weightHistory.push({ date: dateVal, weight: weightVal });
-      weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+      window.weightHistory.push({ date: dateVal, weight: weightVal });
+      window.weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
 
       saveAllToStorage();
       updateWeightChart();
@@ -1132,12 +1164,12 @@
     }
 
     function editWeightPoint(index) {
-      const item = weightHistory[index];
+      const item = window.weightHistory[index];
       const newWeight = prompt("Nouveau poids (kg) :", item.weight);
       if (newWeight !== null) {
         const val = parseFloat(newWeight);
         if (!isNaN(val)) {
-          weightHistory[index].weight = val;
+          window.weightHistory[index].weight = val;
           saveAllToStorage();
           updateWeightChart();
           renderWeightList();
@@ -1146,7 +1178,7 @@
     }
 
     function removeWeightPoint(index) {
-      weightHistory.splice(index, 1);
+      window.weightHistory.splice(index, 1);
       saveAllToStorage();
       updateWeightChart();
       renderWeightList();
@@ -1155,19 +1187,19 @@
     function updateWeightChart() {
       if (!chartWeightInstance) return;
 
-      const labels = weightHistory.map(item => item.date);
-      const data = weightHistory.map(item => item.weight);
+      const labels = window.weightHistory.map(item => item.date);
+      const data = window.weightHistory.map(item => item.weight);
 
       chartWeightInstance.data.labels = labels;
       chartWeightInstance.data.datasets[0].data = data;
       chartWeightInstance.update();
 
-      if (weightHistory.length > 0) {
-        const latest = weightHistory[weightHistory.length - 1].weight;
+      if (window.weightHistory.length > 0) {
+        const latest = window.weightHistory[window.weightHistory.length - 1].weight;
         document.getElementById('statCurrentWeight').innerText = `${latest.toFixed(3)} kg`;
 
-        if (weightHistory.length > 1) {
-          const prev = weightHistory[0].weight;
+        if (window.weightHistory.length > 1) {
+          const prev = window.weightHistory[0].weight;
           const diffGrams = Math.round((latest - prev) * 1000);
           const sign = diffGrams >= 0 ? '+' : '';
           document.getElementById('statWeightDiff').innerText = `${sign}${diffGrams} g depuis le 1er relevé`;
@@ -1182,12 +1214,12 @@
       const container = document.getElementById('weightPointsList');
       container.innerHTML = '';
 
-      if (weightHistory.length === 0) {
+      if (window.weightHistory.length === 0) {
         container.innerHTML = `<p class="text-slate-400 italic">Aucune mesure enregistrée.</p>`;
         return;
       }
 
-      weightHistory.forEach((item, index) => {
+      window.weightHistory.forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm hover:border-blue-200 transition';
         div.innerHTML = `
@@ -1215,11 +1247,11 @@
       chartTempInstance = new Chart(ctxTemp, {
         type: 'line',
         data: {
-          labels: tempHistory.map(c => c.time),
+          labels: window.tempHistory.map(c => c.time),
           datasets: [
             {
               label: 'Temp. Bébé (°C)',
-              data: tempHistory.map(c => c.tempBaby),
+              data: window.tempHistory.map(c => c.tempBaby),
               borderColor: '#ef4444',
               backgroundColor: 'rgba(239, 68, 68, 0.1)',
               tension: 0.3,
@@ -1228,7 +1260,7 @@
             },
             {
               label: 'Temp. Couveuse (°C)',
-              data: tempHistory.map(c => c.tempIncubator),
+              data: window.tempHistory.map(c => c.tempIncubator),
               borderColor: '#f59e0b',
               borderDash: [5, 5],
               tension: 0.3,
@@ -1248,10 +1280,10 @@
       chartWeightInstance = new Chart(ctxWeight, {
         type: 'line',
         data: {
-          labels: weightHistory.map(w => w.date),
+          labels: window.weightHistory.map(w => w.date),
           datasets: [{
             label: 'Poids du bébé (kg)',
-            data: weightHistory.map(w => w.weight),
+            data: window.weightHistory.map(w => w.weight),
             borderColor: '#3b82f6',
             backgroundColor: 'rgba(59, 130, 246, 0.15)',
             fill: true,
@@ -1294,20 +1326,20 @@
       const weight = parseFloat(document.getElementById('officialWeight').value);
       const height = parseFloat(document.getElementById('officialHeight').value);
 
-      officialResult = { name, gender, weight, height };
+      window.officialResult = { name, gender, weight, height };
       saveAllToStorage();
       displayOfficialBanner();
     }
 
     function displayOfficialBanner() {
-      if (!officialResult) return;
+      if (!window.officialResult) return;
 
       let bestWinner = null;
       let minDiff = Infinity;
 
-      predictions.forEach(p => {
-        const diffW = Math.abs(p.weight - officialResult.weight);
-        const diffH = Math.abs(p.height - officialResult.height);
+      window.predictions.forEach(p => {
+        const diffW = Math.abs(p.weight - window.officialResult.weight);
+        const diffH = Math.abs(p.height - window.officialResult.height);
         const score = diffW * 10 + diffH;
 
         if (score < minDiff) {
@@ -1316,8 +1348,8 @@
         }
       });
 
-      document.getElementById('resBabyName').innerText = `Bienvenue à ${officialResult.name} !`;
-      document.getElementById('resBabyDetails').innerText = `Sexe : ${officialResult.gender} | Poids : ${officialResult.weight} kg | Taille : ${officialResult.height} cm`;
+      document.getElementById('resBabyName').innerText = `Bienvenue à ${window.officialResult.name} !`;
+      document.getElementById('resBabyDetails').innerText = `Sexe : ${window.officialResult.gender} | Poids : ${window.officialResult.weight} kg | Taille : ${window.officialResult.height} cm`;
       document.getElementById('resWinnerName').innerText = bestWinner ? bestWinner : 'Égalité !';
       document.getElementById('resultBanner').classList.remove('hidden');
     }
