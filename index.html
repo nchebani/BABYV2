@@ -262,8 +262,13 @@
             </select>
           </div>
           
-          <!-- BOUTONS D'EXPORTATION MULTI-FORMATS -->
+          <!-- BOUTONS D'EXPORTATION MULTI-FORMATS & SCANNER IA -->
           <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="document.getElementById('fileInput').click()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+              <i class="fa-solid fa-camera"></i> 📄 Scanner / Importer Document
+            </button>
+            <input type="file" id="fileInput" accept="image/*,.pdf,.txt" style="display: none;" onchange="traiterFichier(event)">
+
             <button onclick="exportCareCSV()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
               <i class="fa-solid fa-file-csv"></i> Export CSV
             </button>
@@ -589,6 +594,77 @@
 
     let timerInterval = null;
     let timerSeconds = 0;
+
+    /* TRAITEMENT ET ENVOI DE FICHIER VERS LE BACKEND LOCAL IA */
+    async function traiterFichier(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      if (file.type === "text/plain") {
+        reader.onload = async function(e) {
+          envoyerAuBackend({ fileType: 'txt', textContent: e.target.result });
+        };
+        reader.readAsText(file);
+      } else {
+        reader.onload = async function(e) {
+          const base64Data = e.target.result.split(',')[1];
+          const fileType = file.type.includes('pdf') ? 'pdf' : 'image';
+          envoyerAuBackend({ fileType, base64Data });
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function envoyerAuBackend(bodyData) {
+      alert("⏳ Analyse du document en cours par l'IA GPT-4o...");
+
+      try {
+        const response = await fetch('http://localhost:3000/api/analyser-document', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bodyData)
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          const d = result.data;
+          
+          // Mise à jour automatique des graphiques si un poids est trouvé
+          if (d.poids_kg) {
+            const todayDate = d.date || new Date().toISOString().split('T')[0];
+            window.weightHistory.push({ date: todayDate, weight: d.poids_kg });
+            window.weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+            updateWeightChart();
+            renderWeightList();
+          }
+
+          // Ajout d'une entrée de soin dans la fiche si des données de soin/repas sont trouvées
+          const currentTime = new Date().toTimeString().substring(0, 5);
+          window.careEntries.push({
+            time: currentTime,
+            tempBaby: null,
+            tempIncubator: null,
+            diaper: "Propre / Rien",
+            feeding: d.volume_sondage_ml || 0,
+            notes: d.notes || `Document importé (${d.type_document || 'analyse IA'})`,
+            author: currentUser || "Scanner IA"
+          });
+
+          saveAllToStorage();
+          renderCareEntries();
+
+          alert(`✅ Analyse terminée avec succès !\n\n• Type : ${d.type_document}\n• Poids extrait : ${d.poids_kg ? d.poids_kg + ' kg' : 'Non spécifié'}\n• Volume repas : ${d.volume_sondage_ml ? d.volume_sondage_ml + ' ml' : 'Non spécifié'}\n• Notes : ${d.notes || 'Rien à signaler'}`);
+        } else {
+          alert("❌ Erreur lors de l'analyse du document.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("⚠️ Impossible de joindre le serveur. Vérifiez que la commande 'node server.js' tourne bien dans le terminal.");
+      }
+    }
 
     function saveAllToStorage() {
       localStorage.setItem('bp_predictions', JSON.stringify(window.predictions));
@@ -1027,7 +1103,6 @@
       const targetDate = new Date();
       targetDate.setHours(hours + intervalHours, minutes, 0, 0);
 
-      // Calcul de la fin de la plage horaire (+1h30, soit 90 min)
       const maxDate = new Date(targetDate.getTime() + 90 * 60 * 1000);
 
       const formatTime = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
