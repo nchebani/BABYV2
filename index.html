@@ -248,13 +248,13 @@
             <i class="fa-solid fa-bottle-droplet"></i>
           </div>
           <div>
-            <h3 class="font-bold text-slate-800">Rappel Prochain Biberon / Tétée</h3>
+            <h3 class="font-bold text-slate-800">Plage Horaire Repas Bébé</h3>
             <p class="text-sm text-slate-500" id="nextFeedingTimer">Dernier repas enregistré : --:--</p>
           </div>
         </div>
         <div class="flex items-center gap-3 flex-wrap">
           <div class="flex items-center gap-2 bg-white/80 px-3 py-2 rounded-xl border border-slate-200 text-xs">
-            <span>Fréquence :</span>
+            <span>Intervalle :</span>
             <select id="feedingInterval" onchange="updateNextFeedingReminder()" class="font-bold text-slate-700 bg-transparent outline-none">
               <option value="2">Toutes les 2h</option>
               <option value="3" selected>Toutes les 3h</option>
@@ -1014,6 +1014,7 @@
       updateNextFeedingReminder();
     }
 
+    /* RAPPEL REPAS AVEC PLAGE HORAIRE DE 1H30 */
     function updateNextFeedingReminder() {
       if (!window.careEntries || window.careEntries.length === 0) return;
 
@@ -1023,10 +1024,20 @@
       const intervalHours = parseInt(document.getElementById('feedingInterval').value);
       const [hours, minutes] = lastFeeding.time.split(':').map(Number);
       
-      let nextHours = (hours + intervalHours) % 24;
-      const formattedNext = `${String(nextHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      const targetDate = new Date();
+      targetDate.setHours(hours + intervalHours, minutes, 0, 0);
 
-      document.getElementById('nextFeedingTimer').innerHTML = `Dernier repas : <strong>${lastFeeding.time}</strong> (${lastFeeding.feeding} ml) — Prochain estimé : <strong class="text-amber-600">${formattedNext}</strong>`;
+      // Calcul de la fin de la plage horaire (+1h30, soit 90 min)
+      const maxDate = new Date(targetDate.getTime() + 90 * 60 * 1000);
+
+      const formatTime = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+      const targetStr = formatTime(targetDate);
+      const maxStr = formatTime(maxDate);
+
+      document.getElementById('nextFeedingTimer').innerHTML = 
+        `Dernier repas : <strong>${lastFeeding.time}</strong> (${lastFeeding.feeding} ml) — ` +
+        `Plage repas : <strong class="text-amber-600">${targetStr} à ${maxStr}</strong> (1h30 max)`;
     }
 
     /* GESTION TEMPÉRATURES ET MODIFICATION RAPIDE */
