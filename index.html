@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
     .glassmorphism {
@@ -251,7 +252,7 @@
             <p class="text-sm text-slate-500" id="nextFeedingTimer">Dernier repas enregistré : --:--</p>
           </div>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-wrap">
           <div class="flex items-center gap-2 bg-white/80 px-3 py-2 rounded-xl border border-slate-200 text-xs">
             <span>Fréquence :</span>
             <select id="feedingInterval" onchange="updateNextFeedingReminder()" class="font-bold text-slate-700 bg-transparent outline-none">
@@ -260,9 +261,19 @@
               <option value="4">Toutes les 4h</option>
             </select>
           </div>
-          <button onclick="exportCarePDF()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-sm shadow-md transition flex items-center gap-2">
-            <i class="fa-solid fa-file-pdf text-red-400"></i> Exporter PDF Pédiatre
-          </button>
+          
+          <!-- BOUTONS D'EXPORTATION MULTI-FORMATS -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="exportCareCSV()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-csv"></i> Export CSV
+            </button>
+            <button onclick="exportCareExcel()" class="px-3 py-2 bg-green-700 hover:bg-green-800 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-excel"></i> Export Excel
+            </button>
+            <button onclick="exportCarePDF()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-pdf text-red-400"></i> Export PDF
+            </button>
+          </div>
         </div>
       </div>
 
@@ -523,12 +534,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Fonction globale pour sauvegarder sur Firebase
     window.saveToFirebase = function(path, data) {
       set(ref(db, path), data);
     };
 
-    // Écoute synchrone en temps réel sur toutes les clés
     const nodes = [
       { key: 'predictions', render: () => renderPredictions() },
       { key: 'officialResult', render: () => displayOfficialBanner() },
@@ -582,14 +591,12 @@
     let timerSeconds = 0;
 
     function saveAllToStorage() {
-      // Sauvegarde localement
       localStorage.setItem('bp_predictions', JSON.stringify(window.predictions));
       localStorage.setItem('bp_officialResult', JSON.stringify(window.officialResult));
       localStorage.setItem('bp_careEntries', JSON.stringify(window.careEntries));
       localStorage.setItem('bp_weightHistory', JSON.stringify(window.weightHistory));
       localStorage.setItem('bp_tempHistory', JSON.stringify(window.tempHistory));
 
-      // Synchronisation sur Firebase pour tous les appareils
       if (typeof window.saveToFirebase === 'function') {
         window.saveToFirebase('predictions', window.predictions);
         window.saveToFirebase('officialResult', window.officialResult);
@@ -1289,6 +1296,7 @@
       });
     }
 
+    /* FONCTIONS D'EXPORTATION (PDF, CSV, EXCEL) */
     function exportCarePDF() {
       const element = document.getElementById('careJournalContainer');
       element.classList.add('pdf-compact');
@@ -1304,6 +1312,64 @@
       html2pdf().set(opt).from(element).save().then(() => {
         element.classList.remove('pdf-compact');
       });
+    }
+
+    function exportCareCSV() {
+      if (!window.careEntries || window.careEntries.length === 0) {
+        alert("Aucune donnée de soin à exporter.");
+        return;
+      }
+
+      let csvContent = "\uFEFFHeure;Temp. Bébé (°C);Temp. Couveuse (°C);Couche;Repas (ml);Observations;Auteur\n";
+
+      window.careEntries.forEach(c => {
+        const row = [
+          `"${c.time || ''}"`,
+          `"${c.tempBaby || ''}"`,
+          `"${c.tempIncubator || ''}"`,
+          `"${c.diaper || ''}"`,
+          `"${c.feeding || 0}"`,
+          `"${(c.notes || '').replace(/"/g, '""')}"`,
+          `"${c.author || ''}"`
+        ];
+        csvContent += row.join(";") + "\n";
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Suivi_Maternite_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportCareExcel() {
+      if (!window.careEntries || window.careEntries.length === 0) {
+        alert("Aucune donnée de soin à exporter.");
+        return;
+      }
+
+      const dataForExcel = window.careEntries.map(c => ({
+        "Heure": c.time || '',
+        "Temp. Bébé (°C)": c.tempBaby || '',
+        "Temp. Couveuse (°C)": c.tempIncubator || '',
+        "Couche": c.diaper || '',
+        "Repas (ml)": c.feeding || 0,
+        "Observations": c.notes || '',
+        "Auteur": c.author || ''
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Journal de Soins");
+
+      worksheet['!cols'] = [
+        { wch: 10 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 12 }, { wch: 35 }, { wch: 18 }
+      ];
+
+      XLSX.writeFile(workbook, `Suivi_Maternite_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
     function saveOfficialResults(e) {
