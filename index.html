@@ -621,7 +621,7 @@
       alert("⏳ Analyse du document en cours par l'IA GPT-4o...");
 
       try {
-        const response = await fetch('http://localhost:3000/api/analyser-document', {
+        const response = await fetch('http://192.168.1.35:3000/api/analyser-document', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(bodyData)
