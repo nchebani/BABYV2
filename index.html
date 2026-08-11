@@ -621,11 +621,10 @@
       console.log("Analyse du document en cours...");
 
       try {
-const backendUrl = `http://${window.location.hostname}:3000/api/analyser-document`;
-        const response = await fetch(backendUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bodyData)
+        const response = await fetch('http://192.168.1.35:3000/api/analyser-document', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bodyData)
         });
 
         const result = await response.json();
