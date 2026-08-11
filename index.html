@@ -265,7 +265,7 @@
           <!-- BOUTONS D'EXPORTATION MULTI-FORMATS & SCANNER IA -->
           <div class="flex items-center gap-2 flex-wrap">
             <button onclick="document.getElementById('fileInput').click()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
-              <i class="fa-solid fa-camera"></i> 📄 Scanner / Importer Document
+              <i class="fa-solid fa-camera"></i> Scanner / Importer Document
             </button>
             <input type="file" id="fileInput" accept="image/*,.pdf,.txt" style="display: none;" onchange="traiterFichier(event)">
 
@@ -618,7 +618,7 @@
     }
 
     async function envoyerAuBackend(bodyData) {
-      alert("⏳ Analyse du document en cours par l'IA GPT-4o...");
+      console.log("Analyse du document en cours...");
 
       try {
         const response = await fetch('http://192.168.1.35:3000/api/analyser-document', {
@@ -656,13 +656,13 @@
           saveAllToStorage();
           renderCareEntries();
 
-          alert(`✅ Analyse terminée avec succès !\n\n• Type : ${d.type_document}\n• Poids extrait : ${d.poids_kg ? d.poids_kg + ' kg' : 'Non spécifié'}\n• Volume repas : ${d.volume_sondage_ml ? d.volume_sondage_ml + ' ml' : 'Non spécifié'}\n• Notes : ${d.notes || 'Rien à signaler'}`);
+          alert(`Analyse terminée avec succès !\n\n• Type : ${d.type_document}\n• Poids extrait : ${d.poids_kg ? d.poids_kg + ' kg' : 'Non spécifié'}\n• Volume repas : ${d.volume_sondage_ml ? d.volume_sondage_ml + ' ml' : 'Non spécifié'}\n• Notes : ${d.notes || 'Rien à signaler'}`);
         } else {
-          alert("❌ Erreur lors de l'analyse du document.");
+          alert("Erreur lors de l'analyse du document.");
         }
       } catch (err) {
         console.error(err);
-        alert("⚠️ Impossible de joindre le serveur. Vérifiez que la commande 'node server.js' tourne bien dans le terminal.");
+        alert("Impossible de joindre le serveur. Vérifiez que la commande 'node server.js' tourne bien dans le terminal.");
       }
     }
 
