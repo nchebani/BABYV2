@@ -3,245 +3,1775 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BABY PREDICT 2026 - Agenda & Suivi</title>
-  
-  <!-- Bootstrap 5 CSS & Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  
-  <!-- FullCalendar CSS & JS -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-
+  <title>BABY PREDICT 2026 - Pro, Suivi Maternité & Agenda</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
-    .fc-event {
-      cursor: pointer;
-      border-radius: 4px;
-      padding: 2px 4px;
+    .glassmorphism {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    .badge-category {
-      font-size: 0.9rem;
-      padding: 6px 10px;
+    .active-tab {
+      border-bottom: 3px solid #ec4899;
+      color: #db2777;
+      font-weight: 700;
+    }
+    .pdf-compact {
+      background: white !important;
+      padding: 15px !important;
+      font-size: 11px !important;
+      color: #1e293b !important;
+    }
+    .pdf-compact table {
+      font-size: 10px !important;
+    }
+    .pdf-compact th, .pdf-compact td {
+      padding: 4px 6px !important;
+    }
+    .pdf-compact .no-pdf {
+      display: none !important;
     }
   </style>
 </head>
-<body class="bg-light">
+<body class="bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 min-h-screen text-slate-800 font-sans pb-12">
 
-  <div class="container py-4">
-    <header class="mb-4 text-center">
-      <h1 class="fw-bold text-primary"><i class="bi bi-egg-fried me-2"></i>BABY PREDICT 2026</h1>
-      <p class="text-muted">Gestion de la maternité, pronostics et agenda partagé</p>
-    </header>
-
-    <!-- Navigation Onglets -->
-    <ul class="nav nav-pills nav-justified mb-4" id="mainTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="agenda-tab" data-bs-toggle="tab" data-bs-target="#tab-agenda" type="button" role="tab">
-          <i class="bi bi-calendar3 me-1"></i> Agenda Partagé
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="pronostics-tab" data-bs-toggle="tab" data-bs-target="#tab-pronostics" type="button" role="tab">
-          <i class="bi bi-trophy me-1"></i> Pronostics
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="suivi-tab" data-bs-toggle="tab" data-bs-target="#tab-suivi" type="button" role="tab">
-          <i class="bi bi-heart-pulse me-1"></i> Maternité & Soins
-        </button>
-      </li>
-    </ul>
-
-    <div class="tab-content" id="mainTabsContent">
+  <!-- PAGE DE CONNEXION -->
+  <div id="loginPage" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-md p-4">
+    <div class="glassmorphism p-8 rounded-3xl shadow-2xl max-w-md w-full border border-white/50 text-center">
+      <div class="inline-flex p-4 rounded-full bg-pink-100 text-pink-500 mb-4 text-3xl">
+        <i class="fa-solid fa-baby"></i>
+      </div>
+      <h1 class="text-2xl font-black text-slate-800 mb-2">BABY PREDICT 2026</h1>
+      <p class="text-sm text-slate-500 mb-6">Connectez-vous pour accéder au tableau de bord et à la fiche de soins.</p>
       
-      <!-- TAB 1 : AGENDA -->
-      <div class="tab-pane fade show active" id="tab-agenda" role="tabpanel">
-        <div class="row g-4">
-          
-          <!-- Formulaire d'ajout -->
-          <div class="col-lg-4">
-            <div class="card shadow-sm border-0 h-100">
-              <div class="card-body">
-                <h5 class="card-title mb-3"><i class="bi bi-plus-circle me-2"></i>Ajouter un événement</h5>
-                <form id="form-rdv">
-                  <div class="mb-3">
-                    <label for="rdv-titre" class="form-label">Titre / Description</label>
-                    <input type="text" class="form-control" id="rdv-titre" placeholder="Ex: Échographie T2, Garde Périodique..." required>
-                  </div>
-                  
-                  <div class="mb-3">
-                    <label for="rdv-type" class="form-label">Catégorie (Couleur)</label>
-                    <select class="form-select" id="rdv-type" required>
-                      <option value="MEDICAL">RDV Médical (Bleu)</option>
-                      <option value="TRAVAIL">Travail Parent (Jaune/Orange)</option>
-                      <option value="PREPARATION">Cours Préparation (Vert)</option>
-                      <option value="AUTRE">Autre (Gris)</option>
-                    </select>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="rdv-date" class="form-label">Date et Heure</label>
-                    <input type="datetime-local" class="form-control" id="rdv-date" required>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="rdv-notes" class="form-label">Notes complémentaires</label>
-                    <textarea class="form-control" id="rdv-notes" rows="2" placeholder="Adresse, documents à prendre..."></textarea>
-                  </div>
-
-                  <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-calendar-plus me-1"></i> Enregistrer l'événement
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <!-- Affichage du Calendrier -->
-          <div class="col-lg-8">
-            <div class="card shadow-sm border-0">
-              <div class="card-body">
-                <!-- Légende des couleurs -->
-                <div class="d-flex gap-2 mb-3 flex-wrap">
-                  <span class="badge bg-primary badge-category"><i class="bi bi-hospital me-1"></i> RDV Médical</span>
-                  <span class="badge bg-warning text-dark badge-category"><i class="bi bi-briefcase me-1"></i> Travail Parent</span>
-                  <span class="badge bg-success badge-category"><i class="bi bi-person-arms-up me-1"></i> Cours Préparation</span>
-                  <span class="badge bg-secondary badge-category"><i class="bi bi-bookmark me-1"></i> Autre</span>
-                </div>
-
-                <!-- Calendrier interactif -->
-                <div id="calendar"></div>
-              </div>
-            </div>
-          </div>
-
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 text-left">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Votre Prénom / Pseudo</label>
+          <input type="text" id="usernameInput" required placeholder="ex: Julie, Oncle Marc..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-400 bg-white/80">
         </div>
-      </div>
-
-      <!-- TAB 2 : PRONOSTICS -->
-      <div class="tab-pane fade" id="tab-pronostics" role="tabpanel">
-        <div class="card shadow-sm border-0 p-4">
-          <h4 class="card-title">Pronostics de Naissance</h4>
-          <p class="text-muted">Module de paris et prédictions sur la date, la taille et le poids.</p>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Code d'accès</label>
+          <input type="password" id="accessCodeInput" required placeholder="Clé famille ou admin" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-400 bg-white/80">
+          <p class="text-xs text-slate-400 mt-1">Saisissez <code class="bg-slate-100 px-1 rounded text-pink-600 font-bold">ADMIN2026</code> pour le mode administration.</p>
         </div>
-      </div>
-
-      <!-- TAB 3 : SUIVI MATERNITÉ -->
-      <div class="tab-pane fade" id="tab-suivi" role="tabpanel">
-        <div class="card shadow-sm border-0 p-4">
-          <h4 class="card-title">Suivi Maternité & Soins</h4>
-          <p class="text-muted">Analyse de documents et suivi médical.</p>
-        </div>
-      </div>
-
+        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:opacity-95 transition">
+          Accéder à l'application
+        </button>
+      </form>
     </div>
   </div>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- NAVIGATION PRINCIPALE -->
+  <header class="max-w-6xl mx-auto px-4 pt-6">
+    <div class="glassmorphism rounded-2xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-pink-500 text-white rounded-xl shadow-md">
+          <i class="fa-solid fa-baby-carriage text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-lg text-slate-800">BABY PREDICT 2026</h1>
+          <p class="text-xs text-slate-500">Espace Suivi Maternité, Pronostics & Agenda</p>
+        </div>
+      </div>
 
-  <!-- Script Logic Agenda -->
+      <nav class="flex gap-2 border-b md:border-b-0 border-slate-200 pb-2 md:pb-0 overflow-x-auto">
+        <button onclick="switchTab('pronostics')" id="tab-pronostics" class="px-3 py-2 text-sm font-semibold text-slate-600 hover:text-pink-600 active-tab transition flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-chart-pie"></i> Pronostics
+        </button>
+        <button onclick="switchTab('maternite')" id="tab-maternite" class="px-3 py-2 text-sm font-semibold text-slate-600 hover:text-pink-600 transition flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-heart-pulse"></i> Suivi Maternité & Soins
+        </button>
+        <button onclick="switchTab('agenda')" id="tab-agenda" class="px-3 py-2 text-sm font-semibold text-slate-600 hover:text-pink-600 transition flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-calendar-days"></i> Agenda Partagé
+        </button>
+      </nav>
+
+      <div class="flex items-center gap-3 text-sm">
+        <span class="px-3 py-1.5 rounded-full bg-slate-100 font-medium text-slate-700 border border-slate-200" id="userBadge">
+          <i class="fa-regular fa-user mr-1"></i> Invité
+        </span>
+        <button onclick="logout()" class="p-2 text-slate-400 hover:text-red-500 transition" title="Déconnexion">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENU PRINCIPAL -->
+  <main class="max-w-6xl mx-auto px-4 mt-6">
+
+    <!-- SECTION 1 : PRONOSTICS -->
+    <div id="section-pronostics" class="space-y-6">
+      <div id="resultBanner" class="hidden glassmorphism bg-gradient-to-r from-amber-100 via-pink-100 to-purple-100 p-6 rounded-3xl border-2 border-amber-300 shadow-md">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+          <div>
+            <span class="px-3 py-1 bg-amber-500 text-white font-bold text-xs rounded-full uppercase tracking-wider">Naissance Confirmée !</span>
+            <h2 class="text-2xl font-black text-slate-800 mt-2" id="resBabyName">Bébé Arrivé !</h2>
+            <p class="text-sm text-slate-600" id="resBabyDetails">Né(e) le -- à -- | -- kg | -- cm</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs font-bold text-slate-500 uppercase">Grand Gagnant du Pronostic</p>
+            <p class="text-xl font-extrabold text-pink-600" id="resWinnerName">--</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="adminPanel" class="hidden glassmorphism p-6 rounded-3xl border-2 border-purple-200">
+        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-lock text-purple-600"></i> Panneau Administration : Publier les résultats officiels
+        </h3>
+        <form onsubmit="saveOfficialResults(event)" class="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <input type="text" id="officialName" placeholder="Prénom" required class="px-3 py-2 rounded-xl border border-slate-200 text-sm">
+          <select id="officialGender" class="px-3 py-2 rounded-xl border border-slate-200 text-sm">
+            <option value="Fille">Fille</option>
+            <option value="Garçon">Garçon</option>
+          </select>
+          <input type="number" step="0.01" id="officialWeight" placeholder="Poids (kg)" required class="px-3 py-2 rounded-xl border border-slate-200 text-sm">
+          <input type="number" step="0.5" id="officialHeight" placeholder="Taille (cm)" required class="px-3 py-2 rounded-xl border border-slate-200 text-sm">
+          <button type="submit" class="bg-purple-600 text-white text-sm font-bold rounded-xl py-2 hover:bg-purple-700 transition">
+            Clôturer & Calculer Gagnant
+          </button>
+        </form>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="glassmorphism p-5 rounded-2xl flex items-center gap-4">
+          <div class="p-3 bg-pink-100 text-pink-500 rounded-xl text-xl"><i class="fa-solid fa-venus-mars"></i></div>
+          <div>
+            <p class="text-xs font-bold text-slate-400 uppercase">Tendance Sexe</p>
+            <p class="text-lg font-black text-slate-700" id="statGender">--</p>
+          </div>
+        </div>
+        <div class="glassmorphism p-5 rounded-2xl flex items-center gap-4">
+          <div class="p-3 bg-blue-100 text-blue-500 rounded-xl text-xl"><i class="fa-solid fa-weight-scale"></i></div>
+          <div>
+            <p class="text-xs font-bold text-slate-400 uppercase">Poids Moyen Prédit</p>
+            <p class="text-lg font-black text-slate-700" id="statAvgWeight">-- kg</p>
+          </div>
+        </div>
+        <div class="glassmorphism p-5 rounded-2xl flex items-center gap-4">
+          <div class="p-3 bg-purple-100 text-purple-500 rounded-xl text-xl"><i class="fa-solid fa-ruler-vertical"></i></div>
+          <div>
+            <p class="text-xs font-bold text-slate-400 uppercase">Taille Moyenne Prédite</p>
+            <p class="text-lg font-black text-slate-700" id="statAvgHeight">-- cm</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- FORMULAIRE PRONOSTIC -->
+        <div class="glassmorphism p-6 rounded-3xl border border-white/50 h-fit">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2" id="formPredTitle">
+              <i class="fa-solid fa-pen-to-square text-pink-500"></i> Faire un pronostic
+            </h3>
+            <button id="btnCancelPredEdit" onclick="cancelPredEdit()" class="hidden text-xs text-red-500 hover:underline font-bold">Annuler modification</button>
+          </div>
+          <form id="predictionForm" onsubmit="addPrediction(event)" class="space-y-4">
+            <input type="hidden" id="editPredIndex" value="-1">
+            <div id="adminUserOverride" class="hidden">
+              <label class="block text-xs font-bold text-purple-600 mb-1">Nom du participant (Mode Admin)</label>
+              <input type="text" id="predUserAdmin" placeholder="Saisir pour quelqu'un d'autre..." class="w-full px-3 py-2 rounded-xl border border-purple-300 bg-purple-50/50 text-sm focus:ring-2 focus:ring-purple-400 outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Prénom estimé du bébé</label>
+              <input type="text" id="predName" required placeholder="ex: Emma, Leo..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
+            </div>
+            
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1"><i class="fa-solid fa-heart text-pink-500 mr-1"></i>Futurs Passions / Hobbies</label>
+              <input type="text" id="predHobby" placeholder="ex: Football, Guitare, Astrophysique..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Sexe</label>
+                <select id="predGender" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
+                  <option value="Fille">Fille</option>
+                  <option value="Garçon">Garçon</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Poids (kg)</label>
+                <input type="number" step="0.05" min="1.5" max="5.5" id="predWeight" required placeholder="3.25" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Taille (cm)</label>
+                <input type="number" step="0.5" min="40" max="60" id="predHeight" required placeholder="50.0" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Date estimée</label>
+                <input type="date" id="predDate" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
+              </div>
+            </div>
+            <button type="submit" id="btnSubmitPred" class="w-full py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl shadow-md transition text-sm">
+              Enregistrer le pronostic
+            </button>
+          </form>
+        </div>
+
+        <!-- TABLEAU DES PRONOSTICS -->
+        <div class="lg:col-span-2 glassmorphism p-6 rounded-3xl border border-white/50">
+          <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center justify-between">
+            <span><i class="fa-solid fa-list-ol text-purple-500 mr-2"></i>Pronostics de la famille</span>
+            <span class="text-xs bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full" id="predCount">0 participation(s)</span>
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="border-b border-slate-200 text-slate-400 text-xs uppercase">
+                  <th class="pb-3 font-semibold">Participant</th>
+                  <th class="pb-3 font-semibold">Prénom estimé</th>
+                  <th class="pb-3 font-semibold">Passion prédite</th>
+                  <th class="pb-3 font-semibold">Sexe</th>
+                  <th class="pb-3 font-semibold">Poids</th>
+                  <th class="pb-3 font-semibold">Taille</th>
+                  <th class="pb-3 font-semibold">Date</th>
+                  <th class="pb-3 font-semibold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="predictionsTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2 : SUIVI MATERNITÉ & SOINS -->
+    <div id="section-maternite" class="hidden space-y-6">
+      <div class="glassmorphism p-6 rounded-3xl border border-white/50 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="p-4 bg-amber-100 text-amber-600 rounded-2xl text-2xl">
+            <i class="fa-solid fa-bottle-droplet"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800">Plage Horaire Repas Bébé</h3>
+            <p class="text-sm text-slate-500" id="nextFeedingTimer">Dernier repas enregistré : --:--</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="flex items-center gap-2 bg-white/80 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+            <span>Intervalle :</span>
+            <select id="feedingInterval" onchange="updateNextFeedingReminder()" class="font-bold text-slate-700 bg-transparent outline-none">
+              <option value="2">Toutes les 2h</option>
+              <option value="3" selected>Toutes les 3h</option>
+              <option value="4">Toutes les 4h</option>
+            </select>
+          </div>
+          
+          <!-- BOUTONS D'EXPORTATION MULTI-FORMATS & SCANNER IA -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="document.getElementById('fileInput').click()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+              <i class="fa-solid fa-camera"></i> Scanner / Importer Document
+            </button>
+            <input type="file" id="fileInput" accept="image/*,.pdf,.txt" style="display: none;" onchange="traiterFichier(event)">
+
+            <button onclick="exportCareCSV()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-csv"></i> Export CSV
+            </button>
+            <button onclick="exportCareExcel()" class="px-3 py-2 bg-green-700 hover:bg-green-800 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-excel"></i> Export Excel
+            </button>
+            <button onclick="exportCarePDF()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-pdf text-red-400"></i> Export PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODULE CHRONOMÈTRE -->
+      <div class="glassmorphism p-6 rounded-3xl border border-white/50">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="p-3 bg-purple-100 text-purple-600 rounded-2xl text-xl">
+              <i class="fa-solid fa-stopwatch"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800">Chronomètre Repas & Contractions</h3>
+              <p class="text-xs text-slate-500">Mesurer la durée d'un biberon, d'une tétée au sein ou la fréquence d'une contraction</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <select id="timerType" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white outline-none">
+              <option value="Repas (Biberon)">Repas (Biberon)</option>
+              <option value="Tétée Sein Gauche">Tétée (Sein Gauche)</option>
+              <option value="Tétée Sein Droit">Tétée (Sein Droit)</option>
+              <option value="Contraction">Contraction</option>
+            </select>
+
+            <div class="bg-slate-900 text-emerald-400 font-mono text-2xl font-bold px-4 py-1.5 rounded-xl border border-slate-700 shadow-inner" id="timerDisplay">
+              00:00
+            </div>
+
+            <div class="flex gap-1.5">
+              <button onclick="toggleTimer()" id="btnStartTimer" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition">
+                <i class="fa-solid fa-play"></i> Démarrer
+              </button>
+              <button onclick="resetTimer()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+              <button onclick="saveTimerToCare()" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow transition">
+                <i class="fa-solid fa-plus"></i> Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="glassmorphism p-4 rounded-2xl">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-bold text-slate-400 uppercase">Repas (Aujourd'hui)</span>
+            <span class="text-xs bg-pink-100 text-pink-600 font-bold px-2 py-0.5 rounded-full" id="badgeMealsGoal">Obj: 8</span>
+          </div>
+          <p class="text-2xl font-black text-slate-800" id="statMealsToday">0</p>
+          <p class="text-xs text-slate-400 mt-1" id="statMealsVol">Volume : 0 ml</p>
+        </div>
+
+        <div class="glassmorphism p-4 rounded-2xl">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-bold text-slate-400 uppercase">Couches (Aujourd'hui)</span>
+            <span class="text-xs bg-blue-100 text-blue-600 font-bold px-2 py-0.5 rounded-full" id="badgeDiapersGoal">Obj: 6</span>
+          </div>
+          <p class="text-2xl font-black text-slate-800" id="statDiapersToday">0</p>
+          <p class="text-xs text-slate-400 mt-1" id="statDiapersDetail">Saines / Urinairement stables</p>
+        </div>
+
+        <div class="glassmorphism p-4 rounded-2xl border transition duration-300" id="cardTempStatus">
+          <span class="text-xs font-bold text-slate-400 uppercase">Température Bébé</span>
+          <p class="text-2xl font-black text-slate-800" id="statLastTemp">-- °C</p>
+          <p class="text-xs font-bold mt-1 text-emerald-600" id="statTempStatus">Statut : Normal</p>
+        </div>
+
+        <div class="glassmorphism p-4 rounded-2xl">
+          <span class="text-xs font-bold text-slate-400 uppercase">Dernier Poids</span>
+          <p class="text-2xl font-black text-slate-800" id="statCurrentWeight">-- kg</p>
+          <p class="text-xs text-slate-400 mt-1" id="statWeightDiff">Aucune donnée</p>
+        </div>
+      </div>
+
+      <!-- COURBES INTERACTIVES TEMPE ET POIDS -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- COURBE DE TEMPÉRATURE INTERACTIVE -->
+        <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-temperature-half text-red-500"></i> Courbe de Température Interactive
+            </h4>
+            <span class="text-xs font-semibold bg-red-50 text-red-600 px-2.5 py-1 rounded-full border border-red-200">Ajustement automatique</span>
+          </div>
+
+          <form onsubmit="addTempPoint(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-2 bg-white/60 p-3 rounded-2xl border border-slate-200">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Heure/Date</label>
+              <input type="text" id="tempPointTime" required placeholder="08:00" class="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-red-300 outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">T° Bébé (°C)</label>
+              <input type="number" step="0.1" min="30" max="43" id="tempPointBaby" required placeholder="36.8" class="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-red-300 outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">T° Couv. (°C)</label>
+              <input type="number" step="0.1" min="20" max="40" id="tempPointIncubator" placeholder="31.5" class="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-red-300 outline-none">
+            </div>
+            <div class="flex items-end">
+              <button type="submit" class="w-full py-1.5 bg-red-500 hover:bg-red-600 text-white font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1">
+                <i class="fa-solid fa-plus"></i> Ajouter
+              </button>
+            </div>
+          </form>
+
+          <div class="h-52">
+            <canvas id="chartTemp"></canvas>
+          </div>
+
+          <div>
+            <p class="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">Points de température enregistrés</p>
+            <div id="tempPointsList" class="max-h-36 overflow-y-auto space-y-1.5 pr-1 text-xs"></div>
+          </div>
+        </div>
+
+        <!-- COURBE DE POIDS INTERACTIVE -->
+        <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-blue-500"></i> Courbe de Poids Interactive
+            </h4>
+            <span class="text-xs font-semibold bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full border border-blue-200">Ajustement automatique</span>
+          </div>
+
+          <form onsubmit="addWeightPoint(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-white/60 p-3 rounded-2xl border border-slate-200">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Date</label>
+              <input type="date" id="weightPointDate" required class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-blue-300 outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-slate-500 mb-1">Poids (kg)</label>
+              <input type="number" step="0.01" min="0.5" max="10" id="weightPointVal" required placeholder="3.25" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-blue-300 outline-none">
+            </div>
+            <div class="flex items-end">
+              <button type="submit" class="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-1">
+                <i class="fa-solid fa-plus"></i> Ajouter
+              </button>
+            </div>
+          </form>
+
+          <div class="h-52">
+            <canvas id="chartWeight"></canvas>
+          </div>
+
+          <div>
+            <p class="text-xs font-bold text-slate-600 mb-2 uppercase tracking-wider">Points de mesure enregistrés</p>
+            <div id="weightPointsList" class="max-h-36 overflow-y-auto space-y-1.5 pr-1 text-xs"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TRANSMISSIONS & JOURNAL DE SOINS -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="glassmorphism p-6 rounded-3xl border border-white/50 h-fit">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2" id="formCareTitle">
+              <i class="fa-solid fa-notes-medical text-emerald-500"></i> Nouvelle Transmission Soin
+            </h3>
+            <button id="btnCancelCareEdit" onclick="cancelCareEdit()" class="hidden text-xs text-red-500 hover:underline font-bold">Annuler modification</button>
+          </div>
+
+          <form id="careForm" onsubmit="addCareEntry(event)" class="space-y-3">
+            <input type="hidden" id="editCareIndex" value="-1">
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Heure du soin</label>
+              <input type="time" id="careTime" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-300 outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Temp. Bébé (°C)</label>
+                <input type="number" step="0.1" id="careTempBaby" placeholder="36.8" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-300 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Temp. Couveuse</label>
+                <input type="number" step="0.1" id="careTempIncubator" placeholder="31.5" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-300 outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Couche</label>
+                <select id="careDiaper" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-300 outline-none">
+                  <option value="Propre / Rien">Propre</option>
+                  <option value="Urine">Urine</option>
+                  <option value="Selles">Selles</option>
+                  <option value="Urine + Selles">Urine + Selles</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Repas (ml)</label>
+                <input type="number" id="careFeeding" placeholder="60" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-300 outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Observations / Remarques</label>
+              <textarea id="careNotes" rows="2" placeholder="Bébé tonique, bien bu, peau saine..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-300 outline-none"></textarea>
+            </div>
+
+            <button type="submit" id="btnSubmitCare" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-md transition text-sm">
+              Enregistrer l'observation
+            </button>
+          </form>
+        </div>
+
+        <div class="lg:col-span-2 glassmorphism p-6 rounded-3xl border border-white/50" id="careJournalContainer">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-bold text-slate-800 text-lg">
+                <i class="fa-solid fa-clipboard-list text-emerald-500 mr-2"></i>Fiche de Soins Hospitalière / Maternité
+              </h3>
+              <p class="text-xs text-slate-400">Transmissions quotidiennes de l'équipe et des parents</p>
+            </div>
+            <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full" id="careDateHeader">Aujourd'hui</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="border-b border-slate-200 text-slate-400 text-xs uppercase">
+                  <th class="pb-3 font-semibold">Heure</th>
+                  <th class="pb-3 font-semibold">T° Bébé / Couv.</th>
+                  <th class="pb-3 font-semibold">Couche</th>
+                  <th class="pb-3 font-semibold">Repas</th>
+                  <th class="pb-3 font-semibold">Observations</th>
+                  <th class="pb-3 font-semibold">Auteur</th>
+                  <th class="pb-3 font-semibold text-right no-pdf">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="careTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3 : AGENDA PARTAGÉ PARENTS -->
+    <div id="section-agenda" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- FORMULAIRE SAISIE AGENDA -->
+        <div class="glassmorphism p-6 rounded-3xl border border-white/50 h-fit">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2" id="formAgendaTitle">
+              <i class="fa-solid fa-calendar-plus text-indigo-500"></i> Ajouter un événement
+            </h3>
+            <button id="btnCancelAgendaEdit" onclick="cancelAgendaEdit()" class="hidden text-xs text-red-500 hover:underline font-bold">Annuler modification</button>
+          </div>
+
+          <form id="agendaForm" onsubmit="addAgendaEntry(event)" class="space-y-3">
+            <input type="hidden" id="editAgendaIndex" value="-1">
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Intitulé du rendez-vous</label>
+              <input type="text" id="agendaTitle" required placeholder="ex: RDV Pédiatre 1er mois" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Catégorie</label>
+              <select id="agendaCategory" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
+                <option value="Médical">🩺 Médical (Pédiatre, vaccins, bilans)</option>
+                <option value="Travail">💼 Travail Parents (Déplacements, réunions)</option>
+                <option value="Garde">🍼 Garde & Quotidien (Nounou, crèche, grands-parents)</option>
+                <option value="Autre">🎈 Autre (Sorties, achats, jalons)</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Date début</label>
+                <input type="date" id="agendaStartDate" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Heure début</label>
+                <input type="time" id="agendaStartTime" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Date fin</label>
+                <input type="date" id="agendaEndDate" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Heure fin</label>
+                <input type="time" id="agendaEndTime" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Responsable / Concerné</label>
+              <select id="agendaAssignee" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
+                <option value="Les deux">Les deux</option>
+                <option value="Maman">Maman</option>
+                <option value="Papa">Papa</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Notes / Rappels</label>
+              <textarea id="agendaNotes" rows="2" placeholder="ex: Apporter le carnet de santé, prévoir doudou..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none"></textarea>
+            </div>
+
+            <button type="submit" id="btnSubmitAgenda" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition text-sm">
+              Ajouter à l'agenda
+            </button>
+          </form>
+        </div>
+
+        <!-- LISTE ET FILTRES AGENDA -->
+        <div class="lg:col-span-2 glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-indigo-500"></i> Planning Familial
+              </h3>
+              <p class="text-xs text-slate-500">Vue chronologique optimisée mobile</p>
+            </div>
+
+            <!-- FILTRE CATEGORIE -->
+            <div class="flex items-center gap-2">
+              <label class="text-xs font-bold text-slate-500 uppercase">Filtrer :</label>
+              <select id="agendaFilterCat" onchange="renderAgendaEntries()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white outline-none">
+                <option value="TOUS">Toutes les catégories</option>
+                <option value="Médical">🩺 Médical</option>
+                <option value="Travail">💼 Travail</option>
+                <option value="Garde">🍼 Garde & Quotidien</option>
+                <option value="Autre">🎈 Autre</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- CONTENEUR LISTE DES ÉVÉNEMENTS -->
+          <div id="agendaListContainer" class="space-y-3 max-h-[600px] overflow-y-auto pr-1"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- INTÉGRATION FIREBASE (SYNCHRONISATION MULTI-APPAREILS EN TEMPS RÉEL) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3vygYO0r0Q8Wx7lMiLARyuj99h1urHXA",
+      authDomain: "babypredictv2.firebaseapp.com",
+      databaseURL: "https://babypredictv2-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "babypredictv2",
+      storageBucket: "babypredictv2.firebasestorage.app",
+      messagingSenderId: "682802850327",
+      appId: "1:682802850327:web:ac161252e0997d3ad64a52"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.saveToFirebase = function(path, data) {
+      set(ref(db, path), data);
+    };
+
+    const nodes = [
+      { key: 'predictions', render: () => renderPredictions() },
+      { key: 'officialResult', render: () => displayOfficialBanner() },
+      { key: 'careEntries', render: () => renderCareEntries() },
+      { key: 'tempHistory', render: () => { updateTempChart(); renderTempList(); } },
+      { key: 'weightHistory', render: () => { updateWeightChart(); renderWeightList(); } },
+      { key: 'agendaEntries', render: () => renderAgendaEntries() }
+    ];
+
+    nodes.forEach(node => {
+      onValue(ref(db, node.key), (snapshot) => {
+        const data = snapshot.val();
+        if (data !== null) {
+          window[node.key] = data;
+          localStorage.setItem(`bp_${node.key}`, JSON.stringify(data));
+          if (typeof node.render === 'function') node.render();
+        }
+      });
+    });
+  </script>
+
+  <!-- LOGIQUE APPLICATIVE PRINCIPALE -->
   <script>
-    let calendar;
+    let currentUser = null;
+    let isAdmin = false;
 
-    document.addEventListener('DOMContentLoaded', function() {
-      const calendarEl = document.getElementById('calendar');
+    window.predictions = JSON.parse(localStorage.getItem('bp_predictions')) || [
+      { user: "Mamie Chantal", name: "Alice", hobby: "Jardinage & Chant", gender: "Fille", weight: 3.200, height: 49.5, date: "2026-08-15" },
+      { user: "Oncle Lucas", name: "Hugo", hobby: "Football", gender: "Garçon", weight: 3.600, height: 51.0, date: "2026-08-18" }
+    ];
 
-      // Initialisation du calendrier
-      calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'fr',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,listWeek'
-        },
-        buttonText: {
-          today: "Aujourd'hui",
-          month: 'Mois',
-          week: 'Semaine',
-          list: 'Liste'
-        },
-        events: chargerEvenementsAgenda(),
-        eventClick: function(info) {
-          const notes = info.event.extendedProps.notes ? `\nNotes: ${info.event.extendedProps.notes}` : '';
-          if (confirm(`Événement : ${info.event.title}${notes}\n\nVoulez-vous supprimer cet événement ?`)) {
-            supprimerEvenement(info.event.id);
+    window.officialResult = JSON.parse(localStorage.getItem('bp_officialResult')) || null;
+
+    window.tempHistory = JSON.parse(localStorage.getItem('bp_tempHistory')) || [
+      { time: "08:00", tempBaby: 36.7, tempIncubator: 31.0 },
+      { time: "12:00", tempBaby: 36.9, tempIncubator: 30.5 }
+    ];
+
+    window.careEntries = JSON.parse(localStorage.getItem('bp_careEntries')) || [
+      { time: "08:00", tempBaby: 36.7, tempIncubator: 31.0, diaper: "Urine", feeding: 60, notes: "Réveil calme, bon biberon.", author: "Infirmière Sophie" }
+    ];
+
+    window.weightHistory = JSON.parse(localStorage.getItem('bp_weightHistory')) || [
+      { date: "2026-08-01", weight: 3.10 },
+      { date: "2026-08-05", weight: 3.28 }
+    ];
+
+    window.agendaEntries = JSON.parse(localStorage.getItem('bp_agendaEntries')) || [
+      { title: "Consultation 1er mois Pédiatre", category: "Médical", startDate: "2026-08-20", startTime: "10:00", endDate: "2026-08-20", endTime: "11:00", assignee: "Les deux", notes: "Apporter le carnet de santé", author: "Maman" },
+      { title: "Adaptation Crèche", category: "Garde", startDate: "2026-09-01", startTime: "09:00", endDate: "2026-09-01", endTime: "12:00", assignee: "Maman", notes: "Prendre les doudous et tétines", author: "Maman" }
+    ];
+
+    let chartTempInstance = null;
+    let chartWeightInstance = null;
+
+    let timerInterval = null;
+    let timerSeconds = 0;
+
+    /* TRAITEMENT ET ENVOI DE FICHIER VERS LE BACKEND LOCAL IA */
+    async function traiterFichier(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      if (file.type === "text/plain") {
+        reader.onload = async function(e) {
+          envoyerAuBackend({ fileType: 'txt', textContent: e.target.result });
+        };
+        reader.readAsText(file);
+      } else {
+        reader.onload = async function(e) {
+          const base64Data = e.target.result.split(',')[1];
+          const fileType = file.type.includes('pdf') ? 'pdf' : 'image';
+          envoyerAuBackend({ fileType, base64Data });
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    async function envoyerAuBackend(bodyData) {
+      console.log("Analyse du document en cours...");
+
+      try {
+        const response = await fetch('http://192.168.1.35:3000/api/analyser-document', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bodyData)
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          const d = result.data;
+          
+          if (d.poids_kg) {
+            const todayDate = d.date || new Date().toISOString().split('T')[0];
+            window.weightHistory.push({ date: todayDate, weight: d.poids_kg });
+            window.weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+            updateWeightChart();
+            renderWeightList();
           }
+
+          const currentTime = new Date().toTimeString().substring(0, 5);
+          window.careEntries.push({
+            time: currentTime,
+            tempBaby: null,
+            tempIncubator: null,
+            diaper: "Propre / Rien",
+            feeding: d.volume_sondage_ml || 0,
+            notes: d.notes || `Document importé (${d.type_document || 'analyse IA'})`,
+            author: currentUser || "Scanner IA"
+          });
+
+          saveAllToStorage();
+          renderCareEntries();
+
+          alert(`Analyse terminée avec succès !\n\n• Type : ${d.type_document}\n• Poids extrait : ${d.poids_kg ? d.poids_kg + ' kg' : 'Non spécifié'}\n• Volume repas : ${d.volume_sondage_ml ? d.volume_sondage_ml + ' ml' : 'Non spécifié'}\n• Notes : ${d.notes || 'Rien à signaler'}`);
+        } else {
+          alert("Erreur lors de l'analyse du document.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Impossible de joindre le serveur. Vérifiez que la commande 'node server.js' tourne bien dans le terminal.");
+      }
+    }
+
+    function saveAllToStorage() {
+      localStorage.setItem('bp_predictions', JSON.stringify(window.predictions));
+      localStorage.setItem('bp_officialResult', JSON.stringify(window.officialResult));
+      localStorage.setItem('bp_careEntries', JSON.stringify(window.careEntries));
+      localStorage.setItem('bp_weightHistory', JSON.stringify(window.weightHistory));
+      localStorage.setItem('bp_tempHistory', JSON.stringify(window.tempHistory));
+      localStorage.setItem('bp_agendaEntries', JSON.stringify(window.agendaEntries));
+
+      if (typeof window.saveToFirebase === 'function') {
+        window.saveToFirebase('predictions', window.predictions);
+        window.saveToFirebase('officialResult', window.officialResult);
+        window.saveToFirebase('careEntries', window.careEntries);
+        window.saveToFirebase('weightHistory', window.weightHistory);
+        window.saveToFirebase('tempHistory', window.tempHistory);
+        window.saveToFirebase('agendaEntries', window.agendaEntries);
+      }
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById('btnStartTimer');
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        btn.innerHTML = `<i class="fa-solid fa-play"></i> Reprendre`;
+        btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition";
+      } else {
+        timerInterval = setInterval(() => {
+          timerSeconds++;
+          updateTimerDisplay();
+        }, 1000);
+        btn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
+        btn.className = "px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition";
+      }
+    }
+
+    function resetTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      timerSeconds = 0;
+      updateTimerDisplay();
+      const btn = document.getElementById('btnStartTimer');
+      btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
+      btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition";
+    }
+
+    function updateTimerDisplay() {
+      const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+      const secs = String(timerSeconds % 60).padStart(2, '0');
+      document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
+    }
+
+    function saveTimerToCare() {
+      if (timerSeconds === 0) return;
+
+      const type = document.getElementById('timerType').value;
+      const mins = Math.floor(timerSeconds / 60);
+      const secs = timerSeconds % 60;
+      const durationStr = mins > 0 ? `${mins} min ${secs} s` : `${secs} s`;
+
+      let volume = 0;
+      if (type === 'Repas (Biberon)') {
+        const inputVol = prompt("Quantité bu au biberon (en ml) :", "60");
+        if (inputVol !== null) {
+          volume = parseInt(inputVol) || 0;
+        }
+      }
+
+      const now = new Date();
+      const timeStr = now.toTimeString().substring(0, 5);
+
+      window.careEntries.push({
+        time: timeStr,
+        tempBaby: null,
+        tempIncubator: null,
+        diaper: "Propre / Rien",
+        feeding: volume,
+        notes: `Chronomètre : ${type} - Durée : ${durationStr}`,
+        author: currentUser || "Parent"
+      });
+
+      saveAllToStorage();
+      renderCareEntries();
+      resetTimer();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('predDate').value = todayStr;
+      document.getElementById('weightPointDate').value = todayStr;
+      
+      document.getElementById('agendaStartDate').value = todayStr;
+      document.getElementById('agendaEndDate').value = todayStr;
+      document.getElementById('agendaStartTime').value = "09:00";
+      document.getElementById('agendaEndTime').value = "10:00";
+
+      const now = new Date();
+      const currentTimeStr = now.toTimeString().substring(0, 5);
+      document.getElementById('careTime').value = currentTimeStr;
+      document.getElementById('tempPointTime').value = currentTimeStr;
+      document.getElementById('careDateHeader').innerText = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+      initCharts();
+      renderPredictions();
+      renderCareEntries();
+      renderWeightList();
+      renderTempList();
+      renderAgendaEntries();
+      updateWeightChart();
+      updateTempChart();
+
+      if (window.officialResult) {
+        displayOfficialBanner();
+      }
+    });
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('usernameInput').value.trim();
+      const code = document.getElementById('accessCodeInput').value.trim();
+
+      if (!username) return;
+
+      currentUser = username;
+      if (code.toUpperCase() === 'ADMIN2026') {
+        isAdmin = true;
+        document.getElementById('adminPanel').classList.remove('hidden');
+        document.getElementById('adminUserOverride').classList.remove('hidden');
+      } else {
+        isAdmin = false;
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('adminUserOverride').classList.add('hidden');
+      }
+
+      document.getElementById('userBadge').innerHTML = `<i class="fa-solid fa-user-check text-emerald-500 mr-1"></i> ${currentUser} ${isAdmin ? '<span class="text-xs text-purple-600 font-bold">(Admin)</span>' : ''}`;
+      document.getElementById('loginPage').classList.add('hidden');
+
+      renderPredictions();
+      renderCareEntries();
+      renderAgendaEntries();
+    }
+
+    function logout() {
+      currentUser = null;
+      isAdmin = false;
+      document.getElementById('adminPanel').classList.add('hidden');
+      document.getElementById('adminUserOverride').classList.add('hidden');
+      document.getElementById('loginPage').classList.remove('hidden');
+      renderPredictions();
+      renderCareEntries();
+      renderAgendaEntries();
+    }
+
+    function switchTab(tab) {
+      const secPronostics = document.getElementById('section-pronostics');
+      const secMaternite = document.getElementById('section-maternite');
+      const secAgenda = document.getElementById('section-agenda');
+
+      const tabPronostics = document.getElementById('tab-pronostics');
+      const tabMaternite = document.getElementById('tab-maternite');
+      const tabAgenda = document.getElementById('tab-agenda');
+
+      secPronostics.classList.add('hidden');
+      secMaternite.classList.add('hidden');
+      secAgenda.classList.add('hidden');
+
+      tabPronostics.classList.remove('active-tab');
+      tabMaternite.classList.remove('active-tab');
+      tabAgenda.classList.remove('active-tab');
+
+      if (tab === 'pronostics') {
+        secPronostics.classList.remove('hidden');
+        tabPronostics.classList.add('active-tab');
+      } else if (tab === 'maternite') {
+        secMaternite.classList.remove('hidden');
+        tabMaternite.classList.add('active-tab');
+      } else if (tab === 'agenda') {
+        secAgenda.classList.remove('hidden');
+        tabAgenda.classList.add('active-tab');
+      }
+    }
+
+    /* MODIFICATION & AJOUT PRONOSTIC */
+    function addPrediction(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const editIdx = parseInt(document.getElementById('editPredIndex').value);
+
+      let targetUser = currentUser;
+      if (isAdmin && editIdx === -1) {
+        const adminOverride = document.getElementById('predUserAdmin').value.trim();
+        if (adminOverride) targetUser = adminOverride;
+      } else if (editIdx !== -1) {
+        targetUser = window.predictions[editIdx].user;
+      }
+
+      const newPred = {
+        user: targetUser,
+        name: document.getElementById('predName').value.trim(),
+        hobby: document.getElementById('predHobby').value.trim() || 'Non renseigné',
+        gender: document.getElementById('predGender').value,
+        weight: parseFloat(document.getElementById('predWeight').value),
+        height: parseFloat(document.getElementById('predHeight').value),
+        date: document.getElementById('predDate').value
+      };
+
+      if (editIdx >= 0) {
+        window.predictions[editIdx] = newPred;
+      } else {
+        window.predictions.push(newPred);
+      }
+
+      saveAllToStorage();
+      renderPredictions();
+      cancelPredEdit();
+    }
+
+    function editPrediction(index) {
+      const p = window.predictions[index];
+      if (!isAdmin && p.user !== currentUser) {
+        alert("Vous ne pouvez modifier que votre propre pronostic !");
+        return;
+      }
+
+      document.getElementById('editPredIndex').value = index;
+      document.getElementById('predName').value = p.name;
+      document.getElementById('predHobby').value = p.hobby === 'Non renseigné' ? '' : p.hobby;
+      document.getElementById('predGender').value = p.gender;
+      document.getElementById('predWeight').value = p.weight;
+      document.getElementById('predHeight').value = p.height;
+      document.getElementById('predDate').value = p.date;
+
+      document.getElementById('formPredTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Modifier le pronostic (${p.user})`;
+      document.getElementById('btnSubmitPred').innerText = "Mettre à jour le pronostic";
+      document.getElementById('btnSubmitPred').className = "w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition text-sm";
+      document.getElementById('btnCancelPredEdit').classList.remove('hidden');
+    }
+
+    function cancelPredEdit() {
+      document.getElementById('editPredIndex').value = "-1";
+      document.getElementById('predictionForm').reset();
+      document.getElementById('predUserAdmin').value = '';
+      document.getElementById('predDate').value = new Date().toISOString().split('T')[0];
+
+      document.getElementById('formPredTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-pink-500"></i> Faire un pronostic`;
+      document.getElementById('btnSubmitPred').innerText = "Enregistrer le pronostic";
+      document.getElementById('btnSubmitPred').className = "w-full py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl shadow-md transition text-sm";
+      document.getElementById('btnCancelPredEdit').classList.add('hidden');
+    }
+
+    function deletePrediction(index) {
+      const p = window.predictions[index];
+      if (!isAdmin && p.user !== currentUser) return;
+
+      if (confirm(`Voulez-vous vraiment supprimer le pronostic de "${p.user}" ?`)) {
+        window.predictions.splice(index, 1);
+        saveAllToStorage();
+        renderPredictions();
+      }
+    }
+
+    function renderPredictions() {
+      const tbody = document.getElementById('predictionsTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      let countFille = 0;
+      let totalWeight = 0;
+      let totalHeight = 0;
+
+      window.predictions.forEach((p, idx) => {
+        if (p.gender === 'Fille') countFille++;
+        totalWeight += p.weight;
+        totalHeight += p.height;
+
+        const isOwnerOrAdmin = isAdmin || (currentUser && p.user === currentUser);
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/50 transition';
+        tr.innerHTML = `
+          <td class="py-3 font-semibold text-slate-700">${p.user}</td>
+          <td class="py-3 font-bold text-pink-600">${p.name}</td>
+          <td class="py-3 text-slate-600 italic text-xs"><span class="bg-pink-50 text-pink-700 px-2 py-1 rounded-lg border border-pink-100">${p.hobby || 'RAS'}</span></td>
+          <td class="py-3">${p.gender === 'Fille' ? 'Fille' : 'Garçon'}</td>
+          <td class="py-3 font-medium">${p.weight.toFixed(3)} kg</td>
+          <td class="py-3 font-medium">${p.height} cm</td>
+          <td class="py-3 text-slate-500">${p.date}</td>
+          <td class="py-3 text-right">
+            ${isOwnerOrAdmin ? `
+              <button onclick="editPrediction(${idx})" class="p-1.5 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-amber-50" title="Modifier ce pronostic"><i class="fa-solid fa-pen text-xs"></i></button>
+              <button onclick="deletePrediction(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50" title="Supprimer ce pronostic"><i class="fa-solid fa-trash-can text-xs"></i></button>
+            ` : '<span class="text-xs text-slate-300">-</span>'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('predCount').innerText = `${window.predictions.length} participation(s)`;
+
+      if (window.predictions.length > 0) {
+        const girlPct = Math.round((countFille / window.predictions.length) * 100);
+        document.getElementById('statGender').innerText = `${girlPct}% Fille / ${100 - girlPct}% Garçon`;
+        document.getElementById('statAvgWeight').innerText = `${(totalWeight / window.predictions.length).toFixed(3)} kg`;
+        document.getElementById('statAvgHeight').innerText = `${(totalHeight / window.predictions.length).toFixed(1)} cm`;
+      } else {
+        document.getElementById('statGender').innerText = `--`;
+        document.getElementById('statAvgWeight').innerText = `-- kg`;
+        document.getElementById('statAvgHeight').innerText = `-- cm`;
+      }
+    }
+
+    /* MODIFICATION & AJOUT SOIN */
+    function addCareEntry(e) {
+      e.preventDefault();
+      const editIdx = parseInt(document.getElementById('editCareIndex').value);
+
+      const time = document.getElementById('careTime').value;
+      const tempBaby = parseFloat(document.getElementById('careTempBaby').value) || null;
+      const tempIncubator = parseFloat(document.getElementById('careTempIncubator').value) || null;
+      const diaper = document.getElementById('careDiaper').value;
+      const feeding = parseInt(document.getElementById('careFeeding').value) || 0;
+      const notes = document.getElementById('careNotes').value.trim();
+
+      const entry = {
+        time,
+        tempBaby,
+        tempIncubator,
+        diaper,
+        feeding,
+        notes: notes || 'RAS',
+        author: editIdx >= 0 ? window.careEntries[editIdx].author : (currentUser || 'Soignant')
+      };
+
+      if (editIdx >= 0) {
+        window.careEntries[editIdx] = entry;
+      } else {
+        window.careEntries.push(entry);
+      }
+
+      if (tempBaby !== null && editIdx === -1) {
+        window.tempHistory.push({ time, tempBaby, tempIncubator });
+        renderTempList();
+        updateTempChart();
+      }
+
+      saveAllToStorage();
+      renderCareEntries();
+      cancelCareEdit();
+    }
+
+    function editCareEntry(index) {
+      const c = window.careEntries[index];
+      document.getElementById('editCareIndex').value = index;
+      document.getElementById('careTime').value = c.time;
+      document.getElementById('careTempBaby').value = c.tempBaby || '';
+      document.getElementById('careTempIncubator').value = c.tempIncubator || '';
+      document.getElementById('careDiaper').value = c.diaper;
+      document.getElementById('careFeeding').value = c.feeding || '';
+      document.getElementById('careNotes').value = c.notes === 'RAS' ? '' : c.notes;
+
+      document.getElementById('formCareTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Modifier l'observation`;
+      document.getElementById('btnSubmitCare').innerText = "Mettre à jour l'observation";
+      document.getElementById('btnSubmitCare').className = "w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition text-sm";
+      document.getElementById('btnCancelCareEdit').classList.remove('hidden');
+    }
+
+    function cancelCareEdit() {
+      document.getElementById('editCareIndex').value = "-1";
+      document.getElementById('careForm').reset();
+      document.getElementById('careTime').value = new Date().toTimeString().substring(0, 5);
+
+      document.getElementById('formCareTitle').innerHTML = `<i class="fa-solid fa-notes-medical text-emerald-500"></i> Nouvelle Transmission Soin`;
+      document.getElementById('btnSubmitCare').innerText = "Enregistrer l'observation";
+      document.getElementById('btnSubmitCare').className = "w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-md transition text-sm";
+      document.getElementById('btnCancelCareEdit').classList.add('hidden');
+    }
+
+    function deleteCareEntry(index) {
+      if (confirm("Voulez-vous vraiment supprimer cette entrée de la fiche de soins ?")) {
+        window.careEntries.splice(index, 1);
+        saveAllToStorage();
+        renderCareEntries();
+      }
+    }
+
+    function renderCareEntries() {
+      const tbody = document.getElementById('careTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      let totalMeals = 0;
+      let totalVolume = 0;
+      let totalDiapers = 0;
+
+      window.careEntries.forEach((c, idx) => {
+        if (c.feeding > 0) {
+          totalMeals++;
+          totalVolume += c.feeding;
+        }
+        if (c.diaper !== 'Propre / Rien') {
+          totalDiapers++;
+        }
+
+        let tempHtml = '--';
+        if (c.tempBaby) {
+          if (c.tempBaby >= 37.5) {
+            tempHtml = `<span class="font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full animate-pulse"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${c.tempBaby}°C</span>`;
+          } else if (c.tempBaby <= 35.5) {
+            tempHtml = `<span class="font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full animate-pulse"><i class="fa-solid fa-temperature-arrow-down mr-1"></i>${c.tempBaby}°C</span>`;
+          } else {
+            tempHtml = `<span class="font-bold text-emerald-600">${c.tempBaby}°C</span>`;
+          }
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/50 transition';
+        tr.innerHTML = `
+          <td class="py-3 font-bold text-slate-700">${c.time}</td>
+          <td class="py-3">${tempHtml} ${c.tempIncubator ? `<span class="text-xs text-slate-400">(${c.tempIncubator}°C)</span>` : ''}</td>
+          <td class="py-3"><span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">${c.diaper}</span></td>
+          <td class="py-3 font-bold text-emerald-600">${c.feeding > 0 ? c.feeding + ' ml' : '--'}</td>
+          <td class="py-3 text-slate-600 text-xs italic">${c.notes}</td>
+          <td class="py-3 text-slate-400 text-xs">${c.author}</td>
+          <td class="py-3 text-right no-pdf flex justify-end gap-1">
+            <button onclick="editCareEntry(${idx})" class="p-1.5 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-amber-50" title="Modifier ce soin">
+              <i class="fa-solid fa-pen text-xs"></i>
+            </button>
+            <button onclick="deleteCareEntry(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50" title="Supprimer ce soin">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('statMealsToday').innerText = totalMeals;
+      document.getElementById('statMealsVol').innerText = `Volume total : ${totalVolume} ml`;
+      document.getElementById('statDiapersToday').innerText = totalDiapers;
+
+      updateNextFeedingReminder();
+    }
+
+    /* MODULE AGENDA PARTAGÉ PARENTS */
+    function addAgendaEntry(e) {
+      e.preventDefault();
+      const editIdx = parseInt(document.getElementById('editAgendaIndex').value);
+
+      const entry = {
+        title: document.getElementById('agendaTitle').value.trim(),
+        category: document.getElementById('agendaCategory').value,
+        startDate: document.getElementById('agendaStartDate').value,
+        startTime: document.getElementById('agendaStartTime').value,
+        endDate: document.getElementById('agendaEndDate').value,
+        endTime: document.getElementById('agendaEndTime').value,
+        assignee: document.getElementById('agendaAssignee').value,
+        notes: document.getElementById('agendaNotes').value.trim() || 'RAS',
+        author: editIdx >= 0 ? window.agendaEntries[editIdx].author : (currentUser || 'Parent')
+      };
+
+      if (editIdx >= 0) {
+        window.agendaEntries[editIdx] = entry;
+      } else {
+        window.agendaEntries.push(entry);
+      }
+
+      window.agendaEntries.sort((a, b) => new Date(`${a.startDate}T${a.startTime}`) - new Date(`${b.startDate}T${b.startTime}`));
+
+      saveAllToStorage();
+      renderAgendaEntries();
+      cancelAgendaEdit();
+    }
+
+    function editAgendaEntry(index) {
+      const a = window.agendaEntries[index];
+      document.getElementById('editAgendaIndex').value = index;
+      document.getElementById('agendaTitle').value = a.title;
+      document.getElementById('agendaCategory').value = a.category;
+      document.getElementById('agendaStartDate').value = a.startDate;
+      document.getElementById('agendaStartTime').value = a.startTime;
+      document.getElementById('agendaEndDate').value = a.endDate;
+      document.getElementById('agendaEndTime').value = a.endTime;
+      document.getElementById('agendaAssignee').value = a.assignee;
+      document.getElementById('agendaNotes').value = a.notes === 'RAS' ? '' : a.notes;
+
+      document.getElementById('formAgendaTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Modifier l'événement`;
+      document.getElementById('btnSubmitAgenda').innerText = "Mettre à jour l'événement";
+      document.getElementById('btnSubmitAgenda').className = "w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition text-sm";
+      document.getElementById('btnCancelAgendaEdit').classList.remove('hidden');
+    }
+
+    function cancelAgendaEdit() {
+      document.getElementById('editAgendaIndex').value = "-1";
+      document.getElementById('agendaForm').reset();
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('agendaStartDate').value = todayStr;
+      document.getElementById('agendaEndDate').value = todayStr;
+      document.getElementById('agendaStartTime').value = "09:00";
+      document.getElementById('agendaEndTime').value = "10:00";
+
+      document.getElementById('formAgendaTitle').innerHTML = `<i class="fa-solid fa-calendar-plus text-indigo-500"></i> Ajouter un événement`;
+      document.getElementById('btnSubmitAgenda').innerText = "Ajouter à l'agenda";
+      document.getElementById('btnSubmitAgenda').className = "w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition text-sm";
+      document.getElementById('btnCancelAgendaEdit').classList.add('hidden');
+    }
+
+    function deleteAgendaEntry(index) {
+      if (confirm("Voulez-vous vraiment supprimer cet événement du planning ?")) {
+        window.agendaEntries.splice(index, 1);
+        saveAllToStorage();
+        renderAgendaEntries();
+      }
+    }
+
+    function renderAgendaEntries() {
+      const container = document.getElementById('agendaListContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const filterCat = document.getElementById('agendaFilterCat') ? document.getElementById('agendaFilterCat').value : 'TOUS';
+
+      const filtered = window.agendaEntries.filter(a => filterCat === 'TOUS' || a.category === filterCat);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 bg-white/50 rounded-2xl border border-dashed border-slate-200">
+          <i class="fa-regular fa-calendar-xmark text-3xl mb-2"></i>
+          <p class="text-sm font-semibold">Aucun événement enregistré dans cette catégorie.</p>
+        </div>`;
+        return;
+      }
+
+      const catBadgeMap = {
+        'Médical': { bg: 'bg-red-500', text: 'text-red-700', bgLight: 'bg-red-50', border: 'border-red-200', icon: 'fa-stethoscope' },
+        'Travail': { bg: 'bg-blue-500', text: 'text-blue-700', bgLight: 'bg-blue-50', border: 'border-blue-200', icon: 'fa-briefcase' },
+        'Garde': { bg: 'bg-amber-500', text: 'text-amber-700', bgLight: 'bg-amber-50', border: 'border-amber-200', icon: 'fa-baby-carriage' },
+        'Autre': { bg: 'bg-purple-500', text: 'text-purple-700', bgLight: 'bg-purple-50', border: 'border-purple-200', icon: 'fa-balloon' }
+      };
+
+      filtered.forEach((item, index) => {
+        const originalIndex = window.agendaEntries.indexOf(item);
+        const style = catBadgeMap[item.category] || catBadgeMap['Autre'];
+
+        const dateStartFormatted = new Date(item.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+        const isSameDay = item.startDate === item.endDate;
+        const timeDisplay = isSameDay 
+          ? `Le ${dateStartFormatted} de ${item.startTime} à ${item.endTime}`
+          : `Du ${dateStartFormatted} à ${item.startTime} au ${new Date(item.endDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} à ${item.endTime}`;
+
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-2xl border ${style.border} ${style.bgLight} backdrop-blur-sm shadow-sm transition hover:shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4`;
+        
+        card.innerHTML = `
+          <div class="flex items-start gap-3 w-full">
+            <span class="w-3.5 h-3.5 rounded-full ${style.bg} shrink-0 mt-1 shadow-sm" title="${item.category}"></span>
+            <div class="space-y-1 w-full">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <h4 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                  <i class="fa-solid ${style.icon} ${style.text}"></i> ${item.title}
+                </h4>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/80 border border-slate-200 ${style.text}">
+                  ${item.category}
+                </span>
+              </div>
+              <p class="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                <i class="fa-regular fa-clock text-slate-400"></i> ${timeDisplay}
+              </p>
+              <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
+                <span class="bg-white/70 px-2 py-0.5 rounded-lg border border-slate-200 font-medium text-slate-700">
+                  <i class="fa-solid fa-user-tag text-slate-400 mr-1"></i>Responsable: <strong>${item.assignee}</strong>
+                </span>
+                ${item.notes && item.notes !== 'RAS' ? `
+                  <span class="italic text-slate-600 bg-white/50 px-2 py-0.5 rounded-lg">
+                    <i class="fa-regular fa-note-sticky mr-1"></i>${item.notes}
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1 self-end sm:self-center shrink-0">
+            <button onclick="editAgendaEntry(${originalIndex})" class="p-2 text-slate-400 hover:text-amber-500 transition rounded-xl hover:bg-amber-100/50" title="Modifier l'événement">
+              <i class="fa-solid fa-pen text-xs"></i>
+            </button>
+            <button onclick="deleteAgendaEntry(${originalIndex})" class="p-2 text-slate-400 hover:text-red-500 transition rounded-xl hover:bg-red-100/50" title="Supprimer l'événement">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    /* RAPPEL REPAS AVEC PLAGE HORAIRE DE 1H30 */
+    function updateNextFeedingReminder() {
+      if (!window.careEntries || window.careEntries.length === 0) return;
+
+      const lastFeeding = [...window.careEntries].reverse().find(c => c.feeding > 0);
+      if (!lastFeeding) return;
+
+      const intervalHours = parseInt(document.getElementById('feedingInterval').value);
+      const [hours, minutes] = lastFeeding.time.split(':').map(Number);
+      
+      const targetDate = new Date();
+      targetDate.setHours(hours + intervalHours, minutes, 0, 0);
+
+      const maxDate = new Date(targetDate.getTime() + 90 * 60 * 1000);
+
+      const formatTime = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+      const targetStr = formatTime(targetDate);
+      const maxStr = formatTime(maxDate);
+
+      document.getElementById('nextFeedingTimer').innerHTML = 
+        `Dernier repas : <strong>${lastFeeding.time}</strong> (${lastFeeding.feeding} ml) — ` +
+        `Plage repas : <strong class="text-amber-600">${targetStr} à ${maxStr}</strong> (1h30 max)`;
+    }
+
+    /* GESTION TEMPÉRATURES ET MODIFICATION RAPIDE */
+    function addTempPoint(e) {
+      e.preventDefault();
+      const timeVal = document.getElementById('tempPointTime').value.trim();
+      const tempBabyVal = parseFloat(document.getElementById('tempPointBaby').value);
+      const tempIncVal = parseFloat(document.getElementById('tempPointIncubator').value) || null;
+
+      if (!timeVal || isNaN(tempBabyVal)) return;
+
+      window.tempHistory.push({ time: timeVal, tempBaby: tempBabyVal, tempIncubator: tempIncVal });
+
+      saveAllToStorage();
+      updateTempChart();
+      renderTempList();
+
+      document.getElementById('tempPointBaby').value = '';
+      document.getElementById('tempPointIncubator').value = '';
+    }
+
+    function editTempPoint(index) {
+      const item = window.tempHistory[index];
+      const newTemp = prompt("Nouvelle température du bébé (°C) :", item.tempBaby);
+      if (newTemp !== null) {
+        const val = parseFloat(newTemp);
+        if (!isNaN(val)) {
+          window.tempHistory[index].tempBaby = val;
+          saveAllToStorage();
+          updateTempChart();
+          renderTempList();
+        }
+      }
+    }
+
+    function removeTempPoint(index) {
+      window.tempHistory.splice(index, 1);
+      saveAllToStorage();
+      updateTempChart();
+      renderTempList();
+    }
+
+    function renderTempList() {
+      const container = document.getElementById('tempPointsList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (!window.tempHistory || window.tempHistory.length === 0) {
+        container.innerHTML = `<p class="text-slate-400 italic">Aucune mesure enregistrée.</p>`;
+        return;
+      }
+
+      window.tempHistory.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm hover:border-red-200 transition';
+        div.innerHTML = `
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-temperature-half text-red-500"></i>
+            <span class="font-bold text-slate-700">${item.tempBaby} °C</span>
+            ${item.tempIncubator ? `<span class="text-[11px] text-slate-400">(Couv: ${item.tempIncubator}°C)</span>` : ''}
+            <span class="text-[11px] text-slate-400">à ${item.time}</span>
+          </div>
+          <div class="flex gap-1">
+            <button onclick="editTempPoint(${index})" class="text-slate-400 hover:text-amber-500 p-1 rounded-lg hover:bg-amber-50 transition" title="Modifier la température">
+              <i class="fa-solid fa-pen text-xs"></i>
+            </button>
+            <button onclick="removeTempPoint(${index})" class="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition" title="Supprimer ce point">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function updateTempChart() {
+      if (!chartTempInstance) return;
+
+      chartTempInstance.data.labels = window.tempHistory.map(c => c.time);
+      chartTempInstance.data.datasets[0].data = window.tempHistory.map(c => c.tempBaby);
+      chartTempInstance.data.datasets[1].data = window.tempHistory.map(c => c.tempIncubator);
+      chartTempInstance.update();
+
+      const cardTemp = document.getElementById('cardTempStatus');
+      const statTempStatus = document.getElementById('statTempStatus');
+
+      if (window.tempHistory.length > 0) {
+        const lastTemp = window.tempHistory[window.tempHistory.length - 1].tempBaby;
+        document.getElementById('statLastTemp').innerText = `${lastTemp} °C`;
+
+        if (lastTemp >= 37.5) {
+          statTempStatus.innerText = "Alerte : Hyperthermie / Fièvre !";
+          statTempStatus.className = "text-xs font-extrabold mt-1 text-red-600";
+          cardTemp.className = "glassmorphism p-4 rounded-2xl border-2 border-red-400 bg-red-50/50";
+        } else if (lastTemp <= 35.5) {
+          statTempStatus.innerText = "Alerte : Hypothermie !";
+          statTempStatus.className = "text-xs font-extrabold mt-1 text-blue-600";
+          cardTemp.className = "glassmorphism p-4 rounded-2xl border-2 border-blue-400 bg-blue-50/50";
+        } else {
+          statTempStatus.innerText = "Statut : Normal";
+          statTempStatus.className = "text-xs font-semibold mt-1 text-emerald-600";
+          cardTemp.className = "glassmorphism p-4 rounded-2xl border border-white/50";
+        }
+      } else {
+        document.getElementById('statLastTemp').innerText = `-- °C`;
+        statTempStatus.innerText = "Statut : Normal";
+        statTempStatus.className = "text-xs font-semibold mt-1 text-emerald-600";
+        cardTemp.className = "glassmorphism p-4 rounded-2xl border border-white/50";
+      }
+    }
+
+    /* GESTION POIDS ET MODIFICATION RAPIDE */
+    function addWeightPoint(e) {
+      e.preventDefault();
+      const dateVal = document.getElementById('weightPointDate').value;
+      const weightVal = parseFloat(document.getElementById('weightPointVal').value);
+
+      if (!dateVal || isNaN(weightVal)) return;
+
+      window.weightHistory.push({ date: dateVal, weight: weightVal });
+      window.weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      saveAllToStorage();
+      updateWeightChart();
+      renderWeightList();
+
+      document.getElementById('weightPointVal').value = '';
+    }
+
+    function editWeightPoint(index) {
+      const item = window.weightHistory[index];
+      const newWeight = prompt("Nouveau poids (kg) :", item.weight);
+      if (newWeight !== null) {
+        const val = parseFloat(newWeight);
+        if (!isNaN(val)) {
+          window.weightHistory[index].weight = val;
+          saveAllToStorage();
+          updateWeightChart();
+          renderWeightList();
+        }
+      }
+    }
+
+    function removeWeightPoint(index) {
+      window.weightHistory.splice(index, 1);
+      saveAllToStorage();
+      updateWeightChart();
+      renderWeightList();
+    }
+
+    function updateWeightChart() {
+      if (!chartWeightInstance) return;
+
+      const labels = window.weightHistory.map(item => item.date);
+      const data = window.weightHistory.map(item => item.weight);
+
+      chartWeightInstance.data.labels = labels;
+      chartWeightInstance.data.datasets[0].data = data;
+      chartWeightInstance.update();
+
+      if (window.weightHistory.length > 0) {
+        const latest = window.weightHistory[window.weightHistory.length - 1].weight;
+        document.getElementById('statCurrentWeight').innerText = `${latest.toFixed(3)} kg`;
+
+        if (window.weightHistory.length > 1) {
+          const prev = window.weightHistory[0].weight;
+          const diffGrams = Math.round((latest - prev) * 1000);
+          const sign = diffGrams >= 0 ? '+' : '';
+          document.getElementById('statWeightDiff').innerText = `${sign}${diffGrams} g depuis le 1er relevé`;
+        }
+      } else {
+        document.getElementById('statCurrentWeight').innerText = `-- kg`;
+        document.getElementById('statWeightDiff').innerText = `Aucune donnée`;
+      }
+    }
+
+    function renderWeightList() {
+      const container = document.getElementById('weightPointsList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (!window.weightHistory || window.weightHistory.length === 0) {
+        container.innerHTML = `<p class="text-slate-400 italic">Aucune mesure enregistrée.</p>`;
+        return;
+      }
+
+      window.weightHistory.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm hover:border-blue-200 transition';
+        div.innerHTML = `
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-weight-scale text-blue-500"></i>
+            <span class="font-bold text-slate-700">${item.weight.toFixed(3)} kg</span>
+            <span class="text-[11px] text-slate-400">(${item.date})</span>
+          </div>
+          <div class="flex gap-1">
+            <button onclick="editWeightPoint(${index})" class="text-slate-400 hover:text-amber-500 p-1 rounded-lg hover:bg-amber-50 transition" title="Modifier le poids">
+              <i class="fa-solid fa-pen text-xs"></i>
+            </button>
+            <button onclick="removeWeightPoint(${index})" class="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition" title="Supprimer ce point">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function initCharts() {
+      const ctxTemp = document.getElementById('chartTemp').getContext('2d');
+
+      chartTempInstance = new Chart(ctxTemp, {
+        type: 'line',
+        data: {
+          labels: window.tempHistory.map(c => c.time),
+          datasets: [
+            {
+              label: 'Temp. Bébé (°C)',
+              data: window.tempHistory.map(c => c.tempBaby),
+              borderColor: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              tension: 0.3,
+              fill: true,
+              pointRadius: 5
+            },
+            {
+              label: 'Temp. Couveuse (°C)',
+              data: window.tempHistory.map(c => c.tempIncubator),
+              borderColor: '#f59e0b',
+              borderDash: [5, 5],
+              tension: 0.3,
+              pointRadius: 3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } },
+          scales: { y: { min: 30, max: 40 } }
         }
       });
 
-      calendar.render();
-
-      // Gestion du formulaire d'ajout
-      document.getElementById('form-rdv').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const nouveauRDV = {
-          id: Date.now().toString(),
-          titre: document.getElementById('rdv-titre').value,
-          type: document.getElementById('rdv-type').value,
-          date: document.getElementById('rdv-date').value,
-          notes: document.getElementById('rdv-notes').value
-        };
-
-        sauvegarderEvenement(nouveauRDV);
-        document.getElementById('form-rdv').reset();
-        rafraichirAgenda();
-      });
-    });
-
-    // Association de la couleur selon le type
-    function getCouleurEvenement(type) {
-      switch (type) {
-        case 'MEDICAL':
-          return { backgroundColor: '#0d6efd', borderColor: '#0d6efd', textColor: '#ffffff' }; // Bleu
-        case 'TRAVAIL':
-          return { backgroundColor: '#ffc107', borderColor: '#ffc107', textColor: '#000000' }; // Jaune
-        case 'PREPARATION':
-          return { backgroundColor: '#198754', borderColor: '#198754', textColor: '#ffffff' }; // Vert
-        default:
-          return { backgroundColor: '#6c757d', borderColor: '#6c757d', textColor: '#ffffff' }; // Gris
-      }
-    }
-
-    // Charger les évènements depuis le localStorage
-    function chargerEvenementsAgenda() {
-      const rdvs = JSON.parse(localStorage.getItem('baby_rdv_list')) || [];
-      return rdvs.map(rdv => {
-        const style = getCouleurEvenement(rdv.type);
-        return {
-          id: rdv.id,
-          title: rdv.titre,
-          start: rdv.date,
-          backgroundColor: style.backgroundColor,
-          borderColor: style.borderColor,
-          textColor: style.textColor,
-          extendedProps: { notes: rdv.notes }
-        };
+      const ctxWeight = document.getElementById('chartWeight').getContext('2d');
+      chartWeightInstance = new Chart(ctxWeight, {
+        type: 'line',
+        data: {
+          labels: window.weightHistory.map(w => w.date),
+          datasets: [{
+            label: 'Poids du bébé (kg)',
+            data: window.weightHistory.map(w => w.weight),
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+            fill: true,
+            tension: 0.2,
+            pointBackgroundColor: '#2563eb',
+            pointRadius: 5,
+            pointHoverRadius: 7
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { title: { display: true, text: 'Poids (kg)' } } }
+        }
       });
     }
 
-    // Enregistrer un événement
-    function sauvegarderEvenement(rdv) {
-      const rdvs = JSON.parse(localStorage.getItem('baby_rdv_list')) || [];
-      rdvs.push(rdv);
-      localStorage.setItem('baby_rdv_list', JSON.stringify(rdvs));
+    /* FONCTIONS D'EXPORTATION (PDF, CSV, EXCEL) */
+    function exportCarePDF() {
+      const element = document.getElementById('careJournalContainer');
+      element.classList.add('pdf-compact');
+
+      const opt = {
+        margin:       [0.3, 0.3, 0.3, 0.3],
+        filename:     `Fiche_Soins_Maternite_${new Date().toISOString().split('T')[0]}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        element.classList.remove('pdf-compact');
+      });
     }
 
-    // Supprimer un événement
-    function supprimerEvenement(id) {
-      let rdvs = JSON.parse(localStorage.getItem('baby_rdv_list')) || [];
-      rdvs = rdvs.filter(r => r.id !== id);
-      localStorage.setItem('baby_rdv_list', JSON.stringify(rdvs));
-      rafraichirAgenda();
-    }
-
-    // Recharger le calendrier après modification
-    function rafraichirAgenda() {
-      if (calendar) {
-        calendar.removeAllEvents();
-        calendar.addEventSource(chargerEvenementsAgenda());
+    function exportCareCSV() {
+      if (!window.careEntries || window.careEntries.length === 0) {
+        alert("Aucune donnée de soin à exporter.");
+        return;
       }
+
+      let csvContent = "\uFEFFHeure;Temp. Bébé (°C);Temp. Couveuse (°C);Couche;Repas (ml);Observations;Auteur\n";
+
+      window.careEntries.forEach(c => {
+        const row = [
+          `"${c.time || ''}"`,
+          `"${c.tempBaby || ''}"`,
+          `"${c.tempIncubator || ''}"`,
+          `"${c.diaper || ''}"`,
+          `"${c.feeding || 0}"`,
+          `"${(c.notes || '').replace(/"/g, '""')}"`,
+          `"${c.author || ''}"`
+        ];
+        csvContent += row.join(";") + "\n";
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Suivi_Maternite_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportCareExcel() {
+      if (!window.careEntries || window.careEntries.length === 0) {
+        alert("Aucune donnée de soin à exporter.");
+        return;
+      }
+
+      const dataForExcel = window.careEntries.map(c => ({
+        "Heure": c.time || '',
+        "Temp. Bébé (°C)": c.tempBaby || '',
+        "Temp. Couveuse (°C)": c.tempIncubator || '',
+        "Couche": c.diaper || '',
+        "Repas (ml)": c.feeding || 0,
+        "Observations": c.notes || '',
+        "Auteur": c.author || ''
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Journal de Soins");
+
+      worksheet['!cols'] = [
+        { wch: 10 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 12 }, { wch: 35 }, { wch: 18 }
+      ];
+
+      XLSX.writeFile(workbook, `Suivi_Maternite_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    function saveOfficialResults(e) {
+      e.preventDefault();
+      const name = document.getElementById('officialName').value.trim();
+      const gender = document.getElementById('officialGender').value;
+      const weight = parseFloat(document.getElementById('officialWeight').value);
+      const height = parseFloat(document.getElementById('officialHeight').value);
+
+      window.officialResult = { name, gender, weight, height };
+      saveAllToStorage();
+      displayOfficialBanner();
+    }
+
+    function displayOfficialBanner() {
+      if (!window.officialResult) return;
+
+      let bestWinner = null;
+      let minDiff = Infinity;
+
+      window.predictions.forEach(p => {
+        const diffW = Math.abs(p.weight - window.officialResult.weight);
+        const diffH = Math.abs(p.height - window.officialResult.height);
+        const score = diffW * 10 + diffH;
+
+        if (score < minDiff) {
+          minDiff = score;
+          bestWinner = p.user;
+        }
+      });
+
+      document.getElementById('resBabyName').innerText = `Bienvenue à ${window.officialResult.name} !`;
+      document.getElementById('resBabyDetails').innerText = `Sexe : ${window.officialResult.gender} | Poids : ${window.officialResult.weight} kg | Taille : ${window.officialResult.height} cm`;
+      document.getElementById('resWinnerName').innerText = bestWinner ? bestWinner : 'Égalité !';
+      document.getElementById('resultBanner').classList.remove('hidden');
     }
   </script>
 </body>
