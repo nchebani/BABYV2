@@ -643,16 +643,23 @@
               <p class="text-xs text-slate-500">Vue calendrier interactif et liste chronologique</p>
             </div>
 
-            <!-- FILTRE CATEGORIE -->
-            <div class="flex items-center gap-2">
-              <label class="text-xs font-bold text-slate-500 uppercase">Filtrer :</label>
-              <select id="agendaFilterCat" onchange="renderAgendaEntries()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white outline-none">
-                <option value="TOUS">Toutes les catégories</option>
-                <option value="Médical"> Médical</option>
-                <option value="Travail"> Travail</option>
-                <option value="Garde"> Garde & Quotidien</option>
-                <option value="Autre"> Autre</option>
-              </select>
+            <div class="flex flex-wrap items-center gap-2">
+              <!-- FILTRE CATEGORIE -->
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-bold text-slate-500 uppercase">Filtrer :</label>
+                <select id="agendaFilterCat" onchange="renderAgendaEntries()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white outline-none">
+                  <option value="TOUS">Toutes les catégories</option>
+                  <option value="Médical"> Médical</option>
+                  <option value="Travail"> Travail</option>
+                  <option value="Garde"> Garde & Quotidien</option>
+                  <option value="Autre"> Autre</option>
+                </select>
+              </div>
+
+              <!-- BOUTON EXPORT IOS / ICS -->
+              <button onclick="exportAgendaICS()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5" title="Télécharger le fichier .ics compatible Apple Calendrier / iOS">
+                <i class="fa-brands fa-apple text-sm"></i> Exporter Calendrier iOS (.ics)
+              </button>
             </div>
           </div>
 
@@ -1293,7 +1300,7 @@
       updateNextFeedingReminder();
     }
 
-    /* MODULE AGENDA PARTAGÉ PARENTS FULLCALENDAR */
+    /* MODULE AGENDA PARTAGÉ PARENTS FULLCALENDAR & EXPORTATION IOS / ICS */
     function initFullCalendar() {
       const calendarEl = document.getElementById('fullCalendarContainer');
       if (!calendarEl) return;
@@ -1351,6 +1358,58 @@
       });
 
       fullCalendarInstance.addEventSource(fcEvents);
+    }
+
+    /* EXPORTATION DES ÉVÉNEMENTS AU FORMAT .ICS POUR CALENDRIER IOS / APPLE CALENDAR */
+    function exportAgendaICS() {
+      if (!window.agendaEntries || window.agendaEntries.length === 0) {
+        alert("Aucun événement à exporter dans l'agenda.");
+        return;
+      }
+
+      const formatICalDate = (dateStr, timeStr) => {
+        const d = new Date(`${dateStr}T${timeStr}`);
+        return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      };
+
+      const nowICS = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+      let icsContent = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Baby Predict 2026//Agenda Familial//FR",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        "X-WR-CALNAME:Baby Predict 2026"
+      ];
+
+      window.agendaEntries.forEach((item, idx) => {
+        const dtStart = formatICalDate(item.startDate, item.startTime);
+        const dtEnd = formatICalDate(item.endDate, item.endTime);
+        const description = `Catégorie: ${item.category} \\nResponsable: ${item.assignee} \\nNotes: ${item.notes || 'Rien à signaler'} \\nAuteur: ${item.author || 'Inconnu'}`;
+
+        icsContent.push("BEGIN:VEVENT");
+        icsContent.push(`UID:bp2026-${idx}-${Date.now()}@babypredict.app`);
+        icsContent.push(`DTSTAMP:${nowICS}`);
+        icsContent.push(`DTSTART:${dtStart}`);
+        icsContent.push(`DTEND:${dtEnd}`);
+        icsContent.push(`SUMMARY:${item.title} (${item.assignee})`);
+        icsContent.push(`DESCRIPTION:${description}`);
+        icsContent.push(`CATEGORIES:${item.category}`);
+        icsContent.push("STATUS:CONFIRMED");
+        icsContent.push("END:VEVENT");
+      });
+
+      icsContent.push("END:VCALENDAR");
+
+      const blob = new Blob([icsContent.join("\r\n")], { type: 'text/calendar;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Agenda_Baby_Predict_${new Date().toISOString().split('T')[0]}.ics`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     function addAgendaEntry(e) {
