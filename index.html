@@ -128,6 +128,12 @@
       </nav>
 
       <div class="flex items-center gap-3 text-sm">
+        <!-- BOUTON D'ABONNEMENT DANS LA NAV -->
+        <button onclick="openSubscribeModal()" class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition flex items-center gap-2 text-xs">
+          <i class="fa-solid fa-crown text-amber-200"></i>
+          <span>S'abonner</span>
+        </button>
+
         <span class="px-3 py-1.5 rounded-full bg-slate-100 font-medium text-slate-700 border border-slate-200" id="userBadge">
           <i class="fa-regular fa-user mr-1"></i> Invité
         </span>
@@ -140,6 +146,22 @@
 
   <!-- CONTENU PRINCIPAL -->
   <main class="max-w-6xl mx-auto px-4 mt-6">
+
+    <!-- BANNIÈRE PROMOTIONNELLE D'ABONNEMENT -->
+    <div class="glassmorphism p-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-amber-500 text-white mb-6 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="p-3 bg-white/20 backdrop-blur-md rounded-xl text-2xl">
+          <i class="fa-solid fa-gem text-amber-300"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-base">Passez à Baby Predict Premium</h3>
+          <p class="text-xs text-white/90">Accédez aux fonctionnalités IA illimitées, aux rappels SMS et au stockage sécurisé HD.</p>
+        </div>
+      </div>
+      <button onclick="openSubscribeModal()" class="px-5 py-2.5 bg-white text-pink-600 font-extrabold rounded-xl shadow hover:bg-slate-100 transition text-xs whitespace-nowrap">
+        Découvrir les offres
+      </button>
+    </div>
 
     <!-- SECTION 1 : PRONOSTICS -->
     <div id="section-pronostics" class="space-y-6">
@@ -691,6 +713,61 @@
 
   </main>
 
+  <!-- MODALE TARIFS D'ABONNEMENT -->
+  <div id="subscribeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 overflow-y-auto">
+    <div class="glassmorphism p-8 rounded-3xl shadow-2xl max-w-2xl w-full border border-white/50 relative my-8">
+      <button onclick="closeSubscribeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-xl font-bold">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center mb-8">
+        <span class="px-3 py-1 bg-amber-100 text-amber-700 font-bold text-xs rounded-full uppercase tracking-wider">Offres d'abonnement</span>
+        <h2 class="text-2xl font-black text-slate-800 mt-2">Choisissez votre formule</h2>
+        <p class="text-sm text-slate-500">Débloquez le potentiel complet pour toute la famille.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- PLAN MENSUEL -->
+        <div class="bg-white/90 rounded-2xl p-6 border-2 border-slate-200 hover:border-pink-400 transition flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-lg text-slate-800">Abonnement Mensuel</h3>
+            <p class="text-xs text-slate-500 mb-4">Sans engagement, résiliable à tout moment.</p>
+            <div class="text-3xl font-black text-slate-800 mb-4">4,99 € <span class="text-xs font-normal text-slate-500">/ mois</span></div>
+            <ul class="space-y-2 text-xs text-slate-600 mb-6">
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Scanner IA illimité pour ordonnances</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Synchro Firebase temps réel</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Exports PDF, CSV & Excel</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> Synchronisation Calendrier iOS / ICS</li>
+            </ul>
+          </div>
+          <button onclick="selectPlan('Mensuel')" class="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs transition">
+            Choisir le plan Mensuel
+          </button>
+        </div>
+
+        <!-- PLAN ANNUEL (POPULAIRE) -->
+        <div class="bg-gradient-to-b from-pink-500/10 to-purple-500/10 rounded-2xl p-6 border-2 border-pink-500 relative flex flex-col justify-between shadow-lg">
+          <span class="absolute -top-3 right-6 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-full shadow">Meilleure offre (-20%)</span>
+          <div>
+            <h3 class="font-bold text-lg text-slate-800">Abonnement Annuel</h3>
+            <p class="text-xs text-slate-500 mb-4">Accès complet pendant 12 mois.</p>
+            <div class="text-3xl font-black text-pink-600 mb-4">3,99 € <span class="text-xs font-normal text-slate-500">/ mois</span></div>
+            <p class="text-[11px] text-pink-700 font-semibold mb-4">Facturé 47,88 € / an</p>
+            <ul class="space-y-2 text-xs text-slate-600 mb-6">
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-pink-500"></i> <strong>Toutes les fonctions Premium</strong></li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-pink-500"></i> Support prioritaire 7j/7</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-pink-500"></i> Sauvegarde Cloud sécurisée HD</li>
+              <li class="flex items-center gap-2"><i class="fa-solid fa-check text-pink-500"></i> Accès partagé illimité famille</li>
+            </ul>
+          </div>
+          <button onclick="selectPlan('Annuel')" class="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-95 text-white font-bold rounded-xl text-xs shadow-md transition">
+            S'abonner pour 1 an
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- INTÉGRATION FIREBASE (SYNCHRONISATION MULTI-APPAREILS EN TEMPS RÉEL) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -779,6 +856,20 @@
 
     let timerInterval = null;
     let timerSeconds = 0;
+
+    /* FONCTIONS DE LA MODALE D'ABONNEMENT */
+    function openSubscribeModal() {
+      document.getElementById('subscribeModal').classList.remove('hidden');
+    }
+
+    function closeSubscribeModal() {
+      document.getElementById('subscribeModal').classList.add('hidden');
+    }
+
+    function selectPlan(planName) {
+      alert(`Redirection vers le paiement pour le plan ${planName}...`);
+      closeSubscribeModal();
+    }
 
     /* TRAITEMENT ET ENVOI DE FICHIER VERS LE BACKEND LOCAL IA */
     async function traiterFichier(event) {
