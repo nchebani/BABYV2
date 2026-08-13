@@ -382,23 +382,30 @@
         </div>
       </div>
 
+      <!-- CARTE DES STATISTIQUES REPAS & COUCHES (JOUR, SEMAINE, MOIS) -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="glassmorphism p-4 rounded-2xl">
           <div class="flex justify-between items-center mb-1">
-            <span class="text-xs font-bold text-slate-400 uppercase">Repas (Aujourd'hui)</span>
-            <span class="text-xs bg-pink-100 text-pink-600 font-bold px-2 py-0.5 rounded-full" id="badgeMealsGoal">Obj: 8</span>
+            <span class="text-xs font-bold text-slate-400 uppercase">Biberons / Repas</span>
+            <span class="text-xs bg-pink-100 text-pink-600 font-bold px-2 py-0.5 rounded-full" id="badgeMealsGoal">Obj: 8/j</span>
           </div>
-          <p class="text-2xl font-black text-slate-800" id="statMealsToday">0</p>
-          <p class="text-xs text-slate-400 mt-1" id="statMealsVol">Volume : 0 ml</p>
+          <div class="space-y-1 mt-2">
+            <p class="text-sm text-slate-700"><strong>Aujourd'hui :</strong> <span id="statMealsToday" class="font-bold text-pink-600">0</span> (<span id="statMealsVolToday">0 ml</span>)</p>
+            <p class="text-xs text-slate-500"><strong>7 derniers jours :</strong> <span id="statMealsWeek" class="font-bold text-slate-700">0</span> (<span id="statMealsVolWeek">0 ml</span>)</p>
+            <p class="text-xs text-slate-500"><strong>30 derniers jours :</strong> <span id="statMealsMonth" class="font-bold text-slate-700">0</span> (<span id="statMealsVolMonth">0 ml</span>)</p>
+          </div>
         </div>
 
         <div class="glassmorphism p-4 rounded-2xl">
           <div class="flex justify-between items-center mb-1">
-            <span class="text-xs font-bold text-slate-400 uppercase">Couches (Aujourd'hui)</span>
-            <span class="text-xs bg-blue-100 text-blue-600 font-bold px-2 py-0.5 rounded-full" id="badgeDiapersGoal">Obj: 6</span>
+            <span class="text-xs font-bold text-slate-400 uppercase">Couches</span>
+            <span class="text-xs bg-blue-100 text-blue-600 font-bold px-2 py-0.5 rounded-full" id="badgeDiapersGoal">Obj: 6/j</span>
           </div>
-          <p class="text-2xl font-black text-slate-800" id="statDiapersToday">0</p>
-          <p class="text-xs text-slate-400 mt-1" id="statDiapersDetail">Saines / Urinairement stables</p>
+          <div class="space-y-1 mt-2">
+            <p class="text-sm text-slate-700"><strong>Aujourd'hui :</strong> <span id="statDiapersToday" class="font-bold text-blue-600">0</span></p>
+            <p class="text-xs text-slate-500"><strong>7 derniers jours :</strong> <span id="statDiapersWeek" class="font-bold text-slate-700">0</span></p>
+            <p class="text-xs text-slate-500"><strong>30 derniers jours :</strong> <span id="statDiapersMonth" class="font-bold text-slate-700">0</span></p>
+          </div>
         </div>
 
         <div class="glassmorphism p-4 rounded-2xl border transition duration-300" id="cardTempStatus">
@@ -506,9 +513,15 @@
           <form id="careForm" onsubmit="addCareEntry(event)" class="space-y-3">
             <input type="hidden" id="editCareIndex" value="-1">
 
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Heure du soin</label>
-              <input type="time" id="careTime" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-300 outline-none">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Date du soin</label>
+                <input type="date" id="careDate" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-300 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Heure du soin</label>
+                <input type="time" id="careTime" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-emerald-300 outline-none">
+              </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2">
@@ -564,7 +577,7 @@
             <table class="w-full text-left text-sm">
               <thead>
                 <tr class="border-b border-slate-200 text-slate-400 text-xs uppercase">
-                  <th class="pb-3 font-semibold">Heure</th>
+                  <th class="pb-3 font-semibold">Date & Heure</th>
                   <th class="pb-3 font-semibold">T° Bébé / Couv.</th>
                   <th class="pb-3 font-semibold">Couche</th>
                   <th class="pb-3 font-semibold">Repas</th>
@@ -641,9 +654,9 @@
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Responsable / Code Couleur</label>
               <select id="agendaAssignee" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none font-bold">
-                <option value="Papa" class="text-blue-600">🟦 Papa (Code couleur Bleu)</option>
-                <option value="Maman" class="text-pink-600">🟥 Maman (Code couleur Rose)</option>
-                <option value="Les deux" class="text-purple-600">🟪 Les deux (Code couleur Violet)</option>
+                <option value="Papa" class="text-blue-600"> Papa (Code couleur Bleu)</option>
+                <option value="Maman" class="text-pink-600"> Maman (Code couleur Rose)</option>
+                <option value="Les deux" class="text-purple-600"> Les deux (Code couleur Violet)</option>
               </select>
             </div>
 
@@ -822,7 +835,6 @@
     let isAdmin = false;
     let fullCalendarInstance = null;
 
-    // COULEURS PAR PARENT : PAPA = BLEU (#3b82f6), MAMAN = ROSE (#ec4899), LES DEUX = VIOLET (#a855f7)
     const parentColors = {
       'Papa':     { bg: '#3b82f6', border: '#2563eb', text: 'text-blue-700', bgLight: 'bg-blue-50', borderClass: 'border-blue-200', dot: 'bg-blue-500' },
       'Maman':    { bg: '#ec4899', border: '#db2777', text: 'text-pink-700', bgLight: 'bg-pink-50', borderClass: 'border-pink-200', dot: 'bg-pink-500' },
@@ -841,8 +853,9 @@
       { time: "12:00", tempBaby: 36.9, tempIncubator: 30.5 }
     ];
 
+    const todayIsoStr = new Date().toISOString().split('T')[0];
     window.careEntries = JSON.parse(localStorage.getItem('bp_careEntries')) || [
-      { time: "08:00", tempBaby: 36.7, tempIncubator: 31.0, diaper: "Urine", feeding: 60, notes: "Réveil calme, bon biberon.", author: "Infirmière Sophie" }
+      { date: todayIsoStr, time: "08:00", tempBaby: 36.7, tempIncubator: 31.0, diaper: "Urine", feeding: 60, notes: "Réveil calme, bon biberon.", author: "Infirmière Sophie" }
     ];
 
     window.weightHistory = JSON.parse(localStorage.getItem('bp_weightHistory')) || [
@@ -919,6 +932,7 @@
 
           const currentTime = new Date().toTimeString().substring(0, 5);
           window.careEntries.push({
+            date: new Date().toISOString().split('T')[0],
             time: currentTime,
             tempBaby: null,
             tempIncubator: null,
@@ -1014,6 +1028,7 @@
       const timeStr = now.toTimeString().substring(0, 5);
 
       window.careEntries.push({
+        date: now.toISOString().split('T')[0],
         time: timeStr,
         tempBaby: null,
         tempIncubator: null,
@@ -1032,6 +1047,7 @@
       const todayStr = new Date().toISOString().split('T')[0];
       document.getElementById('predDate').value = todayStr;
       document.getElementById('weightPointDate').value = todayStr;
+      document.getElementById('careDate').value = todayStr;
       
       document.getElementById('agendaStartDate').value = todayStr;
       document.getElementById('agendaEndDate').value = todayStr;
@@ -1263,6 +1279,7 @@
       e.preventDefault();
       const editIdx = parseInt(document.getElementById('editCareIndex').value);
 
+      const date = document.getElementById('careDate').value || new Date().toISOString().split('T')[0];
       const time = document.getElementById('careTime').value;
       const tempBaby = parseFloat(document.getElementById('careTempBaby').value) || null;
       const tempIncubator = parseFloat(document.getElementById('careTempIncubator').value) || null;
@@ -1271,6 +1288,7 @@
       const notes = document.getElementById('careNotes').value.trim();
 
       const entry = {
+        date,
         time,
         tempBaby,
         tempIncubator,
@@ -1300,6 +1318,7 @@
     function editCareEntry(index) {
       const c = window.careEntries[index];
       document.getElementById('editCareIndex').value = index;
+      document.getElementById('careDate').value = c.date || new Date().toISOString().split('T')[0];
       document.getElementById('careTime').value = c.time;
       document.getElementById('careTempBaby').value = c.tempBaby || '';
       document.getElementById('careTempIncubator').value = c.tempIncubator || '';
@@ -1316,6 +1335,8 @@
     function cancelCareEdit() {
       document.getElementById('editCareIndex').value = "-1";
       document.getElementById('careForm').reset();
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('careDate').value = todayStr;
       document.getElementById('careTime').value = new Date().toTimeString().substring(0, 5);
 
       document.getElementById('formCareTitle').innerHTML = `<i class="fa-solid fa-notes-medical text-emerald-500"></i> Nouvelle Transmission Soin`;
@@ -1337,17 +1358,33 @@
       if (!tbody) return;
       tbody.innerHTML = '';
 
-      let totalMeals = 0;
-      let totalVolume = 0;
-      let totalDiapers = 0;
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(now.getDate() - 7);
+      
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+
+      let mealsToday = 0, volToday = 0, diapersToday = 0;
+      let mealsWeek = 0, volWeek = 0, diapersWeek = 0;
+      let mealsMonth = 0, volMonth = 0, diapersMonth = 0;
 
       window.careEntries.forEach((c, idx) => {
+        const entryDateStr = c.date || todayStr;
+        const entryDate = new Date(entryDateStr);
+
         if (c.feeding > 0) {
-          totalMeals++;
-          totalVolume += c.feeding;
+          if (entryDateStr === todayStr) { mealsToday++; volToday += c.feeding; }
+          if (entryDate >= sevenDaysAgo) { mealsWeek++; volWeek += c.feeding; }
+          if (entryDate >= thirtyDaysAgo) { mealsMonth++; volMonth += c.feeding; }
         }
-        if (c.diaper !== 'Propre / Rien') {
-          totalDiapers++;
+
+        if (c.diaper && c.diaper !== 'Propre / Rien') {
+          if (entryDateStr === todayStr) diapersToday++;
+          if (entryDate >= sevenDaysAgo) diapersWeek++;
+          if (entryDate >= thirtyDaysAgo) diapersMonth++;
         }
 
         let tempHtml = '--';
@@ -1361,10 +1398,12 @@
           }
         }
 
+        const formattedDate = new Date(entryDateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/50 transition';
         tr.innerHTML = `
-          <td class="py-3 font-bold text-slate-700">${c.time}</td>
+          <td class="py-3 font-bold text-slate-700">${formattedDate} ${c.time}</td>
           <td class="py-3">${tempHtml} ${c.tempIncubator ? `<span class="text-xs text-slate-400">(${c.tempIncubator}°C)</span>` : ''}</td>
           <td class="py-3"><span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">${c.diaper}</span></td>
           <td class="py-3 font-bold text-emerald-600">${c.feeding > 0 ? c.feeding + ' ml' : '--'}</td>
@@ -1382,14 +1421,22 @@
         tbody.appendChild(tr);
       });
 
-      document.getElementById('statMealsToday').innerText = totalMeals;
-      document.getElementById('statMealsVol').innerText = `Volume total : ${totalVolume} ml`;
-      document.getElementById('statDiapersToday').innerText = totalDiapers;
+      // Mettre à jour les statistiques Repas
+      document.getElementById('statMealsToday').innerText = mealsToday;
+      document.getElementById('statMealsVolToday').innerText = `${volToday} ml`;
+      document.getElementById('statMealsWeek').innerText = mealsWeek;
+      document.getElementById('statMealsVolWeek').innerText = `${volWeek} ml`;
+      document.getElementById('statMealsMonth').innerText = mealsMonth;
+      document.getElementById('statMealsVolMonth').innerText = `${volMonth} ml`;
+
+      // Mettre à jour les statistiques Couches
+      document.getElementById('statDiapersToday').innerText = diapersToday;
+      document.getElementById('statDiapersWeek').innerText = diapersWeek;
+      document.getElementById('statDiapersMonth').innerText = diapersMonth;
 
       updateNextFeedingReminder();
     }
 
-    /* MODULE AGENDA PARTAGÉ PARENTS FULLCALENDAR ET COULEURS PAPA (BLEU) / MAMAN (ROSE) */
     function initFullCalendar() {
       const calendarEl = document.getElementById('fullCalendarContainer');
       if (!calendarEl) return;
@@ -1958,10 +2005,11 @@
         return;
       }
 
-      let csvContent = "\uFEFFHeure;Temp. Bébé (°C);Temp. Couveuse (°C);Couche;Repas (ml);Observations;Auteur\n";
+      let csvContent = "\uFEFFDate;Heure;Temp. Bébé (°C);Temp. Couveuse (°C);Couche;Repas (ml);Observations;Auteur\n";
 
       window.careEntries.forEach(c => {
         const row = [
+          `"${c.date || ''}"`,
           `"${c.time || ''}"`,
           `"${c.tempBaby || ''}"`,
           `"${c.tempIncubator || ''}"`,
@@ -1990,6 +2038,7 @@
       }
 
       const dataForExcel = window.careEntries.map(c => ({
+        "Date": c.date || '',
         "Heure": c.time || '',
         "Temp. Bébé (°C)": c.tempBaby || '',
         "Temp. Couveuse (°C)": c.tempIncubator || '',
@@ -2004,7 +2053,7 @@
       XLSX.utils.book_append_sheet(workbook, worksheet, "Journal de Soins");
 
       worksheet['!cols'] = [
-        { wch: 10 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 12 }, { wch: 35 }, { wch: 18 }
+        { wch: 12 }, { wch: 10 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 12 }, { wch: 35 }, { wch: 18 }
       ];
 
       XLSX.writeFile(workbook, `Suivi_Maternite_${new Date().toISOString().split('T')[0]}.xlsx`);
