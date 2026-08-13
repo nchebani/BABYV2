@@ -128,7 +128,6 @@
       </nav>
 
       <div class="flex items-center gap-3 text-sm">
-        <!-- BOUTON D'ABONNEMENT DANS LA NAV -->
         <button onclick="openSubscribeModal()" class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition flex items-center gap-2 text-xs">
           <i class="fa-solid fa-crown text-amber-200"></i>
           <span>S'abonner</span>
@@ -324,7 +323,6 @@
             </select>
           </div>
           
-          <!-- BOUTONS D'EXPORTATION MULTI-FORMATS & SCANNER IA -->
           <div class="flex items-center gap-2 flex-wrap">
             <button onclick="document.getElementById('fileInput').click()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
               <i class="fa-solid fa-camera"></i> Scanner / Importer Document
@@ -599,17 +597,22 @@
             <input type="hidden" id="editAgendaIndex" value="-1">
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Intitulé du rendez-vous</label>
-              <input type="text" id="agendaTitle" required placeholder="ex: RDV Pédiatre 1er mois" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Intitulé de l'activité / RDV</label>
+              <input type="text" id="agendaTitle" required placeholder="ex: RDV Dentiste, Séance Fitness, Poste du matin..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Catégorie</label>
               <select id="agendaCategory" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
-                <option value="Médical"> Médical (Pédiatre, vaccins, bilans)</option>
-                <option value="Travail"> Travail Parents (Déplacements, réunions)</option>
-                <option value="Garde"> Garde & Quotidien (Nounou, crèche, grands-parents)</option>
-                <option value="Autre"> Autre (Sorties, achats, jalons)</option>
+                <option value="RDV / Consultation"> RDV / Consultation Médicale ou Pro</option>
+                <option value="Activité Sportive"> Activité Sportive / Loisir</option>
+                <option value="Travail (Matin)"> Travail - Matin</option>
+                <option value="Travail (Midi)"> Travail - Midi</option>
+                <option value="Travail (Soir)"> Travail - Soir</option>
+                <option value="Travail (Nuit)"> Travail - Nuit</option>
+                <option value="Travail (Régulier)"> Travail - Régulier / Horaires classiques</option>
+                <option value="Garde & Quotidien"> Garde & Quotidien (Nounou, Crèche...)</option>
+                <option value="Autre"> Autre</option>
               </select>
             </div>
 
@@ -636,17 +639,17 @@
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Responsable / Concerné</label>
-              <select id="agendaAssignee" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
-                <option value="Les deux">Les deux</option>
-                <option value="Maman">Maman</option>
-                <option value="Papa">Papa</option>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Responsable / Code Couleur</label>
+              <select id="agendaAssignee" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none font-bold">
+                <option value="Papa" class="text-blue-600">🟦 Papa (Code couleur Bleu)</option>
+                <option value="Maman" class="text-pink-600">🟥 Maman (Code couleur Rose)</option>
+                <option value="Les deux" class="text-purple-600">🟪 Les deux (Code couleur Violet)</option>
               </select>
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Notes / Rappels</label>
-              <textarea id="agendaNotes" rows="2" placeholder="ex: Apporter le carnet de santé, prévoir doudou..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none"></textarea>
+              <textarea id="agendaNotes" rows="2" placeholder="ex: Lieu, matériel à prévoir, remarques..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none"></textarea>
             </div>
 
             <button type="submit" id="btnSubmitAgenda" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition text-sm">
@@ -671,27 +674,31 @@
                 <label class="text-xs font-bold text-slate-500 uppercase">Filtrer :</label>
                 <select id="agendaFilterCat" onchange="renderAgendaEntries()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white outline-none">
                   <option value="TOUS">Toutes les catégories</option>
-                  <option value="Médical"> Médical</option>
-                  <option value="Travail"> Travail</option>
-                  <option value="Garde"> Garde & Quotidien</option>
+                  <option value="RDV / Consultation"> RDV / Consultation</option>
+                  <option value="Activité Sportive"> Sport / Loisir</option>
+                  <option value="Travail (Matin)"> Travail - Matin</option>
+                  <option value="Travail (Midi)"> Travail - Midi</option>
+                  <option value="Travail (Soir)"> Travail - Soir</option>
+                  <option value="Travail (Nuit)"> Travail - Nuit</option>
+                  <option value="Travail (Régulier)"> Travail - Régulier</option>
+                  <option value="Garde & Quotidien"> Garde & Quotidien</option>
                   <option value="Autre"> Autre</option>
                 </select>
               </div>
 
               <!-- BOUTON EXPORT IOS / ICS -->
               <button onclick="exportAgendaICS()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5" title="Télécharger le fichier .ics compatible Apple Calendrier / iOS">
-                <i class="fa-brands fa-apple text-sm"></i> Exporter Calendrier iOS (.ics)
+                <i class="fa-brands fa-apple text-sm"></i> Exporter (.ics)
               </button>
             </div>
           </div>
 
-          <!-- LÉGENDE DES COULEURS FULLCALENDAR -->
+          <!-- LÉGENDE DES COULEURS (PARENT) -->
           <div class="flex flex-wrap items-center gap-4 text-xs font-bold bg-white/60 p-3 rounded-2xl border border-slate-100">
-            <span class="text-slate-400 font-normal">Légende :</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500"></span> Médical</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500"></span> Travail</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Garde</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-purple-500"></span> Autre</span>
+            <span class="text-slate-400 font-normal">Code Couleur :</span>
+            <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-blue-500 shadow-sm"></span> Papa (Bleu)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-pink-500 shadow-sm"></span> Maman (Rose)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-purple-500 shadow-sm"></span> Les deux (Violet)</span>
           </div>
 
           <!-- CONTENEUR DU CALENDRIER VISUEL FULLCALENDAR -->
@@ -727,7 +734,6 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- PLAN MENSUEL -->
         <div class="bg-white/90 rounded-2xl p-6 border-2 border-slate-200 hover:border-pink-400 transition flex flex-col justify-between">
           <div>
             <h3 class="font-bold text-lg text-slate-800">Abonnement Mensuel</h3>
@@ -745,7 +751,6 @@
           </button>
         </div>
 
-        <!-- PLAN ANNUEL (POPULAIRE) -->
         <div class="bg-gradient-to-b from-pink-500/10 to-purple-500/10 rounded-2xl p-6 border-2 border-pink-500 relative flex flex-col justify-between shadow-lg">
           <span class="absolute -top-3 right-6 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-full shadow">Meilleure offre (-20%)</span>
           <div>
@@ -768,7 +773,7 @@
     </div>
   </div>
 
-  <!-- INTÉGRATION FIREBASE (SYNCHRONISATION MULTI-APPAREILS EN TEMPS RÉEL) -->
+  <!-- INTÉGRATION FIREBASE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -817,12 +822,11 @@
     let isAdmin = false;
     let fullCalendarInstance = null;
 
-    // Palette de couleurs FullCalendar par catégorie
-    const categoryColors = {
-      'Médical': { bg: '#ef4444', border: '#dc2626' },  // Rouge
-      'Travail': { bg: '#3b82f6', border: '#2563eb' },  // Bleu
-      'Garde':   { bg: '#f59e0b', border: '#d97706' },  // Orange
-      'Autre':   { bg: '#a855f7', border: '#9333ea' }   // Violet
+    // COULEURS PAR PARENT : PAPA = BLEU (#3b82f6), MAMAN = ROSE (#ec4899), LES DEUX = VIOLET (#a855f7)
+    const parentColors = {
+      'Papa':     { bg: '#3b82f6', border: '#2563eb', text: 'text-blue-700', bgLight: 'bg-blue-50', borderClass: 'border-blue-200', dot: 'bg-blue-500' },
+      'Maman':    { bg: '#ec4899', border: '#db2777', text: 'text-pink-700', bgLight: 'bg-pink-50', borderClass: 'border-pink-200', dot: 'bg-pink-500' },
+      'Les deux': { bg: '#a855f7', border: '#9333ea', text: 'text-purple-700', bgLight: 'bg-purple-50', borderClass: 'border-purple-200', dot: 'bg-purple-500' }
     };
 
     window.predictions = JSON.parse(localStorage.getItem('bp_predictions')) || [
@@ -847,8 +851,9 @@
     ];
 
     window.agendaEntries = JSON.parse(localStorage.getItem('bp_agendaEntries')) || [
-      { title: "Consultation 1er mois Pédiatre", category: "Médical", startDate: "2026-08-20", startTime: "10:00", endDate: "2026-08-20", endTime: "11:00", assignee: "Les deux", notes: "Apporter le carnet de santé", author: "Maman" },
-      { title: "Adaptation Crèche", category: "Garde", startDate: "2026-09-01", startTime: "09:00", endDate: "2026-09-01", endTime: "12:00", assignee: "Maman", notes: "Prendre les doudous et tétines", author: "Maman" }
+      { title: "Planning Travail (Matin)", category: "Travail (Matin)", startDate: "2026-08-20", startTime: "06:00", endDate: "2026-08-20", endTime: "14:00", assignee: "Papa", notes: "Shift du matin", author: "Papa" },
+      { title: "Séance Natation / Sport", category: "Activité Sportive", startDate: "2026-08-21", startTime: "18:00", endDate: "2026-08-21", endTime: "19:30", assignee: "Maman", notes: "Reprise du sport", author: "Maman" },
+      { title: "RDV Pédiatre 1er mois", category: "RDV / Consultation", startDate: "2026-08-22", startTime: "10:00", endDate: "2026-08-22", endTime: "11:00", assignee: "Les deux", notes: "Apporter le carnet de santé", author: "Maman" }
     ];
 
     let chartTempInstance = null;
@@ -857,7 +862,6 @@
     let timerInterval = null;
     let timerSeconds = 0;
 
-    /* FONCTIONS DE LA MODALE D'ABONNEMENT */
     function openSubscribeModal() {
       document.getElementById('subscribeModal').classList.remove('hidden');
     }
@@ -871,7 +875,6 @@
       closeSubscribeModal();
     }
 
-    /* TRAITEMENT ET ENVOI DE FICHIER VERS LE BACKEND LOCAL IA */
     async function traiterFichier(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -894,8 +897,6 @@
     }
 
     async function envoyerAuBackend(bodyData) {
-      console.log("Analyse du document en cours...");
-
       try {
         const response = await fetch('http://192.168.1.35:3000/api/analyser-document', {
           method: 'POST',
@@ -936,7 +937,7 @@
         }
       } catch (err) {
         console.error(err);
-        alert("Impossible de joindre le serveur. Vérifiez que la commande 'node server.js' tourne bien dans le terminal.");
+        alert("Impossible de joindre le serveur. Vérifiez que le serveur fonctionne.");
       }
     }
 
@@ -1121,7 +1122,6 @@
       } else if (tab === 'agenda') {
         secAgenda.classList.remove('hidden');
         tabAgenda.classList.add('active-tab');
-        // Rafraîchir le rendu FullCalendar au changement d'onglet
         if (fullCalendarInstance) {
           setTimeout(() => {
             fullCalendarInstance.updateSize();
@@ -1130,7 +1130,6 @@
       }
     }
 
-    /* MODIFICATION & AJOUT PRONOSTIC */
     function addPrediction(e) {
       e.preventDefault();
       if (!currentUser) return;
@@ -1260,7 +1259,6 @@
       }
     }
 
-    /* MODIFICATION & AJOUT SOIN */
     function addCareEntry(e) {
       e.preventDefault();
       const editIdx = parseInt(document.getElementById('editCareIndex').value);
@@ -1391,7 +1389,7 @@
       updateNextFeedingReminder();
     }
 
-    /* MODULE AGENDA PARTAGÉ PARENTS FULLCALENDAR & EXPORTATION IOS / ICS */
+    /* MODULE AGENDA PARTAGÉ PARENTS FULLCALENDAR ET COULEURS PAPA (BLEU) / MAMAN (ROSE) */
     function initFullCalendar() {
       const calendarEl = document.getElementById('fullCalendarContainer');
       if (!calendarEl) return;
@@ -1430,10 +1428,10 @@
 
       const fcEvents = filteredEntries.map(item => {
         const origIndex = window.agendaEntries.indexOf(item);
-        const colors = categoryColors[item.category] || categoryColors['Autre'];
+        const colors = parentColors[item.assignee] || parentColors['Les deux'];
 
         return {
-          title: `${item.title} (${item.assignee})`,
+          title: `[${item.assignee}] ${item.title}`,
           start: `${item.startDate}T${item.startTime}`,
           end: `${item.endDate}T${item.endTime}`,
           backgroundColor: colors.bg,
@@ -1451,7 +1449,6 @@
       fullCalendarInstance.addEventSource(fcEvents);
     }
 
-    /* EXPORTATION DES ÉVÉNEMENTS AU FORMAT .ICS POUR CALENDRIER IOS / APPLE CALENDAR */
     function exportAgendaICS() {
       if (!window.agendaEntries || window.agendaEntries.length === 0) {
         alert("Aucun événement à exporter dans l'agenda.");
@@ -1584,7 +1581,6 @@
 
       const filtered = window.agendaEntries.filter(a => filterCat === 'TOUS' || a.category === filterCat);
 
-      // Mise à jour du calendrier visuel FullCalendar
       updateFullCalendarEvents(filtered);
 
       if (filtered.length === 0) {
@@ -1595,16 +1591,9 @@
         return;
       }
 
-      const catBadgeMap = {
-        'Médical': { bg: 'bg-red-500', text: 'text-red-700', bgLight: 'bg-red-50', border: 'border-red-200', icon: 'fa-stethoscope' },
-        'Travail': { bg: 'bg-blue-500', text: 'text-blue-700', bgLight: 'bg-blue-50', border: 'border-blue-200', icon: 'fa-briefcase' },
-        'Garde': { bg: 'bg-amber-500', text: 'text-amber-700', bgLight: 'bg-amber-50', border: 'border-amber-200', icon: 'fa-baby-carriage' },
-        'Autre': { bg: 'bg-purple-500', text: 'text-purple-700', bgLight: 'bg-purple-50', border: 'border-purple-200', icon: 'fa-balloon' }
-      };
-
       filtered.forEach((item) => {
         const originalIndex = window.agendaEntries.indexOf(item);
-        const style = catBadgeMap[item.category] || catBadgeMap['Autre'];
+        const style = parentColors[item.assignee] || parentColors['Les deux'];
 
         const dateStartFormatted = new Date(item.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
         const isSameDay = item.startDate === item.endDate;
@@ -1613,15 +1602,15 @@
           : `Du ${dateStartFormatted} à ${item.startTime} au ${new Date(item.endDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} à ${item.endTime}`;
 
         const card = document.createElement('div');
-        card.className = `p-4 rounded-2xl border ${style.border} ${style.bgLight} backdrop-blur-sm shadow-sm transition hover:shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4`;
+        card.className = `p-4 rounded-2xl border ${style.borderClass} ${style.bgLight} backdrop-blur-sm shadow-sm transition hover:shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4`;
         
         card.innerHTML = `
           <div class="flex items-start gap-3 w-full">
-            <span class="w-3.5 h-3.5 rounded-full ${style.bg} shrink-0 mt-1 shadow-sm" title="${item.category}"></span>
+            <span class="w-3.5 h-3.5 rounded-full ${style.dot} shrink-0 mt-1 shadow-sm" title="${item.assignee}"></span>
             <div class="space-y-1 w-full">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <h4 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-                  <i class="fa-solid ${style.icon} ${style.text}"></i> ${item.title}
+                  ${item.title}
                 </h4>
                 <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/80 border border-slate-200 ${style.text}">
                   ${item.category}
@@ -1631,8 +1620,8 @@
                 <i class="fa-regular fa-clock text-slate-400"></i> ${timeDisplay}
               </p>
               <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
-                <span class="bg-white/70 px-2 py-0.5 rounded-lg border border-slate-200 font-medium text-slate-700">
-                  <i class="fa-solid fa-user-tag text-slate-400 mr-1"></i>Responsable: <strong>${item.assignee}</strong>
+                <span class="bg-white/70 px-2 py-0.5 rounded-lg border border-slate-200 font-bold ${style.text}">
+                  <i class="fa-solid fa-user-tag text-slate-400 mr-1"></i>Concerné: ${item.assignee}
                 </span>
                 ${item.notes && item.notes !== 'RAS' ? `
                   <span class="italic text-slate-600 bg-white/50 px-2 py-0.5 rounded-lg">
@@ -1657,7 +1646,6 @@
       });
     }
 
-    /* RAPPEL REPAS AVEC PLAGE HORAIRE DE 1H30 */
     function updateNextFeedingReminder() {
       if (!window.careEntries || window.careEntries.length === 0) return;
 
@@ -1682,7 +1670,6 @@
         `Plage repas : <strong class="text-amber-600">${targetStr} à ${maxStr}</strong> (1h30 max)`;
     }
 
-    /* GESTION TEMPÉRATURES ET MODIFICATION RAPIDE */
     function addTempPoint(e) {
       e.preventDefault();
       const timeVal = document.getElementById('tempPointTime').value.trim();
@@ -1791,7 +1778,6 @@
       }
     }
 
-    /* GESTION POIDS ET MODIFICATION RAPIDE */
     function addWeightPoint(e) {
       e.preventDefault();
       const dateVal = document.getElementById('weightPointDate').value;
@@ -1949,7 +1935,6 @@
       });
     }
 
-    /* FONCTIONS D'EXPORTATION (PDF, CSV, EXCEL) */
     function exportCarePDF() {
       const element = document.getElementById('careJournalContainer');
       element.classList.add('pdf-compact');
