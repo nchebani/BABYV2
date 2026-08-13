@@ -39,7 +39,6 @@
     .pdf-compact .no-pdf {
       display: none !important;
     }
-    /* Personnalisation esthétique de FullCalendar pour la charte graphique */
     .fc {
       font-family: inherit;
     }
@@ -146,7 +145,7 @@
   <!-- CONTENU PRINCIPAL -->
   <main class="max-w-6xl mx-auto px-4 mt-6">
 
-    <!-- BANNIÈRE PROMOTIONNELLE D'ABONNEMENT -->
+    <!-- BANNIÈRE PROMOTIONNELLE -->
     <div class="glassmorphism p-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-amber-500 text-white mb-6 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <div class="p-3 bg-white/20 backdrop-blur-md rounded-xl text-2xl">
@@ -380,6 +379,16 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- BOUTON DE PERSONNALISATION DES OBJECTIFS & STATISTIQUES -->
+      <div class="flex justify-between items-center bg-white/60 p-3 rounded-2xl border border-slate-200">
+        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-chart-simple text-pink-500"></i> Bilan Statistiques & Objectifs
+        </span>
+        <button onclick="openEditStatsModal()" class="px-3 py-1.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-95 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+          <i class="fa-solid fa-sliders"></i> Modifier Objectifs & Valeurs
+        </button>
       </div>
 
       <!-- CARTE DES STATISTIQUES REPAS & COUCHES (JOUR, SEMAINE, MOIS) -->
@@ -671,7 +680,7 @@
           </form>
         </div>
 
-        <!-- LISTE, AGENDA VISUEL FULLCALENDAR ET FILTRES -->
+        <!-- LISTE & AGENDA VISUEL FULLCALENDAR -->
         <div class="lg:col-span-2 glassmorphism p-6 rounded-3xl border border-white/50 space-y-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -682,7 +691,6 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-              <!-- FILTRE CATEGORIE -->
               <div class="flex items-center gap-2">
                 <label class="text-xs font-bold text-slate-500 uppercase">Filtrer :</label>
                 <select id="agendaFilterCat" onchange="renderAgendaEntries()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white outline-none">
@@ -699,14 +707,12 @@
                 </select>
               </div>
 
-              <!-- BOUTON EXPORT IOS / ICS -->
               <button onclick="exportAgendaICS()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5" title="Télécharger le fichier .ics compatible Apple Calendrier / iOS">
                 <i class="fa-brands fa-apple text-sm"></i> Exporter (.ics)
               </button>
             </div>
           </div>
 
-          <!-- LÉGENDE DES COULEURS (PARENT) -->
           <div class="flex flex-wrap items-center gap-4 text-xs font-bold bg-white/60 p-3 rounded-2xl border border-slate-100">
             <span class="text-slate-400 font-normal">Code Couleur :</span>
             <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-blue-500 shadow-sm"></span> Papa (Bleu)</span>
@@ -714,7 +720,6 @@
             <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-purple-500 shadow-sm"></span> Les deux (Violet)</span>
           </div>
 
-          <!-- CONTENEUR DU CALENDRIER VISUEL FULLCALENDAR -->
           <div id="fullCalendarContainer" class="bg-white/90 p-4 rounded-2xl border border-slate-200 shadow-inner"></div>
 
           <hr class="border-slate-200/60">
@@ -723,7 +728,6 @@
             <h4 class="font-bold text-slate-700 text-sm mb-3 flex items-center gap-2">
               <i class="fa-solid fa-list-check text-indigo-500"></i> Vue Liste Chronologique
             </h4>
-            <!-- CONTENEUR LISTE DES ÉVÉNEMENTS -->
             <div id="agendaListContainer" class="space-y-3 max-h-[400px] overflow-y-auto pr-1"></div>
           </div>
         </div>
@@ -732,6 +736,52 @@
     </div>
 
   </main>
+
+  <!-- MODALE MODIFICATION DES OBJECTIFS STATS -->
+  <div id="editStatsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 overflow-y-auto">
+    <div class="glassmorphism p-6 rounded-3xl shadow-2xl max-w-md w-full border border-white/50 relative my-8">
+      <button onclick="closeEditStatsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-xl font-bold">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center mb-6">
+        <span class="px-3 py-1 bg-pink-100 text-pink-700 font-bold text-xs rounded-full uppercase tracking-wider">Configuration</span>
+        <h2 class="text-xl font-black text-slate-800 mt-2">Ajuster les Objectifs & Stats</h2>
+        <p class="text-xs text-slate-500">Modifiez les objectifs cibles quotidiens pour l'affichage des repères.</p>
+      </div>
+
+      <form onsubmit="saveStatsGoals(event)" class="space-y-4">
+        <div class="p-4 bg-white/70 rounded-2xl border border-pink-100 space-y-3">
+          <h3 class="font-bold text-sm text-pink-600 flex items-center gap-2">
+            <i class="fa-solid fa-bottle-droplet"></i> Objectifs Repas / Biberons
+          </h3>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Objectif par jour (nombre)</label>
+            <input type="number" min="1" max="20" id="goalMealsDayInput" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+          </div>
+        </div>
+
+        <div class="p-4 bg-white/70 rounded-2xl border border-blue-100 space-y-3">
+          <h3 class="font-bold text-sm text-blue-600 flex items-center gap-2">
+            <i class="fa-solid fa-baby text-blue-500"></i> Objectifs Couches
+          </h3>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Objectif par jour (nombre)</label>
+            <input type="number" min="1" max="20" id="goalDiapersDayInput" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm">
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="closeEditStatsModal()" class="w-1/2 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition">
+            Annuler
+          </button>
+          <button type="submit" class="w-1/2 py-2.5 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl text-xs shadow transition">
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- MODALE TARIFS D'ABONNEMENT -->
   <div id="subscribeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 overflow-y-auto">
@@ -814,7 +864,8 @@
       { key: 'careEntries', render: () => renderCareEntries() },
       { key: 'tempHistory', render: () => { updateTempChart(); renderTempList(); } },
       { key: 'weightHistory', render: () => { updateWeightChart(); renderWeightList(); } },
-      { key: 'agendaEntries', render: () => renderAgendaEntries() }
+      { key: 'agendaEntries', render: () => renderAgendaEntries() },
+      { key: 'statsGoals', render: () => updateGoalsBadges() }
     ];
 
     nodes.forEach(node => {
@@ -839,6 +890,11 @@
       'Papa':     { bg: '#3b82f6', border: '#2563eb', text: 'text-blue-700', bgLight: 'bg-blue-50', borderClass: 'border-blue-200', dot: 'bg-blue-500' },
       'Maman':    { bg: '#ec4899', border: '#db2777', text: 'text-pink-700', bgLight: 'bg-pink-50', borderClass: 'border-pink-200', dot: 'bg-pink-500' },
       'Les deux': { bg: '#a855f7', border: '#9333ea', text: 'text-purple-700', bgLight: 'bg-purple-50', borderClass: 'border-purple-200', dot: 'bg-purple-500' }
+    };
+
+    window.statsGoals = JSON.parse(localStorage.getItem('bp_statsGoals')) || {
+      mealsDay: 8,
+      diapersDay: 6
     };
 
     window.predictions = JSON.parse(localStorage.getItem('bp_predictions')) || [
@@ -871,9 +927,33 @@
 
     let chartTempInstance = null;
     let chartWeightInstance = null;
-
     let timerInterval = null;
     let timerSeconds = 0;
+
+    function openEditStatsModal() {
+      document.getElementById('goalMealsDayInput').value = window.statsGoals.mealsDay || 8;
+      document.getElementById('goalDiapersDayInput').value = window.statsGoals.diapersDay || 6;
+      document.getElementById('editStatsModal').classList.remove('hidden');
+    }
+
+    function closeEditStatsModal() {
+      document.getElementById('editStatsModal').classList.add('hidden');
+    }
+
+    function saveStatsGoals(e) {
+      e.preventDefault();
+      window.statsGoals.mealsDay = parseInt(document.getElementById('goalMealsDayInput').value) || 8;
+      window.statsGoals.diapersDay = parseInt(document.getElementById('goalDiapersDayInput').value) || 6;
+
+      saveAllToStorage();
+      updateGoalsBadges();
+      closeEditStatsModal();
+    }
+
+    function updateGoalsBadges() {
+      document.getElementById('badgeMealsGoal').innerText = `Obj: ${window.statsGoals.mealsDay || 8}/j`;
+      document.getElementById('badgeDiapersGoal').innerText = `Obj: ${window.statsGoals.diapersDay || 6}/j`;
+    }
 
     function openSubscribeModal() {
       document.getElementById('subscribeModal').classList.remove('hidden');
@@ -962,6 +1042,7 @@
       localStorage.setItem('bp_weightHistory', JSON.stringify(window.weightHistory));
       localStorage.setItem('bp_tempHistory', JSON.stringify(window.tempHistory));
       localStorage.setItem('bp_agendaEntries', JSON.stringify(window.agendaEntries));
+      localStorage.setItem('bp_statsGoals', JSON.stringify(window.statsGoals));
 
       if (typeof window.saveToFirebase === 'function') {
         window.saveToFirebase('predictions', window.predictions);
@@ -970,6 +1051,7 @@
         window.saveToFirebase('weightHistory', window.weightHistory);
         window.saveToFirebase('tempHistory', window.tempHistory);
         window.saveToFirebase('agendaEntries', window.agendaEntries);
+        window.saveToFirebase('statsGoals', window.statsGoals);
       }
     }
 
@@ -1062,6 +1144,7 @@
 
       initCharts();
       initFullCalendar();
+      updateGoalsBadges();
       renderPredictions();
       renderCareEntries();
       renderWeightList();
@@ -1421,7 +1504,6 @@
         tbody.appendChild(tr);
       });
 
-      // Mettre à jour les statistiques Repas
       document.getElementById('statMealsToday').innerText = mealsToday;
       document.getElementById('statMealsVolToday').innerText = `${volToday} ml`;
       document.getElementById('statMealsWeek').innerText = mealsWeek;
@@ -1429,7 +1511,6 @@
       document.getElementById('statMealsMonth').innerText = mealsMonth;
       document.getElementById('statMealsVolMonth').innerText = `${volMonth} ml`;
 
-      // Mettre à jour les statistiques Couches
       document.getElementById('statDiapersToday').innerText = diapersToday;
       document.getElementById('statDiapersWeek').innerText = diapersWeek;
       document.getElementById('statDiapersMonth').innerText = diapersMonth;
@@ -2050,23 +2131,20 @@
 
       const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Journal de Soins");
-
-      worksheet['!cols'] = [
-        { wch: 12 }, { wch: 10 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 12 }, { wch: 35 }, { wch: 18 }
-      ];
-
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Soins Maternité");
       XLSX.writeFile(workbook, `Suivi_Maternite_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
     function saveOfficialResults(e) {
       e.preventDefault();
-      const name = document.getElementById('officialName').value.trim();
-      const gender = document.getElementById('officialGender').value;
-      const weight = parseFloat(document.getElementById('officialWeight').value);
-      const height = parseFloat(document.getElementById('officialHeight').value);
+      const official = {
+        name: document.getElementById('officialName').value.trim(),
+        gender: document.getElementById('officialGender').value,
+        weight: parseFloat(document.getElementById('officialWeight').value),
+        height: parseFloat(document.getElementById('officialHeight').value)
+      };
 
-      window.officialResult = { name, gender, weight, height };
+      window.officialResult = official;
       saveAllToStorage();
       displayOfficialBanner();
     }
@@ -2074,23 +2152,26 @@
     function displayOfficialBanner() {
       if (!window.officialResult) return;
 
-      let bestWinner = null;
-      let minDiff = Infinity;
+      const res = window.officialResult;
+      document.getElementById('resBabyName').innerText = `Bébé ${res.name} est né(e) !`;
+      document.getElementById('resBabyDetails').innerText = `${res.gender} | Poids: ${res.weight.toFixed(3)} kg | Taille: ${res.height} cm`;
+
+      let bestScore = Infinity;
+      let winnerName = "Aucun participant";
 
       window.predictions.forEach(p => {
-        const diffW = Math.abs(p.weight - window.officialResult.weight);
-        const diffH = Math.abs(p.height - window.officialResult.height);
-        const score = diffW * 10 + diffH;
+        let score = 0;
+        if (p.gender !== res.gender) score += 5;
+        score += Math.abs(p.weight - res.weight) * 2;
+        score += Math.abs(p.height - res.height) * 0.5;
 
-        if (score < minDiff) {
-          minDiff = score;
-          bestWinner = p.user;
+        if (score < bestScore) {
+          bestScore = score;
+          winnerName = p.user;
         }
       });
 
-      document.getElementById('resBabyName').innerText = `Bienvenue à ${window.officialResult.name} !`;
-      document.getElementById('resBabyDetails').innerText = `Sexe : ${window.officialResult.gender} | Poids : ${window.officialResult.weight} kg | Taille : ${window.officialResult.height} cm`;
-      document.getElementById('resWinnerName').innerText = bestWinner ? bestWinner : 'Égalité !';
+      document.getElementById('resWinnerName').innerText = winnerName;
       document.getElementById('resultBanner').classList.remove('hidden');
     }
   </script>
