@@ -312,9 +312,14 @@
             </h3>
             <p class="text-xs text-slate-500" id="currentTrackingDate">Date du jour : --/--/----</p>
           </div>
-          <button onclick="resetDailyTracker()" class="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl text-xs border border-red-200 transition flex items-center gap-2">
-            <i class="fa-solid fa-rotate-right"></i> Réinitialiser la journée
-          </button>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="resetStatsPeriod()" class="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-600 font-bold rounded-xl text-xs border border-purple-200 transition flex items-center gap-2">
+              <i class="fa-solid fa-filter-circle-xmark"></i> Initialiser (Semaine / Mois)
+            </button>
+            <button onclick="resetDailyTracker()" class="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl text-xs border border-red-200 transition flex items-center gap-2">
+              <i class="fa-solid fa-rotate-right"></i> Réinitialiser la journée
+            </button>
+          </div>
         </div>
 
         <!-- BOUTONS D'AJOUT RAPIDE ET COMPTEURS DYNAMIQUES -->
@@ -443,9 +448,14 @@
         <span class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
           <i class="fa-solid fa-chart-simple text-pink-500"></i> Bilan Statistiques & Objectifs
         </span>
-        <button onclick="openEditStatsModal()" class="px-3 py-1.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-95 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
-          <i class="fa-solid fa-sliders"></i> Modifier Objectifs & Valeurs
-        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="resetStatsPeriod()" class="px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5">
+            <i class="fa-solid fa-rotate-left"></i> Initialiser Semaine/Mois
+          </button>
+          <button onclick="openEditStatsModal()" class="px-3 py-1.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-95 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
+            <i class="fa-solid fa-sliders"></i> Modifier Objectifs & Valeurs
+          </button>
+        </div>
       </div>
 
       <!-- CARTE DES STATISTIQUES REPAS & COUCHES (JOUR, SEMAINE, MOIS) -->
@@ -1190,6 +1200,44 @@
       }
     }
 
+    // --- NOUVELLE FONCTION : RÉINITIALISATION DES STATISTIQUES SEMAINE / MOIS ---
+    function resetStatsPeriod() {
+      const choice = prompt("Quelle période souhaitez-vous initialiser ?\n1: Cette semaine (7 derniers jours)\n2: Ce mois-ci (30 derniers jours)", "1");
+      if (choice === null) return;
+
+      const now = new Date();
+      let limitDate = new Date();
+
+      if (choice === "1") {
+        limitDate.setDate(now.getDate() - 7);
+      } else if (choice === "2") {
+        limitDate.setDate(now.getDate() - 30);
+      } else {
+        alert("Choix invalide.");
+        return;
+      }
+
+      if (confirm("Confirmez-vous la suppression des entrées de soins pour la période sélectionnée ?")) {
+        window.careEntries = window.careEntries.filter(c => {
+          const entryDate = new Date(c.date || now.toISOString().split('T')[0]);
+          return entryDate < limitDate;
+        });
+
+        // Nettoyage de l'archive quotidienne
+        Object.keys(window.dailyArchive).forEach(dateStr => {
+          const d = new Date(dateStr);
+          if (d >= limitDate) {
+            delete window.dailyArchive[dateStr];
+          }
+        });
+
+        saveAllToStorage();
+        renderCareEntries();
+        renderDailyTracker();
+        alert("Les statistiques de la période sélectionnée ont été réinitialisées.");
+      }
+    }
+
     function openEditStatsModal() {
       document.getElementById('goalMealsDayInput').value = window.statsGoals.mealsDay || 8;
       document.getElementById('goalDiapersDayInput').value = window.statsGoals.diapersDay || 6;
@@ -1424,7 +1472,6 @@
         displayOfficialBanner();
       }
 
-      // Vérification périodique du passage à minuit (toutes les minutes)
       setInterval(() => {
         checkMidnightReset();
         renderDailyTracker();
@@ -1796,14 +1843,13 @@
       updateNextFeedingReminder();
     }
 
-    /* RENDU DU DÉTAIL DES STATS JOUR PAR JOUR */
     function renderDailyStatsGrid() {
       const grid = document.getElementById('dailyStatsGrid');
       if (!grid) return;
       grid.innerHTML = '';
 
       const now = new Date();
-      const currentDayOfWeek = now.getDay(); // 0: Dim, 1: Lun...
+      const currentDayOfWeek = now.getDay();
       const distanceToMonday = (currentDayOfWeek + 6) % 7;
       
       const monday = new Date(now);
@@ -2067,107 +2113,138 @@
           : `Du ${dateStartFormatted} à ${item.startTime} au ${new Date(item.endDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} à ${item.endTime}`;
 
         const card = document.createElement('div');
-        card.className = `p-4 rounded-2xl border ${style.borderClass} ${style.bgLight} backdrop-blur-sm shadow-sm transition hover:shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4`;
-        
+        card.className = `p-4 rounded-2xl border ${style.bgLight} ${style.borderClass} shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3`;
         card.innerHTML = `
-          <div class="flex items-start gap-3 w-full">
-            <span class="w-3.5 h-3.5 rounded-full ${style.dot} shrink-0 mt-1 shadow-sm" title="${item.assignee}"></span>
-            <div class="space-y-1 w-full">
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <h4 class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-                  ${item.title}
-                </h4>
-                <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/80 border border-slate-200 ${style.text}">
-                  ${item.category}
-                </span>
-              </div>
-              <p class="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
-                <i class="fa-regular fa-clock text-slate-400"></i> ${timeDisplay}
-              </p>
-              <div class="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
-                <span class="bg-white/70 px-2 py-0.5 rounded-lg border border-slate-200 font-bold ${style.text}">
-                  <i class="fa-solid fa-user-tag text-slate-400 mr-1"></i>Concerné: ${item.assignee}
-                </span>
-                ${item.notes && item.notes !== 'RAS' ? `
-                  <span class="italic text-slate-600 bg-white/50 px-2 py-0.5 rounded-lg">
-                    <i class="fa-regular fa-note-sticky mr-1"></i>${item.notes}
-                  </span>
-                ` : ''}
-              </div>
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full ${style.dot}"></span>
+              <h5 class="font-extrabold text-slate-800 text-sm">${item.title}</h5>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/80 border text-slate-600">${item.category}</span>
             </div>
+            <p class="text-xs font-semibold ${style.text}">${timeDisplay} &bull; <span class="underline">${item.assignee}</span></p>
+            ${item.notes && item.notes !== 'RAS' ? `<p class="text-xs text-slate-500 italic"><i class="fa-regular fa-comment mr-1"></i>${item.notes}</p>` : ''}
           </div>
 
-          <div class="flex items-center gap-1 self-end sm:self-center shrink-0">
-            <button onclick="editAgendaEntry(${originalIndex})" class="p-2 text-slate-400 hover:text-amber-500 transition rounded-xl hover:bg-amber-100/50" title="Modifier l'événement">
+          <div class="flex items-center gap-2 self-end sm:self-center">
+            <button onclick="editAgendaEntry(${originalIndex})" class="p-2 text-slate-400 hover:text-amber-600 bg-white/80 rounded-xl border border-slate-200 transition" title="Modifier">
               <i class="fa-solid fa-pen text-xs"></i>
             </button>
-            <button onclick="deleteAgendaEntry(${originalIndex})" class="p-2 text-slate-400 hover:text-red-500 transition rounded-xl hover:bg-red-100/50" title="Supprimer l'événement">
+            <button onclick="deleteAgendaEntry(${originalIndex})" class="p-2 text-slate-400 hover:text-red-600 bg-white/80 rounded-xl border border-slate-200 transition" title="Supprimer">
               <i class="fa-solid fa-trash-can text-xs"></i>
             </button>
           </div>
         `;
-
         container.appendChild(card);
       });
     }
 
-    function updateNextFeedingReminder() {
-      if (!window.careEntries || window.careEntries.length === 0) return;
+    function initCharts() {
+      const ctxTemp = document.getElementById('chartTemp');
+      if (ctxTemp) {
+        chartTempInstance = new Chart(ctxTemp, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: 'Temp. Bébé (°C)',
+                data: [],
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                fill: true,
+                tension: 0.3
+              },
+              {
+                label: 'Temp. Couveuse (°C)',
+                data: [],
+                borderColor: '#3b82f6',
+                backgroundColor: 'transparent',
+                borderDash: [5, 5],
+                tension: 0.3
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { min: 28, max: 40 }
+            }
+          }
+        });
+      }
 
-      const lastFeeding = [...window.careEntries].reverse().find(c => c.feeding > 0);
-      if (!lastFeeding) return;
-
-      const intervalHours = parseInt(document.getElementById('feedingInterval').value);
-      const [hours, minutes] = lastFeeding.time.split(':').map(Number);
-      
-      const targetDate = new Date();
-      targetDate.setHours(hours + intervalHours, minutes, 0, 0);
-
-      const maxDate = new Date(targetDate.getTime() + 90 * 60 * 1000);
-
-      const formatTime = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-
-      const targetStr = formatTime(targetDate);
-      const maxStr = formatTime(maxDate);
-
-      document.getElementById('nextFeedingTimer').innerHTML = 
-        `Dernier repas : <strong>${lastFeeding.time}</strong> (${lastFeeding.feeding} ml) — ` +
-        `Plage repas : <strong class="text-amber-600">${targetStr} à ${maxStr}</strong> (1h30 max)`;
+      const ctxWeight = document.getElementById('chartWeight');
+      if (ctxWeight) {
+        chartWeightInstance = new Chart(ctxWeight, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'Poids Bébé (kg)',
+              data: [],
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              fill: true,
+              tension: 0.2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false
+          }
+        });
+      }
     }
 
-    function addTempPoint(e) {
-      e.preventDefault();
-      const timeVal = document.getElementById('tempPointTime').value.trim();
-      const tempBabyVal = parseFloat(document.getElementById('tempPointBaby').value);
-      const tempIncVal = parseFloat(document.getElementById('tempPointIncubator').value) || null;
+    function updateTempChart() {
+      if (!chartTempInstance) return;
+      const labels = window.tempHistory.map(t => t.time);
+      const dataBaby = window.tempHistory.map(t => t.tempBaby);
+      const dataInc = window.tempHistory.map(t => t.tempIncubator);
 
-      if (!timeVal || isNaN(tempBabyVal)) return;
+      chartTempInstance.data.labels = labels;
+      chartTempInstance.data.datasets[0].data = dataBaby;
+      chartTempInstance.data.datasets[1].data = dataInc;
+      chartTempInstance.update();
 
-      window.tempHistory.push({ time: timeVal, tempBaby: tempBabyVal, tempIncubator: tempIncVal });
+      if (window.tempHistory.length > 0) {
+        const last = window.tempHistory[window.tempHistory.length - 1];
+        document.getElementById('statLastTemp').innerText = `${last.tempBaby || '--'} °C`;
+        const statEl = document.getElementById('statTempStatus');
+        const cardEl = document.getElementById('cardTempStatus');
 
-      saveAllToStorage();
-      updateTempChart();
-      renderTempList();
-
-      document.getElementById('tempPointBaby').value = '';
-      document.getElementById('tempPointIncubator').value = '';
-    }
-
-    function editTempPoint(index) {
-      const item = window.tempHistory[index];
-      const newTemp = prompt("Nouvelle température du bébé (°C) :", item.tempBaby);
-      if (newTemp !== null) {
-        const val = parseFloat(newTemp);
-        if (!isNaN(val)) {
-          window.tempHistory[index].tempBaby = val;
-          saveAllToStorage();
-          updateTempChart();
-          renderTempList();
+        if (last.tempBaby >= 37.5) {
+          statEl.innerText = "Statut : Fièvre !";
+          statEl.className = "text-xs font-bold mt-1 text-red-600";
+          cardEl.className = "glassmorphism p-4 rounded-2xl border-2 border-red-400 bg-red-50/50";
+        } else if (last.tempBaby <= 35.5) {
+          statEl.innerText = "Statut : Hypothermie !";
+          statEl.className = "text-xs font-bold mt-1 text-blue-600";
+          cardEl.className = "glassmorphism p-4 rounded-2xl border-2 border-blue-400 bg-blue-50/50";
+        } else {
+          statEl.innerText = "Statut : Normal";
+          statEl.className = "text-xs font-bold mt-1 text-emerald-600";
+          cardEl.className = "glassmorphism p-4 rounded-2xl border border-white/50";
         }
       }
     }
 
-    function removeTempPoint(index) {
+    function addTempPoint(e) {
+      e.preventDefault();
+      const time = document.getElementById('tempPointTime').value;
+      const baby = parseFloat(document.getElementById('tempPointBaby').value);
+      const inc = parseFloat(document.getElementById('tempPointIncubator').value) || null;
+
+      window.tempHistory.push({ time, tempBaby: baby, tempIncubator: inc });
+      saveAllToStorage();
+      updateTempChart();
+      renderTempList();
+      e.target.reset();
+      document.getElementById('tempPointTime').value = new Date().toTimeString().substring(0, 5);
+    }
+
+    function deleteTempPoint(index) {
       window.tempHistory.splice(index, 1);
       saveAllToStorage();
       updateTempChart();
@@ -2179,146 +2256,62 @@
       if (!container) return;
       container.innerHTML = '';
 
-      if (!window.tempHistory || window.tempHistory.length === 0) {
-        container.innerHTML = `<p class="text-slate-400 italic">Aucune mesure enregistrée.</p>`;
-        return;
-      }
-
-      window.tempHistory.forEach((item, index) => {
+      window.tempHistory.slice().reverse().forEach((item) => {
+        const originalIndex = window.tempHistory.indexOf(item);
         const div = document.createElement('div');
-        div.className = 'flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm hover:border-red-200 transition';
+        div.className = 'flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm';
         div.innerHTML = `
-          <div class="flex items-center gap-2">
-            <i class="fa-solid fa-temperature-half text-red-500"></i>
-            <span class="font-bold text-slate-700">${item.tempBaby} °C</span>
-            ${item.tempIncubator ? `<span class="text-[11px] text-slate-400">(Couv: ${item.tempIncubator}°C)</span>` : ''}
-            <span class="text-[11px] text-slate-400">à ${item.time}</span>
-          </div>
-          <div class="flex gap-1">
-            <button onclick="editTempPoint(${index})" class="text-slate-400 hover:text-amber-500 p-1 rounded-lg hover:bg-amber-50 transition" title="Modifier la température">
-              <i class="fa-solid fa-pen text-xs"></i>
-            </button>
-            <button onclick="removeTempPoint(${index})" class="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition" title="Supprimer ce point">
-              <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
-          </div>
+          <span><strong>${item.time}</strong> : Bébé ${item.tempBaby}°C ${item.tempIncubator ? `(Couv. ${item.tempIncubator}°C)` : ''}</span>
+          <button onclick="deleteTempPoint(${originalIndex})" class="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition"><i class="fa-solid fa-trash-can text-xs"></i></button>
         `;
         container.appendChild(div);
       });
     }
 
-    function updateTempChart() {
-      if (!chartTempInstance) return;
+    function updateWeightChart() {
+      if (!chartWeightInstance) return;
+      const labels = window.weightHistory.map(w => w.date);
+      const data = window.weightHistory.map(w => w.weight);
 
-      chartTempInstance.data.labels = window.tempHistory.map(c => c.time);
-      chartTempInstance.data.datasets[0].data = window.tempHistory.map(c => c.tempBaby);
-      chartTempInstance.data.datasets[1].data = window.tempHistory.map(c => c.tempIncubator);
-      chartTempInstance.update();
+      chartWeightInstance.data.labels = labels;
+      chartWeightInstance.data.datasets[0].data = data;
+      chartWeightInstance.update();
 
-      const cardTemp = document.getElementById('cardTempStatus');
-      const statTempStatus = document.getElementById('statTempStatus');
+      if (window.weightHistory.length > 0) {
+        const last = window.weightHistory[window.weightHistory.length - 1];
+        document.getElementById('statCurrentWeight').innerText = `${last.weight.toFixed(2)} kg`;
 
-      if (window.tempHistory.length > 0) {
-        const lastTemp = window.tempHistory[window.tempHistory.length - 1].tempBaby;
-        document.getElementById('statLastTemp').innerText = `${lastTemp} °C`;
-
-        if (lastTemp >= 37.5) {
-          statTempStatus.innerText = "Alerte : Hyperthermie / Fièvre !";
-          statTempStatus.className = "text-xs font-extrabold mt-1 text-red-600";
-          cardTemp.className = "glassmorphism p-4 rounded-2xl border-2 border-red-400 bg-red-50/50";
-        } else if (lastTemp <= 35.5) {
-          statTempStatus.innerText = "Alerte : Hypothermie !";
-          statTempStatus.className = "text-xs font-extrabold mt-1 text-blue-600";
-          cardTemp.className = "glassmorphism p-4 rounded-2xl border-2 border-blue-400 bg-blue-50/50";
+        if (window.weightHistory.length > 1) {
+          const prev = window.weightHistory[window.weightHistory.length - 2];
+          const diff = last.weight - prev.weight;
+          const diffStr = diff >= 0 ? `+${(diff * 1000).toFixed(0)} g` : `${(diff * 1000).toFixed(0)} g`;
+          document.getElementById('statWeightDiff').innerText = `${diffStr} vs mesure précédente`;
         } else {
-          statTempStatus.innerText = "Statut : Normal";
-          statTempStatus.className = "text-xs font-semibold mt-1 text-emerald-600";
-          cardTemp.className = "glassmorphism p-4 rounded-2xl border border-white/50";
+          document.getElementById('statWeightDiff').innerText = `1ère mesure enregistrée`;
         }
-      } else {
-        document.getElementById('statLastTemp').innerText = `-- °C`;
-        statTempStatus.innerText = "Statut : Normal";
-        statTempStatus.className = "text-xs font-semibold mt-1 text-emerald-600";
-        cardTemp.className = "glassmorphism p-4 rounded-2xl border border-white/50";
       }
     }
 
     function addWeightPoint(e) {
       e.preventDefault();
-      const dateVal = document.getElementById('weightPointDate').value;
-      const weightVal = parseFloat(document.getElementById('weightPointVal').value);
+      const date = document.getElementById('weightPointDate').value;
+      const val = parseFloat(document.getElementById('weightPointVal').value);
 
-      if (!dateVal || isNaN(weightVal)) return;
-
-      window.weightHistory.push({ date: dateVal, weight: weightVal });
+      window.weightHistory.push({ date, weight: val });
       window.weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
 
       saveAllToStorage();
       updateWeightChart();
       renderWeightList();
-
-      document.getElementById('weightPointVal').value = '';
+      e.target.reset();
+      document.getElementById('weightPointDate').value = new Date().toISOString().split('T')[0];
     }
 
-    function editWeightPoint(index) {
-      const item = window.weightHistory[index];
-      const newWeight = prompt("Nouveau poids (kg) :", item.weight);
-      if (newWeight !== null) {
-        const val = parseFloat(newWeight);
-        if (!isNaN(val)) {
-          window.weightHistory[index].weight = val;
-          saveAllToStorage();
-          updateWeightChart();
-          renderWeightList();
-        }
-      }
-    }
-
-    function removeWeightPoint(index) {
+    function deleteWeightPoint(index) {
       window.weightHistory.splice(index, 1);
       saveAllToStorage();
       updateWeightChart();
       renderWeightList();
-    }
-
-    function updateWeightChart() {
-      if (!chartWeightInstance) return;
-
-      const labels = window.weightHistory.map(item => item.date);
-      const data = window.weightHistory.map(item => item.weight);
-
-      chartWeightInstance.data.labels = labels;
-      chartWeightInstance.data.datasets[0].data = data;
-      chartWeightInstance.update();
-    }
-
-    function initCharts() {
-      const ctxTemp = document.getElementById('chartTemp');
-      if (ctxTemp) {
-        chartTempInstance = new Chart(ctxTemp, {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [
-              { label: 'Bébé (°C)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', tension: 0.3, fill: true },
-              { label: 'Couveuse (°C)', data: [], borderColor: '#9333ea', borderDash: [4, 4], tension: 0.3, fill: false }
-            ]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
-      }
-
-      const ctxWeight = document.getElementById('chartWeight');
-      if (ctxWeight) {
-        chartWeightInstance = new Chart(ctxWeight, {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [{ label: 'Poids (kg)', data: [], borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', tension: 0.3, fill: true }]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
-      }
     }
 
     function renderWeightList() {
@@ -2326,99 +2319,109 @@
       if (!container) return;
       container.innerHTML = '';
 
-      if (!window.weightHistory || window.weightHistory.length === 0) {
-        container.innerHTML = `<p class="text-slate-400 italic">Aucune mesure enregistrée.</p>`;
-        return;
-      }
-
-      window.weightHistory.forEach((item, index) => {
+      window.weightHistory.slice().reverse().forEach((item) => {
+        const originalIndex = window.weightHistory.indexOf(item);
         const div = document.createElement('div');
-        div.className = 'flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm hover:border-blue-200 transition';
+        div.className = 'flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm';
         div.innerHTML = `
-          <div class="flex items-center gap-2">
-            <i class="fa-solid fa-weight-scale text-blue-500"></i>
-            <span class="font-bold text-slate-700">${item.weight} kg</span>
-            <span class="text-[11px] text-slate-400">le ${item.date}</span>
-          </div>
-          <div class="flex gap-1">
-            <button onclick="editWeightPoint(${index})" class="text-slate-400 hover:text-amber-500 p-1 rounded-lg hover:bg-amber-50 transition" title="Modifier le poids">
-              <i class="fa-solid fa-pen text-xs"></i>
-            </button>
-            <button onclick="removeWeightPoint(${index})" class="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition" title="Supprimer ce point">
-              <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
-          </div>
+          <span><strong>${item.date}</strong> : ${item.weight.toFixed(2)} kg</span>
+          <button onclick="deleteWeightPoint(${originalIndex})" class="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition"><i class="fa-solid fa-trash-can text-xs"></i></button>
         `;
         container.appendChild(div);
       });
-
-      if (window.weightHistory.length > 0) {
-        const last = window.weightHistory[window.weightHistory.length - 1].weight;
-        document.getElementById('statCurrentWeight').innerText = `${last} kg`;
-      }
     }
 
-    function saveOfficialResults(e) {
-      e.preventDefault();
-      if (!isAdmin) return;
+    function updateNextFeedingReminder() {
+      const intervalHours = parseInt(document.getElementById('feedingInterval').value) || 3;
+      const lastMeals = window.careEntries.filter(c => c.feeding > 0);
 
-      window.officialResult = {
-        name: document.getElementById('officialName').value.trim(),
-        gender: document.getElementById('officialGender').value,
-        weight: parseFloat(document.getElementById('officialWeight').value),
-        height: parseFloat(document.getElementById('officialHeight').value)
-      };
+      const timerEl = document.getElementById('nextFeedingTimer');
+      if (!timerEl) return;
 
-      saveAllToStorage();
-      displayOfficialBanner();
+      if (lastMeals.length === 0) {
+        timerEl.innerText = "Dernier repas enregistré : Aucun repas";
+        return;
+      }
+
+      const lastMeal = lastMeals[lastMeals.length - 1];
+      const lastTime = lastMeal.time;
+      const lastDate = lastMeal.date || new Date().toISOString().split('T')[0];
+
+      const lastDateTime = new Date(`${lastDate}T${lastTime}`);
+      const nextDateTime = new Date(lastDateTime.getTime() + intervalHours * 3600 * 1000);
+      const nextTimeStr = nextDateTime.toTimeString().substring(0, 5);
+
+      timerEl.innerHTML = `Dernier repas : <strong>${lastTime}</strong> (${lastMeal.feeding} ml) &bull; Prochain repas estimé : <strong class="text-pink-600">${nextTimeStr}</strong>`;
     }
 
     function displayOfficialBanner() {
       if (!window.officialResult) return;
-      const b = window.officialResult;
-      document.getElementById('resBabyName').innerText = `🎉 Bienvenue à ${b.name} !`;
-      document.getElementById('resBabyDetails').innerText = `Sexe : ${b.gender} | Poids : ${b.weight} kg | Taille : ${b.height} cm`;
-      
-      let bestWinner = "--";
-      let minDiff = Infinity;
+      const res = window.officialResult;
 
-      window.predictions.forEach(p => {
-        const diff = Math.abs(p.weight - b.weight) + Math.abs(p.height - b.height);
-        if (diff < minDiff) {
-          minDiff = diff;
-          bestWinner = p.user;
-        }
-      });
-
-      document.getElementById('resWinnerName').innerText = bestWinner;
+      document.getElementById('resBabyName').innerText = `Bienvenue à ${res.name} !`;
+      document.getElementById('resBabyDetails').innerText = `Né(e) le ${res.date || 'officiel'} | ${res.weight} kg | ${res.height} cm | ${res.gender}`;
+      document.getElementById('resWinnerName').innerText = res.winner || "Pronostics clos !";
       document.getElementById('resultBanner').classList.remove('hidden');
     }
 
+    function saveOfficialResults(e) {
+      e.preventDefault();
+      const name = document.getElementById('officialName').value.trim();
+      const gender = document.getElementById('officialGender').value;
+      const weight = parseFloat(document.getElementById('officialWeight').value);
+      const height = parseFloat(document.getElementById('officialHeight').value);
+
+      let winner = "Aucun participant";
+      let minDiff = Infinity;
+
+      window.predictions.forEach(p => {
+        let diff = Math.abs(p.weight - weight) * 10 + Math.abs(p.height - height);
+        if (p.gender === gender) diff -= 5;
+        if (diff < minDiff) {
+          minDiff = diff;
+          winner = p.user;
+        }
+      });
+
+      window.officialResult = { name, gender, weight, height, winner, date: new Date().toLocaleDateString('fr-FR') };
+      saveAllToStorage();
+      displayOfficialBanner();
+    }
+
     function exportCareCSV() {
-      let csv = "Date;Heure;Temperature Bebe;Temperature Couveuse;Couche;Repas (ml);Notes;Auteur\n";
+      if (window.careEntries.length === 0) { alert("Aucune donnée à exporter."); return; }
+      let csv = "Date;Heure;Temp_Bebe;Temp_Couveuse;Couche;Repas_ml;Observations;Auteur\n";
       window.careEntries.forEach(c => {
-        csv += `${c.date};${c.time};${c.tempBaby || ''};${c.tempIncubator || ''};${c.diaper};${c.feeding};"${c.notes}";${c.author}\n`;
+        csv += `${c.date || ''};${c.time || ''};${c.tempBaby || ''};${c.tempIncubator || ''};${c.diaper || ''};${c.feeding || 0};"${(c.notes || '').replace(/"/g, '""')}";${c.author || ''}\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = `Suivi_Soin_${new Date().toISOString().split('T')[0]}.csv`;
+      link.download = `Suivi_Maternite_${new Date().toISOString().split('T')[0]}.csv`;
       link.click();
     }
 
     function exportCareExcel() {
-      const ws = XLSX.utils.json_to_sheet(window.careEntries);
+      if (window.careEntries.length === 0) { alert("Aucune donnée à exporter."); return; }
+      const wsData = [
+        ["Date", "Heure", "Temp Bébé (°C)", "Temp Couveuse (°C)", "Couche", "Repas (ml)", "Observations", "Auteur"]
+      ];
+      window.careEntries.forEach(c => {
+        wsData.push([c.date || '', c.time || '', c.tempBaby || '', c.tempIncubator || '', c.diaper || '', c.feeding || 0, c.notes || '', c.author || '']);
+      });
       const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
       XLSX.utils.book_append_sheet(wb, ws, "Fiche de Soins");
-      XLSX.writeFile(wb, `Suivi_Soin_${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.writeFile(wb, `Suivi_Maternite_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
     function exportCarePDF() {
       const element = document.getElementById('careJournalContainer');
+      if (!element) return;
       element.classList.add('pdf-compact');
       const opt = {
         margin: 0.5,
-        filename: `Fiche_Soins_${new Date().toISOString().split('T')[0]}.pdf`,
+        filename: `Fiche_Soins_Maternite_${new Date().toISOString().split('T')[0]}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
