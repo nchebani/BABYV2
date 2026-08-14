@@ -430,6 +430,19 @@
         </div>
       </div>
 
+      <!-- NOUVEAU MODULE: STATISTIQUES PAR JOUR DÉTAILLÉES -->
+      <div class="glassmorphism p-6 rounded-3xl border border-white/50">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-calendar-week text-purple-600"></i> Historique Quotidien Détaillé (Cette Semaine)
+          </h3>
+          <span class="text-xs text-slate-500 font-semibold">Mise à jour automatique</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2" id="dailyStatsGrid">
+          <!-- Injecté dynamiquement par le JS -->
+        </div>
+      </div>
+
       <!-- COURBES INTERACTIVES TEMPE ET POIDS -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -1515,7 +1528,67 @@
       document.getElementById('statDiapersWeek').innerText = diapersWeek;
       document.getElementById('statDiapersMonth').innerText = diapersMonth;
 
+      renderDailyStatsGrid();
       updateNextFeedingReminder();
+    }
+
+    /* RENDU DU DÉTAIL DES STATS JOUR PAR JOUR */
+    function renderDailyStatsGrid() {
+      const grid = document.getElementById('dailyStatsGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const now = new Date();
+      const currentDayOfWeek = now.getDay(); // 0: Dim, 1: Lun...
+      const distanceToMonday = (currentDayOfWeek + 6) % 7;
+      
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - distanceToMonday);
+
+      const daysOfWeek = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+
+      daysOfWeek.forEach((dayName, idx) => {
+        const dayDate = new Date(monday);
+        dayDate.setDate(monday.getDate() + idx);
+        const dayIsoStr = dayDate.toISOString().split('T')[0];
+
+        let mealsCount = 0;
+        let mealsVol = 0;
+        let diapersCount = 0;
+
+        window.careEntries.forEach(c => {
+          if (c.date === dayIsoStr) {
+            if (c.feeding > 0) {
+              mealsCount++;
+              mealsVol += c.feeding;
+            }
+            if (c.diaper && c.diaper !== 'Propre / Rien') {
+              diapersCount++;
+            }
+          }
+        });
+
+        const isToday = dayIsoStr === now.toISOString().split('T')[0];
+
+        const dayCard = document.createElement('div');
+        dayCard.className = `p-3 rounded-2xl border text-center transition ${isToday ? 'bg-pink-50/80 border-pink-300 ring-2 ring-pink-400' : 'bg-white/60 border-slate-100'}`;
+        dayCard.innerHTML = `
+          <p class="text-[11px] font-bold uppercase ${isToday ? 'text-pink-600' : 'text-slate-400'}">${dayName}</p>
+          <p class="text-[10px] text-slate-400 mb-1.5">${dayDate.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</p>
+          <div class="space-y-1 text-xs">
+            <div class="bg-pink-100/50 py-1 px-1.5 rounded-lg border border-pink-100">
+              <span class="block text-[9px] font-bold text-pink-700 uppercase">Repas</span>
+              <span class="font-extrabold text-pink-600">${mealsCount}</span> <span class="text-[10px] text-slate-500">(${mealsVol}ml)</span>
+            </div>
+            <div class="bg-blue-100/50 py-1 px-1.5 rounded-lg border border-blue-100">
+              <span class="block text-[9px] font-bold text-blue-700 uppercase">Couches</span>
+              <span class="font-extrabold text-blue-600">${diapersCount}</span>
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(dayCard);
+      });
     }
 
     function initFullCalendar() {
@@ -2049,130 +2122,99 @@
             backgroundColor: 'rgba(59, 130, 246, 0.15)',
             fill: true,
             tension: 0.2,
-            pointBackgroundColor: '#2563eb',
-            pointRadius: 5,
-            pointHoverRadius: 7
+            pointBackgroundColor: '#2563eb'
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { y: { title: { display: true, text: 'Poids (kg)' } } }
+          plugins: { legend: { position: 'bottom' } }
         }
-      });
-    }
-
-    function exportCarePDF() {
-      const element = document.getElementById('careJournalContainer');
-      element.classList.add('pdf-compact');
-
-      const opt = {
-        margin:       [0.3, 0.3, 0.3, 0.3],
-        filename:     `Fiche_Soins_Maternite_${new Date().toISOString().split('T')[0]}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-      };
-
-      html2pdf().set(opt).from(element).save().then(() => {
-        element.classList.remove('pdf-compact');
       });
     }
 
     function exportCareCSV() {
       if (!window.careEntries || window.careEntries.length === 0) {
-        alert("Aucune donnée de soin à exporter.");
+        alert("Aucune donnée à exporter.");
         return;
       }
-
-      let csvContent = "\uFEFFDate;Heure;Temp. Bébé (°C);Temp. Couveuse (°C);Couche;Repas (ml);Observations;Auteur\n";
-
+      let csv = "Date;Heure;Temp_Bebe;Temp_Couveuse;Couche;Repas_ml;Notes;Auteur\n";
       window.careEntries.forEach(c => {
-        const row = [
-          `"${c.date || ''}"`,
-          `"${c.time || ''}"`,
-          `"${c.tempBaby || ''}"`,
-          `"${c.tempIncubator || ''}"`,
-          `"${c.diaper || ''}"`,
-          `"${c.feeding || 0}"`,
-          `"${(c.notes || '').replace(/"/g, '""')}"`,
-          `"${c.author || ''}"`
-        ];
-        csvContent += row.join(";") + "\n";
+        csv += `${c.date || ''};${c.time || ''};${c.tempBaby || ''};${c.tempIncubator || ''};${c.diaper || ''};${c.feeding || 0};"${(c.notes || '').replace(/"/g, '""')}";${c.author || ''}\n`;
       });
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `Suivi_Maternite_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fiche_soins_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
     }
 
     function exportCareExcel() {
       if (!window.careEntries || window.careEntries.length === 0) {
-        alert("Aucune donnée de soin à exporter.");
+        alert("Aucune donnée à exporter.");
         return;
       }
-
-      const dataForExcel = window.careEntries.map(c => ({
+      const data = window.careEntries.map(c => ({
         "Date": c.date || '',
         "Heure": c.time || '',
         "Temp. Bébé (°C)": c.tempBaby || '',
         "Temp. Couveuse (°C)": c.tempIncubator || '',
         "Couche": c.diaper || '',
         "Repas (ml)": c.feeding || 0,
-        "Observations": c.notes || '',
+        "Notes": c.notes || '',
         "Auteur": c.author || ''
       }));
-
-      const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Soins Maternité");
-      XLSX.writeFile(workbook, `Suivi_Maternite_${new Date().toISOString().split('T')[0]}.xlsx`);
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Fiche de Soins");
+      XLSX.writeFile(wb, `fiche_soins_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
-    function saveOfficialResults(e) {
-      e.preventDefault();
-      const official = {
-        name: document.getElementById('officialName').value.trim(),
-        gender: document.getElementById('officialGender').value,
-        weight: parseFloat(document.getElementById('officialWeight').value),
-        height: parseFloat(document.getElementById('officialHeight').value)
+    function exportCarePDF() {
+      const element = document.getElementById('careJournalContainer');
+      element.classList.add('pdf-compact');
+      const opt = {
+        margin: 0.5,
+        filename: `fiche_soins_${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
-
-      window.officialResult = official;
-      saveAllToStorage();
-      displayOfficialBanner();
+      html2pdf().set(opt).from(element).save().then(() => {
+        element.classList.remove('pdf-compact');
+      });
     }
 
     function displayOfficialBanner() {
       if (!window.officialResult) return;
+      document.getElementById('resultBanner').classList.remove('hidden');
+      document.getElementById('resBabyName').innerText = `Bébé ${window.officialResult.name}`;
+      document.getElementById('resBabyDetails').innerText = `Né(e) le ${window.officialResult.date || '--'} | ${window.officialResult.weight} kg | ${window.officialResult.height} cm`;
+      document.getElementById('resWinnerName').innerText = window.officialResult.winner || 'Non déterminé';
+    }
 
-      const res = window.officialResult;
-      document.getElementById('resBabyName').innerText = `Bébé ${res.name} est né(e) !`;
-      document.getElementById('resBabyDetails').innerText = `${res.gender} | Poids: ${res.weight.toFixed(3)} kg | Taille: ${res.height} cm`;
+    function saveOfficialResults(e) {
+      e.preventDefault();
+      const name = document.getElementById('officialName').value;
+      const gender = document.getElementById('officialGender').value;
+      const weight = parseFloat(document.getElementById('officialWeight').value);
+      const height = parseFloat(document.getElementById('officialHeight').value);
 
-      let bestScore = Infinity;
-      let winnerName = "Aucun participant";
+      let bestDiff = Infinity;
+      let winner = "Aucun";
 
       window.predictions.forEach(p => {
-        let score = 0;
-        if (p.gender !== res.gender) score += 5;
-        score += Math.abs(p.weight - res.weight) * 2;
-        score += Math.abs(p.height - res.height) * 0.5;
-
-        if (score < bestScore) {
-          bestScore = score;
-          winnerName = p.user;
+        const diff = Math.abs(p.weight - weight) + Math.abs(p.height - height);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          winner = p.user;
         }
       });
 
-      document.getElementById('resWinnerName').innerText = winnerName;
-      document.getElementById('resultBanner').classList.remove('hidden');
+      window.officialResult = { name, gender, weight, height, winner, date: new Date().toLocaleDateString('fr-FR') };
+      saveAllToStorage();
+      displayOfficialBanner();
     }
   </script>
 </body>
