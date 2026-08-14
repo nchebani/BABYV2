@@ -302,6 +302,63 @@
 
     <!-- SECTION 2 : SUIVI MATERNITÉ & SOINS -->
     <div id="section-maternite" class="hidden space-y-6">
+      
+      <!-- NOUVEAU MODULE : SAISIE RAPIDE & SUIVI QUOTIDIEN -->
+      <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+              <i class="fa-solid fa-bolt text-amber-500"></i> Suivi Quotidien Direct
+            </h3>
+            <p class="text-xs text-slate-500" id="currentTrackingDate">Date du jour : --/--/----</p>
+          </div>
+          <button onclick="resetDailyTracker()" class="px-3.5 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl text-xs border border-red-200 transition flex items-center gap-2">
+            <i class="fa-solid fa-rotate-right"></i> Réinitialiser la journée
+          </button>
+        </div>
+
+        <!-- BOUTONS D'AJOUT RAPIDE ET COMPTEURS DYNAMIQUES -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Carte Biberons -->
+          <div class="p-4 bg-white/70 rounded-2xl border border-pink-100 flex items-center justify-between gap-4 shadow-sm">
+            <div>
+              <span class="text-xs font-bold text-pink-600 uppercase tracking-wider block mb-1"><i class="fa-solid fa-bottle-droplet mr-1"></i> Biberons du jour</span>
+              <div class="text-2xl font-black text-slate-800">
+                <span id="quickMealCount">0</span> <span class="text-sm font-normal text-slate-500">prise(s)</span>
+              </div>
+              <p class="text-xs font-semibold text-pink-500 mt-0.5">Volume total : <span id="quickMealVolume">0</span> ml</p>
+            </div>
+            <button onclick="quickAddMeal()" class="px-4 py-3 bg-pink-500 hover:bg-pink-600 text-white font-extrabold rounded-2xl shadow-md transition flex items-center gap-2 text-xs">
+              <i class="fa-solid fa-plus text-base"></i> +1 Biberon
+            </button>
+          </div>
+
+          <!-- Carte Couches -->
+          <div class="p-4 bg-white/70 rounded-2xl border border-blue-100 flex items-center justify-between gap-4 shadow-sm">
+            <div>
+              <span class="text-xs font-bold text-blue-600 uppercase tracking-wider block mb-1"><i class="fa-solid fa-baby mr-1"></i> Couches du jour</span>
+              <div class="text-2xl font-black text-slate-800">
+                <span id="quickDiaperCount">0</span> <span class="text-sm font-normal text-slate-500">changée(s)</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-0.5">Capture l'heure courante</p>
+            </div>
+            <button onclick="quickAddDiaper()" class="px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-extrabold rounded-2xl shadow-md transition flex items-center gap-2 text-xs">
+              <i class="fa-solid fa-plus text-base"></i> +1 Couche
+            </button>
+          </div>
+        </div>
+
+        <!-- HISTORIQUE CHRONOLOGIQUE DES PRISES -->
+        <div class="pt-2">
+          <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> Historique de la journée en cours
+          </h4>
+          <div id="quickEntriesHistory" class="max-h-40 overflow-y-auto space-y-1.5 pr-1 text-xs">
+            <!-- Injecté dynamiquement par le JS -->
+          </div>
+        </div>
+      </div>
+
       <div class="glassmorphism p-6 rounded-3xl border border-white/50 flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-4">
           <div class="p-4 bg-amber-100 text-amber-600 rounded-2xl text-2xl">
@@ -430,7 +487,7 @@
         </div>
       </div>
 
-      <!-- NOUVEAU MODULE: STATISTIQUES PAR JOUR DÉTAILLÉES -->
+      <!-- MODULE: STATISTIQUES PAR JOUR DÉTAILLÉES -->
       <div class="glassmorphism p-6 rounded-3xl border border-white/50">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
@@ -841,7 +898,7 @@
               <li class="flex items-center gap-2"><i class="fa-solid fa-check text-pink-500"></i> Accès partagé illimité famille</li>
             </ul>
           </div>
-          <button onclick="selectPlan('Annuel')" class="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-95 text-white font-bold rounded-xl text-xs shadow-md transition">
+          <button onclick="selectPlan('Annuel')" class="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-95 text-white font-bold rounded-xl shadow-md transition">
             S'abonner pour 1 an
           </button>
         </div>
@@ -874,7 +931,8 @@
     const nodes = [
       { key: 'predictions', render: () => renderPredictions() },
       { key: 'officialResult', render: () => displayOfficialBanner() },
-      { key: 'careEntries', render: () => renderCareEntries() },
+      { key: 'careEntries', render: () => { renderCareEntries(); renderDailyTracker(); } },
+      { key: 'dailyArchive', render: () => renderDailyTracker() },
       { key: 'tempHistory', render: () => { updateTempChart(); renderTempList(); } },
       { key: 'weightHistory', render: () => { updateWeightChart(); renderWeightList(); } },
       { key: 'agendaEntries', render: () => renderAgendaEntries() },
@@ -927,6 +985,9 @@
       { date: todayIsoStr, time: "08:00", tempBaby: 36.7, tempIncubator: 31.0, diaper: "Urine", feeding: 60, notes: "Réveil calme, bon biberon.", author: "Infirmière Sophie" }
     ];
 
+    window.dailyArchive = JSON.parse(localStorage.getItem('bp_dailyArchive')) || {};
+    window.lastActiveDate = localStorage.getItem('bp_lastActiveDate') || todayIsoStr;
+
     window.weightHistory = JSON.parse(localStorage.getItem('bp_weightHistory')) || [
       { date: "2026-08-01", weight: 3.10 },
       { date: "2026-08-05", weight: 3.28 }
@@ -942,6 +1003,192 @@
     let chartWeightInstance = null;
     let timerInterval = null;
     let timerSeconds = 0;
+
+    // --- LOGIQUE DE REMISE À ZÉRO ET ARCHIVAGE AUTOMATIQUE ---
+    function checkMidnightReset() {
+      const today = new Date().toISOString().split('T')[0];
+      if (window.lastActiveDate !== today) {
+        archiveAndResetDay(window.lastActiveDate);
+        window.lastActiveDate = today;
+        localStorage.setItem('bp_lastActiveDate', today);
+      }
+    }
+
+    function archiveAndResetDay(dateToArchive) {
+      const dayEntries = window.careEntries.filter(c => c.date === dateToArchive);
+      let totalMeals = 0;
+      let totalVol = 0;
+      let totalDiapers = 0;
+
+      dayEntries.forEach(c => {
+        if (c.feeding > 0) {
+          totalMeals++;
+          totalVol += c.feeding;
+        }
+        if (c.diaper && c.diaper !== 'Propre / Rien') {
+          totalDiapers++;
+        }
+      });
+
+      window.dailyArchive[dateToArchive] = {
+        mealsCount: totalMeals,
+        mealsVolume: totalVol,
+        diapersCount: totalDiapers,
+        entriesCount: dayEntries.length
+      };
+
+      saveAllToStorage();
+    }
+
+    function renderDailyTracker() {
+      checkMidnightReset();
+      
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const formattedDate = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      
+      const dateEl = document.getElementById('currentTrackingDate');
+      if (dateEl) dateEl.innerText = `Date du jour : ${formattedDate}`;
+
+      const todayEntries = window.careEntries.filter(c => (c.date || today) === today);
+
+      let mealsCount = 0;
+      let mealsVol = 0;
+      let diapersCount = 0;
+
+      todayEntries.forEach(c => {
+        if (c.feeding > 0) {
+          mealsCount++;
+          mealsVol += c.feeding;
+        }
+        if (c.diaper && c.diaper !== 'Propre / Rien') {
+          diapersCount++;
+        }
+      });
+
+      const quickMealCount = document.getElementById('quickMealCount');
+      const quickMealVolume = document.getElementById('quickMealVolume');
+      const quickDiaperCount = document.getElementById('quickDiaperCount');
+
+      if (quickMealCount) quickMealCount.innerText = mealsCount;
+      if (quickMealVolume) quickMealVolume.innerText = mealsVol;
+      if (quickDiaperCount) quickDiaperCount.innerText = diapersCount;
+
+      renderQuickHistoryList(todayEntries);
+    }
+
+    function quickAddMeal() {
+      checkMidnightReset();
+      const volStr = prompt("Volume du biberon (en ml) :", "90");
+      if (volStr === null) return;
+      const vol = parseInt(volStr) || 0;
+
+      const now = new Date();
+      const entry = {
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().substring(0, 5),
+        tempBaby: null,
+        tempIncubator: null,
+        diaper: "Propre / Rien",
+        feeding: vol,
+        notes: "Ajout rapide Biberon",
+        author: currentUser || "Parent"
+      };
+
+      window.careEntries.push(entry);
+      saveAllToStorage();
+      renderCareEntries();
+      renderDailyTracker();
+    }
+
+    function quickAddDiaper() {
+      checkMidnightReset();
+      const diaperType = prompt("Type de couche :\n1: Urine\n2: Selles\n3: Urine + Selles", "1");
+      if (diaperType === null) return;
+
+      let typeLabel = "Urine";
+      if (diaperType === "2") typeLabel = "Selles";
+      if (diaperType === "3") typeLabel = "Urine + Selles";
+
+      const now = new Date();
+      const entry = {
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().substring(0, 5),
+        tempBaby: null,
+        tempIncubator: null,
+        diaper: typeLabel,
+        feeding: 0,
+        notes: "Ajout rapide Couche",
+        author: currentUser || "Parent"
+      };
+
+      window.careEntries.push(entry);
+      saveAllToStorage();
+      renderCareEntries();
+      renderDailyTracker();
+    }
+
+    function deleteQuickEntry(careIndex) {
+      if (confirm("Supprimer cette entrée ?")) {
+        window.careEntries.splice(careIndex, 1);
+        saveAllToStorage();
+        renderCareEntries();
+        renderDailyTracker();
+      }
+    }
+
+    function renderQuickHistoryList(todayEntries) {
+      const container = document.getElementById('quickEntriesHistory');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (todayEntries.length === 0) {
+        container.innerHTML = `<p class="text-slate-400 italic py-2">Aucune saisie aujourd'hui pour le moment.</p>`;
+        return;
+      }
+
+      todayEntries.slice().reverse().forEach(entry => {
+        const originalIndex = window.careEntries.indexOf(entry);
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm';
+        
+        let label = '';
+        let icon = '';
+
+        if (entry.feeding > 0) {
+          icon = '<i class="fa-solid fa-bottle-droplet text-pink-500"></i>';
+          label = `<strong>Biberon :</strong> ${entry.feeding} ml`;
+        } else if (entry.diaper && entry.diaper !== 'Propre / Rien') {
+          icon = '<i class="fa-solid fa-baby text-blue-500"></i>';
+          label = `<strong>Couche :</strong> ${entry.diaper}`;
+        } else {
+          icon = '<i class="fa-solid fa-notes-medical text-emerald-500"></i>';
+          label = `<strong>Soin :</strong> ${entry.notes}`;
+        }
+
+        div.innerHTML = `
+          <div class="flex items-center gap-2">
+            ${icon}
+            <span class="text-slate-700">${label}</span>
+            <span class="text-[10px] text-slate-400 font-bold">à ${entry.time}</span>
+          </div>
+          <button onclick="deleteQuickEntry(${originalIndex})" class="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition" title="Supprimer">
+            <i class="fa-solid fa-trash-can text-xs"></i>
+          </button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function resetDailyTracker() {
+      if (confirm("Voulez-vous réinitialiser l'historique et les compteurs de la journée en cours ?")) {
+        const today = new Date().toISOString().split('T')[0];
+        window.careEntries = window.careEntries.filter(c => c.date !== today);
+        saveAllToStorage();
+        renderCareEntries();
+        renderDailyTracker();
+      }
+    }
 
     function openEditStatsModal() {
       document.getElementById('goalMealsDayInput').value = window.statsGoals.mealsDay || 8;
@@ -1037,6 +1284,7 @@
 
           saveAllToStorage();
           renderCareEntries();
+          renderDailyTracker();
 
           alert(`Analyse terminée avec succès !\n\n• Type : ${d.type_document}\n• Poids extrait : ${d.poids_kg ? d.poids_kg + ' kg' : 'Non spécifié'}\n• Volume repas : ${d.volume_sondage_ml ? d.volume_sondage_ml + ' ml' : 'Non spécifié'}\n• Notes : ${d.notes || 'Rien à signaler'}`);
         } else {
@@ -1052,6 +1300,7 @@
       localStorage.setItem('bp_predictions', JSON.stringify(window.predictions));
       localStorage.setItem('bp_officialResult', JSON.stringify(window.officialResult));
       localStorage.setItem('bp_careEntries', JSON.stringify(window.careEntries));
+      localStorage.setItem('bp_dailyArchive', JSON.stringify(window.dailyArchive));
       localStorage.setItem('bp_weightHistory', JSON.stringify(window.weightHistory));
       localStorage.setItem('bp_tempHistory', JSON.stringify(window.tempHistory));
       localStorage.setItem('bp_agendaEntries', JSON.stringify(window.agendaEntries));
@@ -1061,6 +1310,7 @@
         window.saveToFirebase('predictions', window.predictions);
         window.saveToFirebase('officialResult', window.officialResult);
         window.saveToFirebase('careEntries', window.careEntries);
+        window.saveToFirebase('dailyArchive', window.dailyArchive);
         window.saveToFirebase('weightHistory', window.weightHistory);
         window.saveToFirebase('tempHistory', window.tempHistory);
         window.saveToFirebase('agendaEntries', window.agendaEntries);
@@ -1135,10 +1385,13 @@
 
       saveAllToStorage();
       renderCareEntries();
+      renderDailyTracker();
       resetTimer();
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      checkMidnightReset();
+
       const todayStr = new Date().toISOString().split('T')[0];
       document.getElementById('predDate').value = todayStr;
       document.getElementById('weightPointDate').value = todayStr;
@@ -1160,6 +1413,7 @@
       updateGoalsBadges();
       renderPredictions();
       renderCareEntries();
+      renderDailyTracker();
       renderWeightList();
       renderTempList();
       renderAgendaEntries();
@@ -1169,6 +1423,12 @@
       if (window.officialResult) {
         displayOfficialBanner();
       }
+
+      // Vérification périodique du passage à minuit (toutes les minutes)
+      setInterval(() => {
+        checkMidnightReset();
+        renderDailyTracker();
+      }, 60000);
     });
 
     function handleLogin(e) {
@@ -1194,6 +1454,7 @@
 
       renderPredictions();
       renderCareEntries();
+      renderDailyTracker();
       renderAgendaEntries();
     }
 
@@ -1205,6 +1466,7 @@
       document.getElementById('loginPage').classList.remove('hidden');
       renderPredictions();
       renderCareEntries();
+      renderDailyTracker();
       renderAgendaEntries();
     }
 
@@ -1408,6 +1670,7 @@
 
       saveAllToStorage();
       renderCareEntries();
+      renderDailyTracker();
       cancelCareEdit();
     }
 
@@ -1446,6 +1709,7 @@
         window.careEntries.splice(index, 1);
         saveAllToStorage();
         renderCareEntries();
+        renderDailyTracker();
       }
     }
 
@@ -2026,20 +2290,34 @@
       chartWeightInstance.data.labels = labels;
       chartWeightInstance.data.datasets[0].data = data;
       chartWeightInstance.update();
+    }
 
-      if (window.weightHistory.length > 0) {
-        const latest = window.weightHistory[window.weightHistory.length - 1].weight;
-        document.getElementById('statCurrentWeight').innerText = `${latest.toFixed(3)} kg`;
+    function initCharts() {
+      const ctxTemp = document.getElementById('chartTemp');
+      if (ctxTemp) {
+        chartTempInstance = new Chart(ctxTemp, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [
+              { label: 'Bébé (°C)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', tension: 0.3, fill: true },
+              { label: 'Couveuse (°C)', data: [], borderColor: '#9333ea', borderDash: [4, 4], tension: 0.3, fill: false }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
 
-        if (window.weightHistory.length > 1) {
-          const prev = window.weightHistory[0].weight;
-          const diffGrams = Math.round((latest - prev) * 1000);
-          const sign = diffGrams >= 0 ? '+' : '';
-          document.getElementById('statWeightDiff').innerText = `${sign}${diffGrams} g depuis le 1er relevé`;
-        }
-      } else {
-        document.getElementById('statCurrentWeight').innerText = `-- kg`;
-        document.getElementById('statWeightDiff').innerText = `Aucune donnée`;
+      const ctxWeight = document.getElementById('chartWeight');
+      if (ctxWeight) {
+        chartWeightInstance = new Chart(ctxWeight, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{ label: 'Poids (kg)', data: [], borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', tension: 0.3, fill: true }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
       }
     }
 
@@ -2059,8 +2337,8 @@
         div.innerHTML = `
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-weight-scale text-blue-500"></i>
-            <span class="font-bold text-slate-700">${item.weight.toFixed(3)} kg</span>
-            <span class="text-[11px] text-slate-400">(${item.date})</span>
+            <span class="font-bold text-slate-700">${item.weight} kg</span>
+            <span class="text-[11px] text-slate-400">le ${item.date}</span>
           </div>
           <div class="flex gap-1">
             <button onclick="editWeightPoint(${index})" class="text-slate-400 hover:text-amber-500 p-1 rounded-lg hover:bg-amber-50 transition" title="Modifier le poids">
@@ -2073,102 +2351,66 @@
         `;
         container.appendChild(div);
       });
+
+      if (window.weightHistory.length > 0) {
+        const last = window.weightHistory[window.weightHistory.length - 1].weight;
+        document.getElementById('statCurrentWeight').innerText = `${last} kg`;
+      }
     }
 
-    function initCharts() {
-      const ctxTemp = document.getElementById('chartTemp').getContext('2d');
+    function saveOfficialResults(e) {
+      e.preventDefault();
+      if (!isAdmin) return;
 
-      chartTempInstance = new Chart(ctxTemp, {
-        type: 'line',
-        data: {
-          labels: window.tempHistory.map(c => c.time),
-          datasets: [
-            {
-              label: 'Temp. Bébé (°C)',
-              data: window.tempHistory.map(c => c.tempBaby),
-              borderColor: '#ef4444',
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              tension: 0.3,
-              fill: true,
-              pointRadius: 5
-            },
-            {
-              label: 'Temp. Couveuse (°C)',
-              data: window.tempHistory.map(c => c.tempIncubator),
-              borderColor: '#f59e0b',
-              borderDash: [5, 5],
-              tension: 0.3,
-              pointRadius: 3
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom' } },
-          scales: { y: { min: 30, max: 40 } }
+      window.officialResult = {
+        name: document.getElementById('officialName').value.trim(),
+        gender: document.getElementById('officialGender').value,
+        weight: parseFloat(document.getElementById('officialWeight').value),
+        height: parseFloat(document.getElementById('officialHeight').value)
+      };
+
+      saveAllToStorage();
+      displayOfficialBanner();
+    }
+
+    function displayOfficialBanner() {
+      if (!window.officialResult) return;
+      const b = window.officialResult;
+      document.getElementById('resBabyName').innerText = `🎉 Bienvenue à ${b.name} !`;
+      document.getElementById('resBabyDetails').innerText = `Sexe : ${b.gender} | Poids : ${b.weight} kg | Taille : ${b.height} cm`;
+      
+      let bestWinner = "--";
+      let minDiff = Infinity;
+
+      window.predictions.forEach(p => {
+        const diff = Math.abs(p.weight - b.weight) + Math.abs(p.height - b.height);
+        if (diff < minDiff) {
+          minDiff = diff;
+          bestWinner = p.user;
         }
       });
 
-      const ctxWeight = document.getElementById('chartWeight').getContext('2d');
-      chartWeightInstance = new Chart(ctxWeight, {
-        type: 'line',
-        data: {
-          labels: window.weightHistory.map(w => w.date),
-          datasets: [{
-            label: 'Poids du bébé (kg)',
-            data: window.weightHistory.map(w => w.weight),
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.15)',
-            fill: true,
-            tension: 0.2,
-            pointBackgroundColor: '#2563eb'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom' } }
-        }
-      });
+      document.getElementById('resWinnerName').innerText = bestWinner;
+      document.getElementById('resultBanner').classList.remove('hidden');
     }
 
     function exportCareCSV() {
-      if (!window.careEntries || window.careEntries.length === 0) {
-        alert("Aucune donnée à exporter.");
-        return;
-      }
-      let csv = "Date;Heure;Temp_Bebe;Temp_Couveuse;Couche;Repas_ml;Notes;Auteur\n";
+      let csv = "Date;Heure;Temperature Bebe;Temperature Couveuse;Couche;Repas (ml);Notes;Auteur\n";
       window.careEntries.forEach(c => {
-        csv += `${c.date || ''};${c.time || ''};${c.tempBaby || ''};${c.tempIncubator || ''};${c.diaper || ''};${c.feeding || 0};"${(c.notes || '').replace(/"/g, '""')}";${c.author || ''}\n`;
+        csv += `${c.date};${c.time};${c.tempBaby || ''};${c.tempIncubator || ''};${c.diaper};${c.feeding};"${c.notes}";${c.author}\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `fiche_soins_${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Suivi_Soin_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
     }
 
     function exportCareExcel() {
-      if (!window.careEntries || window.careEntries.length === 0) {
-        alert("Aucune donnée à exporter.");
-        return;
-      }
-      const data = window.careEntries.map(c => ({
-        "Date": c.date || '',
-        "Heure": c.time || '',
-        "Temp. Bébé (°C)": c.tempBaby || '',
-        "Temp. Couveuse (°C)": c.tempIncubator || '',
-        "Couche": c.diaper || '',
-        "Repas (ml)": c.feeding || 0,
-        "Notes": c.notes || '',
-        "Auteur": c.author || ''
-      }));
-      const ws = XLSX.utils.json_to_sheet(data);
+      const ws = XLSX.utils.json_to_sheet(window.careEntries);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Fiche de Soins");
-      XLSX.writeFile(wb, `fiche_soins_${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.writeFile(wb, `Suivi_Soin_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
     function exportCarePDF() {
@@ -2176,7 +2418,7 @@
       element.classList.add('pdf-compact');
       const opt = {
         margin: 0.5,
-        filename: `fiche_soins_${new Date().toISOString().split('T')[0]}.pdf`,
+        filename: `Fiche_Soins_${new Date().toISOString().split('T')[0]}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -2184,37 +2426,6 @@
       html2pdf().set(opt).from(element).save().then(() => {
         element.classList.remove('pdf-compact');
       });
-    }
-
-    function displayOfficialBanner() {
-      if (!window.officialResult) return;
-      document.getElementById('resultBanner').classList.remove('hidden');
-      document.getElementById('resBabyName').innerText = `Bébé ${window.officialResult.name}`;
-      document.getElementById('resBabyDetails').innerText = `Né(e) le ${window.officialResult.date || '--'} | ${window.officialResult.weight} kg | ${window.officialResult.height} cm`;
-      document.getElementById('resWinnerName').innerText = window.officialResult.winner || 'Non déterminé';
-    }
-
-    function saveOfficialResults(e) {
-      e.preventDefault();
-      const name = document.getElementById('officialName').value;
-      const gender = document.getElementById('officialGender').value;
-      const weight = parseFloat(document.getElementById('officialWeight').value);
-      const height = parseFloat(document.getElementById('officialHeight').value);
-
-      let bestDiff = Infinity;
-      let winner = "Aucun";
-
-      window.predictions.forEach(p => {
-        const diff = Math.abs(p.weight - weight) + Math.abs(p.height - height);
-        if (diff < bestDiff) {
-          bestDiff = diff;
-          winner = p.user;
-        }
-      });
-
-      window.officialResult = { name, gender, weight, height, winner, date: new Date().toLocaleDateString('fr-FR') };
-      saveAllToStorage();
-      displayOfficialBanner();
     }
   </script>
 </body>
