@@ -1917,9 +1917,14 @@
       document.getElementById('subscribeModal').classList.add('hidden');
     }
 
+    function selectPlan(plan) {
+      alert(`Merci d'avoir choisi le plan ${plan} ! Redirection vers la passerelle de paiement sécurisée...`);
+      closeSubscribeModal();
+    }
+
     function openEditStatsModal() {
-      document.getElementById('goalMealsDayInput').value = window.statsGoals.mealsDay;
-      document.getElementById('goalDiapersDayInput').value = window.statsGoals.diapersDay;
+      document.getElementById('goalMealsDayInput').value = window.statsGoals.mealsDay || 8;
+      document.getElementById('goalDiapersDayInput').value = window.statsGoals.diapersDay || 6;
       document.getElementById('editStatsModal').classList.remove('hidden');
     }
 
@@ -1937,88 +1942,11 @@
     }
 
     function updateGoalsBadges() {
-      const bM = document.getElementById('badgeMealsGoal');
-      const bD = document.getElementById('badgeDiapersGoal');
-      if (bM) bM.innerText = `Obj: ${window.statsGoals.mealsDay}/j`;
-      if (bD) bD.innerText = `Obj: ${window.statsGoals.diapersDay}/j`;
+      const mealsBadge = document.getElementById('badgeMealsGoal');
+      const diapersBadge = document.getElementById('badgeDiapersGoal');
+      if (mealsBadge) mealsBadge.innerText = `Obj: ${window.statsGoals.mealsDay}/j`;
+      if (diapersBadge) diapersBadge.innerText = `Obj: ${window.statsGoals.diapersDay}/j`;
     }
-
-    function toggleTimer() {
-      const btn = document.getElementById('btnStartTimer');
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
-        btn.classList.replace('bg-amber-500', 'bg-emerald-500');
-      } else {
-        timerInterval = setInterval(() => {
-          timerSeconds++;
-          const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-          const s = String(timerSeconds % 60).padStart(2, '0');
-          document.getElementById('timerDisplay').innerText = `${m}:${s}`;
-        }, 1000);
-        btn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
-        btn.classList.replace('bg-emerald-500', 'bg-amber-500');
-      }
-    }
-
-    function resetTimer() {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
-      timerSeconds = 0;
-      document.getElementById('timerDisplay').innerText = "00:00";
-      const btn = document.getElementById('btnStartTimer');
-      if (btn) {
-        btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
-        btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition";
-      }
-    }
-
-    function saveTimerToCare() {
-      if (timerSeconds === 0) return alert("Le chronomètre est à 0.");
-      const type = document.getElementById('timerType').value;
-      const mins = Math.round(timerSeconds / 60);
-      const now = new Date();
-
-      const entry = {
-        date: now.toISOString().split('T')[0],
-        time: now.toTimeString().substring(0, 5),
-        tempBaby: null,
-        tempIncubator: null,
-        diaper: "Propre / Rien",
-        feeding: 0,
-        notes: `Chrono ${type} : ${mins} min (${timerSeconds}s)`,
-        author: currentUser || "Parent"
-      };
-
-      if (!window.careEntries) window.careEntries = [];
-      window.careEntries.push(entry);
-      saveAllToStorage();
-      renderCareEntries();
-      resetTimer();
-      alert(`Activité (${type}) enregistrée dans la fiche de soins !`);
-    }
-
-    // Initialisation au chargement de la page
-    window.addEventListener('DOMContentLoaded', () => {
-      const todayStr = new Date().toISOString().split('T')[0];
-      const nowTimeStr = new Date().toTimeString().substring(0, 5);
-
-      if (document.getElementById('agendaStartDate')) document.getElementById('agendaStartDate').value = todayStr;
-      if (document.getElementById('agendaEndDate')) document.getElementById('agendaEndDate').value = todayStr;
-      if (document.getElementById('agendaStartTime')) document.getElementById('agendaStartTime').value = "09:00";
-      if (document.getElementById('agendaEndTime')) document.getElementById('agendaEndTime').value = "10:00";
-      
-      if (document.getElementById('careDate')) document.getElementById('careDate').value = todayStr;
-      if (document.getElementById('careTime')) document.getElementById('careTime').value = nowTimeStr;
-      
-      if (document.getElementById('predDate')) document.getElementById('predDate').value = todayStr;
-      if (document.getElementById('weightPointDate')) document.getElementById('weightPointDate').value = todayStr;
-
-      updateGoalsBadges();
-    });
   </script>
 </body>
 </html>
