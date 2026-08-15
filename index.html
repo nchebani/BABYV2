@@ -1035,6 +1035,61 @@
     let timerInterval = null;
     let timerSeconds = 0;
 
+    // --- NAVIGATION PAR ONGLETS ---
+    function switchTab(tabName) {
+      ['pronostics', 'maternite', 'agenda'].forEach(tab => {
+        const sec = document.getElementById(`section-${tab}`);
+        const btn = document.getElementById(`tab-${tab}`);
+        if (sec) sec.classList.add('hidden');
+        if (btn) btn.classList.remove('active-tab');
+      });
+
+      const activeSec = document.getElementById(`section-${tabName}`);
+      const activeBtn = document.getElementById(`tab-${tabName}`);
+      if (activeSec) activeSec.classList.remove('hidden');
+      if (activeBtn) activeBtn.classList.add('active-tab');
+
+      if (tabName === 'agenda') {
+        setTimeout(() => {
+          if (fullCalendarInstance) {
+            fullCalendarInstance.updateSize();
+            fullCalendarInstance.refetchEvents();
+          }
+        }, 100);
+      }
+    }
+
+    // --- AUTHENTIFICATION ---
+    function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('usernameInput').value.trim();
+      const code = document.getElementById('accessCodeInput').value.trim();
+
+      if (!username) return;
+
+      currentUser = username;
+      isAdmin = (code === "ADMIN2026");
+
+      document.getElementById('userBadge').innerHTML = `<i class="fa-regular fa-user mr-1"></i> ${currentUser} ${isAdmin ? '<span class="bg-purple-100 text-purple-700 font-bold px-1.5 py-0.5 rounded text-[10px] ml-1">ADMIN</span>' : ''}`;
+      document.getElementById('loginPage').classList.add('hidden');
+
+      if (isAdmin) {
+        document.getElementById('adminPanel').classList.remove('hidden');
+        document.getElementById('adminUserOverride').classList.remove('hidden');
+      }
+
+      renderPredictions();
+      renderCareEntries();
+      renderAgendaEntries();
+    }
+
+    function logout() {
+      currentUser = null;
+      isAdmin = false;
+      document.getElementById('loginPage').classList.remove('hidden');
+      document.getElementById('loginForm').reset();
+    }
+
     // --- INITIALISATION DU CALENDRIER FULLCALENDAR ---
     function initFullCalendar() {
       const calendarEl = document.getElementById('fullCalendarContainer');
@@ -1236,6 +1291,214 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+
+    // --- FONCTIONS DE GESTION PRONOSTICS & MATERNITÉ ---
+    function renderPredictions() {
+      const tbody = document.getElementById('predictionsTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      let countGirl = 0, countBoy = 0, sumWeight = 0, sumHeight = 0;
+
+      (window.predictions || []).forEach((pred, idx) => {
+        if (pred.gender === 'Fille') countGirl++; else countBoy++;
+        sumWeight += parseFloat(pred.weight) || 0;
+        sumHeight += parseFloat(pred.height) || 0;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/50 transition';
+        tr.innerHTML = `
+          <td class="py-3 font-semibold text-slate-800">${pred.user}</td>
+          <td class="py-3 font-bold text-pink-600">${pred.name}</td>
+          <td class="py-3 text-slate-600">${pred.hobby || '-'}</td>
+          <td class="py-3"><span class="px-2 py-0.5 rounded-full text-xs font-bold ${pred.gender === 'Fille' ? 'bg-pink-100 text-pink-600' : 'bg-blue-100 text-blue-600'}">${pred.gender}</span></td>
+          <td class="py-3 font-mono">${pred.weight} kg</td>
+          <td class="py-3 font-mono">${pred.height} cm</td>
+          <td class="py-3 text-slate-500">${pred.date}</td>
+          <td class="py-3 text-right">
+            ${isAdmin || pred.user === currentUser ? `
+              <button onclick="editPrediction(${idx})" class="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deletePrediction(${idx})" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+            ` : ''}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const total = window.predictions.length;
+      document.getElementById('predCount').innerText = `${total} participation(s)`;
+
+      if (total > 0) {
+        document.getElementById('statGender').innerText = countGirl >= countBoy ? `Fille (${Math.round(countGirl/total*100)}%)` : `Garçon (${Math.round(countBoy/total*100)}%)`;
+        document.getElementById('statAvgWeight').innerText = `${(sumWeight / total).toFixed(2)} kg`;
+        document.getElementById('statAvgHeight').innerText = `${(sumHeight / total).toFixed(1)} cm`;
+      }
+    }
+
+    function addPrediction(e) {
+      e.preventDefault();
+      const editIdx = parseInt(document.getElementById('editPredIndex').value);
+      const user = (isAdmin && document.getElementById('predUserAdmin').value.trim()) ? document.getElementById('predUserAdmin').value.trim() : (currentUser || "Participant");
+
+      const pred = {
+        user: user,
+        name: document.getElementById('predName').value.trim(),
+        hobby: document.getElementById('predHobby').value.trim(),
+        gender: document.getElementById('predGender').value,
+        weight: parseFloat(document.getElementById('predWeight').value),
+        height: parseFloat(document.getElementById('predHeight').value),
+        date: document.getElementById('predDate').value
+      };
+
+      if (editIdx >= 0) {
+        window.predictions[editIdx] = pred;
+      } else {
+        window.predictions.push(pred);
+      }
+
+      saveAllToStorage();
+      renderPredictions();
+      cancelPredEdit();
+    }
+
+    function editPrediction(idx) {
+      const pred = window.predictions[idx];
+      if (!pred) return;
+
+      document.getElementById('editPredIndex').value = idx;
+      document.getElementById('predName').value = pred.name;
+      document.getElementById('predHobby').value = pred.hobby || '';
+      document.getElementById('predGender').value = pred.gender;
+      document.getElementById('predWeight').value = pred.weight;
+      document.getElementById('predHeight').value = pred.height;
+      document.getElementById('predDate').value = pred.date;
+
+      if (isAdmin) document.getElementById('predUserAdmin').value = pred.user;
+
+      document.getElementById('formPredTitle').innerHTML = `<i class="fa-solid fa-pen text-pink-500"></i> Modifier le pronostic`;
+      document.getElementById('btnSubmitPred').innerText = "Mettre à jour le pronostic";
+      document.getElementById('btnCancelPredEdit').classList.remove('hidden');
+    }
+
+    function cancelPredEdit() {
+      document.getElementById('editPredIndex').value = "-1";
+      document.getElementById('predictionForm').reset();
+      document.getElementById('predDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('formPredTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-pink-500"></i> Faire un pronostic`;
+      document.getElementById('btnSubmitPred').innerText = "Enregistrer le pronostic";
+      document.getElementById('btnCancelPredEdit').classList.add('hidden');
+    }
+
+    function deletePrediction(idx) {
+      if (confirm("Supprimer ce pronostic ?")) {
+        window.predictions.splice(idx, 1);
+        saveAllToStorage();
+        renderPredictions();
+      }
+    }
+
+    function renderCareEntries() {
+      const tbody = document.getElementById('careTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      (window.careEntries || []).forEach((c, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/50 transition';
+        tr.innerHTML = `
+          <td class="py-3 font-semibold text-slate-700">${c.date || '-'} à ${c.time}</td>
+          <td class="py-3">${c.tempBaby ? `<strong>${c.tempBaby} °C</strong>` : '--'} ${c.tempIncubator ? `<span class="text-xs text-slate-400">(${c.tempIncubator}°C)</span>` : ''}</td>
+          <td class="py-3"><span class="px-2 py-0.5 rounded-full text-xs font-bold ${c.diaper === 'Propre / Rien' ? 'bg-slate-100 text-slate-600' : 'bg-blue-100 text-blue-600'}">${c.diaper}</span></td>
+          <td class="py-3 font-mono font-bold text-pink-600">${c.feeding > 0 ? `${c.feeding} ml` : '--'}</td>
+          <td class="py-3 text-slate-600">${c.notes || '-'}</td>
+          <td class="py-3 text-xs font-bold text-slate-500">${c.author || 'Parent'}</td>
+          <td class="py-3 text-right no-pdf">
+            <button onclick="deleteCareEntry(${idx})" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      updateNextFeedingReminder();
+    }
+
+    function addCareEntry(e) {
+      e.preventDefault();
+      const editIdx = parseInt(document.getElementById('editCareIndex').value);
+
+      const entry = {
+        date: document.getElementById('careDate').value,
+        time: document.getElementById('careTime').value,
+        tempBaby: parseFloat(document.getElementById('careTempBaby').value) || null,
+        tempIncubator: parseFloat(document.getElementById('careTempIncubator').value) || null,
+        diaper: document.getElementById('careDiaper').value,
+        feeding: parseInt(document.getElementById('careFeeding').value) || 0,
+        notes: document.getElementById('careNotes').value.trim(),
+        author: currentUser || "Parent"
+      };
+
+      if (editIdx >= 0) {
+        window.careEntries[editIdx] = entry;
+      } else {
+        window.careEntries.push(entry);
+      }
+
+      saveAllToStorage();
+      renderCareEntries();
+      renderDailyTracker();
+      updateMealsChart();
+      cancelCareEdit();
+    }
+
+    function cancelCareEdit() {
+      document.getElementById('editCareIndex').value = "-1";
+      document.getElementById('careForm').reset();
+      const now = new Date();
+      document.getElementById('careDate').value = now.toISOString().split('T')[0];
+      document.getElementById('careTime').value = now.toTimeString().substring(0, 5);
+      document.getElementById('formCareTitle').innerHTML = `<i class="fa-solid fa-notes-medical text-emerald-500"></i> Nouvelle Transmission Soin`;
+      document.getElementById('btnSubmitCare').innerText = "Enregistrer l'observation";
+      document.getElementById('btnCancelCareEdit').classList.add('hidden');
+    }
+
+    function deleteCareEntry(idx) {
+      if (confirm("Supprimer ce soin ?")) {
+        window.careEntries.splice(idx, 1);
+        saveAllToStorage();
+        renderCareEntries();
+        renderDailyTracker();
+        updateMealsChart();
+      }
+    }
+
+    function exportCareCSV() {
+      if (!window.careEntries || window.careEntries.length === 0) return alert("Aucune donnée à exporter.");
+      let csv = "Date,Heure,Temp_Bebe,Temp_Couveuse,Couche,Repas_ml,Observations,Auteur\n";
+      window.careEntries.forEach(c => {
+        csv += `"${c.date}","${c.time}","${c.tempBaby || ''}","${c.tempIncubator || ''}","${c.diaper}","${c.feeding}","${c.notes || ''}","${c.author}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'fiches_de_soins.csv';
+      link.click();
+    }
+
+    function exportCareExcel() {
+      if (!window.careEntries || window.careEntries.length === 0) return alert("Aucune donnée à exporter.");
+      const ws = XLSX.utils.json_to_sheet(window.careEntries);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Fiche Soins");
+      XLSX.writeFile(wb, "fiches_de_soins.xlsx");
+    }
+
+    function exportCarePDF() {
+      const element = document.getElementById('careJournalContainer');
+      element.classList.add('pdf-compact');
+      html2pdf().from(element).save('fiche_soins_maternite.pdf').then(() => {
+        element.classList.remove('pdf-compact');
+      });
     }
 
     // --- INITIALISATION DES GRAPHIQUES ---
@@ -1913,6 +2176,41 @@
       resetTimer();
     }
 
+    function saveOfficialResults(e) {
+      e.preventDefault();
+      const name = document.getElementById('officialName').value.trim();
+      const gender = document.getElementById('officialGender').value;
+      const weight = parseFloat(document.getElementById('officialWeight').value);
+      const height = parseFloat(document.getElementById('officialHeight').value);
+
+      let bestDiff = Infinity;
+      let winner = "Aucun";
+
+      (window.predictions || []).forEach(pred => {
+        const diffW = Math.abs(pred.weight - weight);
+        const diffH = Math.abs(pred.height - height);
+        const score = diffW + diffH;
+        if (score < bestDiff) {
+          bestDiff = score;
+          winner = pred.user;
+        }
+      });
+
+      window.officialResult = { name, gender, weight, height, winner };
+      saveAllToStorage();
+      displayOfficialBanner();
+    }
+
+    function displayOfficialBanner() {
+      if (!window.officialResult) return;
+      const banner = document.getElementById('resultBanner');
+      if (!banner) return;
+      banner.classList.remove('hidden');
+      document.getElementById('resBabyName').innerText = `Bébé ${window.officialResult.name} est là !`;
+      document.getElementById('resBabyDetails').innerText = `Sexe: ${window.officialResult.gender} | Poids: ${window.officialResult.weight} kg | Taille: ${window.officialResult.height} cm`;
+      document.getElementById('resWinnerName').innerText = window.officialResult.winner;
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       checkMidnightReset();
 
@@ -1954,369 +2252,6 @@
         renderDailyTracker();
       }, 60000);
     });
-
-    function handleLogin(e) {
-      e.preventDefault();
-      const username = document.getElementById('usernameInput').value.trim();
-      const code = document.getElementById('accessCodeInput').value.trim();
-
-      if (!username) return;
-
-      currentUser = username;
-      if (code.toUpperCase() === 'ADMIN2026') {
-        isAdmin = true;
-        document.getElementById('adminPanel').classList.remove('hidden');
-        document.getElementById('adminUserOverride').classList.remove('hidden');
-      } else {
-        isAdmin = false;
-        document.getElementById('adminPanel').classList.add('hidden');
-        document.getElementById('adminUserOverride').classList.add('hidden');
-      }
-
-      document.getElementById('userBadge').innerHTML = `<i class="fa-solid fa-user-check text-emerald-500 mr-1"></i> ${currentUser} ${isAdmin ? '<span class="text-xs text-purple-600 font-bold">(Admin)</span>' : ''}`;
-      document.getElementById('loginPage').classList.add('hidden');
-
-      renderPredictions();
-      renderCareEntries();
-      renderDailyTracker();
-      renderAgendaEntries();
-    }
-
-    function logout() {
-      currentUser = null;
-      isAdmin = false;
-      document.getElementById('adminPanel').classList.add('hidden');
-      document.getElementById('adminUserOverride').classList.add('hidden');
-      document.getElementById('loginPage').classList.remove('hidden');
-      renderPredictions();
-      renderCareEntries();
-      renderDailyTracker();
-      renderAgendaEntries();
-    }
-
-    function switchTab(tab) {
-      const secPronostics = document.getElementById('section-pronostics');
-      const secMaternite = document.getElementById('section-maternite');
-      const secAgenda = document.getElementById('section-agenda');
-
-      const tabPronostics = document.getElementById('tab-pronostics');
-      const tabMaternite = document.getElementById('tab-maternite');
-      const tabAgenda = document.getElementById('tab-agenda');
-
-      secPronostics.classList.add('hidden');
-      secMaternite.classList.add('hidden');
-      secAgenda.classList.add('hidden');
-
-      tabPronostics.classList.remove('active-tab');
-      tabMaternite.classList.remove('active-tab');
-      tabAgenda.classList.remove('active-tab');
-
-      if (tab === 'pronostics') {
-        secPronostics.classList.remove('hidden');
-        tabPronostics.classList.add('active-tab');
-      } else if (tab === 'maternite') {
-        secMaternite.classList.remove('hidden');
-        tabMaternite.classList.add('active-tab');
-      } else if (tab === 'agenda') {
-        secAgenda.classList.remove('hidden');
-        tabAgenda.classList.add('active-tab');
-        if (fullCalendarInstance) {
-          setTimeout(() => {
-            fullCalendarInstance.updateSize();
-          }, 50);
-        }
-      }
-    }
-
-    function addPrediction(e) {
-      e.preventDefault();
-      if (!currentUser) return;
-
-      const editIdx = parseInt(document.getElementById('editPredIndex').value);
-
-      let targetUser = currentUser;
-      if (isAdmin && editIdx === -1) {
-        const adminOverride = document.getElementById('predUserAdmin').value.trim();
-        if (adminOverride) targetUser = adminOverride;
-      } else if (editIdx !== -1) {
-        targetUser = window.predictions[editIdx].user;
-      }
-
-      const newPred = {
-        user: targetUser,
-        name: document.getElementById('predName').value.trim(),
-        hobby: document.getElementById('predHobby').value.trim() || 'Non renseigné',
-        gender: document.getElementById('predGender').value,
-        weight: parseFloat(document.getElementById('predWeight').value),
-        height: parseFloat(document.getElementById('predHeight').value),
-        date: document.getElementById('predDate').value
-      };
-
-      if (editIdx >= 0) {
-        window.predictions[editIdx] = newPred;
-      } else {
-        window.predictions.push(newPred);
-      }
-
-      saveAllToStorage();
-      renderPredictions();
-      cancelPredEdit();
-    }
-
-    function editPrediction(index) {
-      const p = window.predictions[index];
-      if (!isAdmin && p.user !== currentUser) {
-        alert("Vous ne pouvez modifier que votre propre pronostic !");
-        return;
-      }
-
-      document.getElementById('editPredIndex').value = index;
-      document.getElementById('predName').value = p.name;
-      document.getElementById('predHobby').value = p.hobby === 'Non renseigné' ? '' : p.hobby;
-      document.getElementById('predGender').value = p.gender;
-      document.getElementById('predWeight').value = p.weight;
-      document.getElementById('predHeight').value = p.height;
-      document.getElementById('predDate').value = p.date;
-
-      document.getElementById('formPredTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Modifier le pronostic (${p.user})`;
-      document.getElementById('btnSubmitPred').innerText = "Mettre à jour le pronostic";
-      document.getElementById('btnSubmitPred').className = "w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition text-sm";
-      document.getElementById('btnCancelPredEdit').classList.remove('hidden');
-    }
-
-    function cancelPredEdit() {
-      document.getElementById('editPredIndex').value = "-1";
-      document.getElementById('predictionForm').reset();
-      document.getElementById('predUserAdmin').value = '';
-      document.getElementById('predDate').value = new Date().toISOString().split('T')[0];
-
-      document.getElementById('formPredTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-pink-500"></i> Faire un pronostic`;
-      document.getElementById('btnSubmitPred').innerText = "Enregistrer le pronostic";
-      document.getElementById('btnSubmitPred').className = "w-full py-3 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-xl shadow-md transition text-sm";
-      document.getElementById('btnCancelPredEdit').classList.add('hidden');
-    }
-
-    function deletePrediction(index) {
-      const p = window.predictions[index];
-      if (!isAdmin && p.user !== currentUser) return;
-
-      if (confirm(`Voulez-vous vraiment supprimer le pronostic de "${p.user}" ?`)) {
-        window.predictions.splice(index, 1);
-        saveAllToStorage();
-        renderPredictions();
-      }
-    }
-
-    function renderPredictions() {
-      const tbody = document.getElementById('predictionsTableBody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-
-      let countFille = 0;
-      let totalWeight = 0;
-      let totalHeight = 0;
-
-      (window.predictions || []).forEach((p, idx) => {
-        if (p.gender === 'Fille') countFille++;
-        totalWeight += p.weight;
-        totalHeight += p.height;
-
-        const isOwnerOrAdmin = isAdmin || (currentUser && p.user === currentUser);
-
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50/50 transition';
-        tr.innerHTML = `
-          <td class="py-3 font-semibold text-slate-700">${p.user}</td>
-          <td class="py-3 font-bold text-pink-600">${p.name}</td>
-          <td class="py-3 text-slate-600 italic text-xs"><span class="bg-pink-50 text-pink-700 px-2 py-1 rounded-lg border border-pink-100">${p.hobby || 'RAS'}</span></td>
-          <td class="py-3">${p.gender === 'Fille' ? 'Fille' : 'Garçon'}</td>
-          <td class="py-3 font-medium">${p.weight.toFixed(3)} kg</td>
-          <td class="py-3 font-medium">${p.height} cm</td>
-          <td class="py-3 text-slate-500">${p.date}</td>
-          <td class="py-3 text-right">
-            ${isOwnerOrAdmin ? `
-              <button onclick="editPrediction(${idx})" class="text-indigo-600 hover:bg-indigo-50 p-1.5 rounded-lg mr-1 transition"><i class="fa-solid fa-pen"></i></button>
-              <button onclick="deletePrediction(${idx})" class="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
-            ` : '-'}
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      const total = (window.predictions || []).length;
-      document.getElementById('predCount').innerText = `${total} participation(s)`;
-
-      if (total > 0) {
-        document.getElementById('statGender').innerText = `${Math.round((countFille / total) * 100)}% Fille`;
-        document.getElementById('statAvgWeight').innerText = `${(totalWeight / total).toFixed(2)} kg`;
-        document.getElementById('statAvgHeight').innerText = `${(totalHeight / total).toFixed(1)} cm`;
-      } else {
-        document.getElementById('statGender').innerText = '--';
-        document.getElementById('statAvgWeight').innerText = '-- kg';
-        document.getElementById('statAvgHeight').innerText = '-- cm';
-      }
-    }
-
-    function renderCareEntries() {
-      const tbody = document.getElementById('careTableBody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-
-      (window.careEntries || []).slice().reverse().forEach((c, idx) => {
-        const realIdx = window.careEntries.length - 1 - idx;
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50/50 transition';
-        tr.innerHTML = `
-          <td class="py-3 font-semibold text-slate-700">${c.date || '--'} à ${c.time || '--'}</td>
-          <td class="py-3">${c.tempBaby ? `${c.tempBaby}°C` : '-'} ${c.tempIncubator ? `<span class="text-xs text-slate-400">(${c.tempIncubator}°C)</span>` : ''}</td>
-          <td class="py-3">${c.diaper || '-'}</td>
-          <td class="py-3 font-bold text-pink-600">${c.feeding ? `${c.feeding} ml` : '-'}</td>
-          <td class="py-3 text-xs text-slate-600">${c.notes || '-'}</td>
-          <td class="py-3 text-xs font-bold text-slate-500">${c.author || 'Inconnu'}</td>
-          <td class="py-3 text-right no-pdf">
-            <button onclick="deleteCareEntry(${realIdx})" class="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      updateNextFeedingReminder();
-    }
-
-    function addCareEntry(e) {
-      e.preventDefault();
-      const editIdx = parseInt(document.getElementById('editCareIndex').value);
-
-      const entry = {
-        date: document.getElementById('careDate').value,
-        time: document.getElementById('careTime').value,
-        tempBaby: parseFloat(document.getElementById('careTempBaby').value) || null,
-        tempIncubator: parseFloat(document.getElementById('careTempIncubator').value) || null,
-        diaper: document.getElementById('careDiaper').value,
-        feeding: parseInt(document.getElementById('careFeeding').value) || 0,
-        notes: document.getElementById('careNotes').value.trim(),
-        author: currentUser || "Parent"
-      };
-
-      if (!window.careEntries) window.careEntries = [];
-
-      if (editIdx >= 0) {
-        window.careEntries[editIdx] = entry;
-      } else {
-        window.careEntries.push(entry);
-      }
-
-      saveAllToStorage();
-      renderCareEntries();
-      renderDailyTracker();
-      updateMealsChart();
-      cancelCareEdit();
-    }
-
-    function cancelCareEdit() {
-      document.getElementById('editCareIndex').value = "-1";
-      document.getElementById('careForm').reset();
-      const todayStr = new Date().toISOString().split('T')[0];
-      document.getElementById('careDate').value = todayStr;
-      document.getElementById('careTime').value = new Date().toTimeString().substring(0, 5);
-
-      document.getElementById('formCareTitle').innerHTML = `<i class="fa-solid fa-notes-medical text-emerald-500"></i> Nouvelle Transmission Soin`;
-      document.getElementById('btnSubmitCare').innerText = "Enregistrer l'observation";
-      document.getElementById('btnCancelCareEdit').classList.add('hidden');
-    }
-
-    function deleteCareEntry(index) {
-      if (confirm("Voulez-vous supprimer ce soin ?")) {
-        window.careEntries.splice(index, 1);
-        saveAllToStorage();
-        renderCareEntries();
-        renderDailyTracker();
-        updateMealsChart();
-      }
-    }
-
-    function saveOfficialResults(e) {
-      e.preventDefault();
-      if (!isAdmin) return;
-
-      window.officialResult = {
-        name: document.getElementById('officialName').value.trim(),
-        gender: document.getElementById('officialGender').value,
-        weight: parseFloat(document.getElementById('officialWeight').value),
-        height: parseFloat(document.getElementById('officialHeight').value)
-      };
-
-      saveAllToStorage();
-      displayOfficialBanner();
-    }
-
-    function displayOfficialBanner() {
-      if (!window.officialResult) return;
-      const res = window.officialResult;
-      document.getElementById('resultBanner').classList.remove('hidden');
-      document.getElementById('resBabyName').innerText = `Bienvenue à ${res.name} !`;
-      document.getElementById('resBabyDetails').innerText = `Sexe : ${res.gender} | Poids : ${res.weight} kg | Taille : ${res.height} cm`;
-
-      let bestWinner = "--";
-      let minDiff = Infinity;
-
-      (window.predictions || []).forEach(p => {
-        const diffWeight = Math.abs(p.weight - res.weight);
-        const diffHeight = Math.abs(p.height - res.height);
-        const score = diffWeight * 2 + diffHeight;
-
-        if (score < minDiff) {
-          minDiff = score;
-          bestWinner = p.user;
-        }
-      });
-
-      document.getElementById('resWinnerName').innerText = bestWinner;
-    }
-
-    function exportCareCSV() {
-      if (!window.careEntries || window.careEntries.length === 0) {
-        alert("Aucune donnée à exporter.");
-        return;
-      }
-      let csv = "Date;Heure;Temp_Bebe;Temp_Couveuse;Couche;Repas_ml;Notes;Auteur\n";
-      window.careEntries.forEach(c => {
-        csv += `${c.date};${c.time};${c.tempBaby||''};${c.tempIncubator||''};${c.diaper};${c.feeding};"${(c.notes||'').replace(/"/g, '""')}";${c.author}\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.setAttribute('download', 'fiche_soins_maternite.csv');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function exportCareExcel() {
-      if (!window.careEntries || window.careEntries.length === 0) {
-        alert("Aucune donnée à exporter.");
-        return;
-      }
-      const ws = XLSX.utils.json_to_sheet(window.careEntries);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Fiche de Soins");
-      XLSX.writeFile(wb, "fiche_soins_maternite.xlsx");
-    }
-
-    function exportCarePDF() {
-      const element = document.getElementById('careJournalContainer');
-      element.classList.add('pdf-compact');
-      const opt = {
-        margin: 0.5,
-        filename: 'fiche_soins_maternite.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      html2pdf().set(opt).from(element).save().then(() => {
-        element.classList.remove('pdf-compact');
-      });
-    }
   </script>
 </body>
 </html>
