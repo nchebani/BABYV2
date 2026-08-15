@@ -936,7 +936,7 @@
     </div>
   </div>
 
-  <!-- INTÉGRATION FIREBASE -->
+  <!-- INTÉGRATION FIREBASE (RÉALTIME DATABASE SYNCHRONIZATION) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -1035,7 +1035,7 @@
     let timerInterval = null;
     let timerSeconds = 0;
 
-    // --- FONCTION DE SAUVEGARDE GLOBALE ---
+    // --- FONCTION DE SAUVEGARDE GLOBALE EN TEMPS RÉEL ---
     function saveAllToStorage() {
       localStorage.setItem('bp_predictions', JSON.stringify(window.predictions));
       localStorage.setItem('bp_officialResult', JSON.stringify(window.officialResult));
@@ -1107,6 +1107,7 @@
       renderPredictions();
       renderCareEntries();
       renderAgendaEntries();
+      initCharts();
     }
 
     function logout() {
@@ -1168,7 +1169,7 @@
         });
     }
 
-    // --- GESTION DE L'AGENDA & SYNCHRONISATION ---
+    // --- GESTION DE L'AGENDA & SYNCHRONISATION MULTI-APPAREILS ---
     function renderAgendaEntries() {
       const container = document.getElementById('agendaListContainer');
       if (container) {
@@ -1319,7 +1320,7 @@
       document.body.removeChild(link);
     }
 
-    // --- FONCTIONS DE GESTION PRONOSTICS & MATERNITÉ ---
+    // --- PRONOSTICS & SOINS MATERNITÉ ---
     function renderPredictions() {
       const tbody = document.getElementById('predictionsTableBody');
       if (!tbody) return;
@@ -1527,10 +1528,10 @@
       });
     }
 
-    // --- INITIALISATION DES GRAPHIQUES ---
+    // --- GRAPHIOUES INTERACTIFS ---
     function initCharts() {
       const ctxTemp = document.getElementById('chartTemp')?.getContext('2d');
-      if (ctxTemp) {
+      if (ctxTemp && !chartTempInstance) {
         chartTempInstance = new Chart(ctxTemp, {
           type: 'line',
           data: {
@@ -1545,7 +1546,7 @@
       }
 
       const ctxWeight = document.getElementById('chartWeight')?.getContext('2d');
-      if (ctxWeight) {
+      if (ctxWeight && !chartWeightInstance) {
         chartWeightInstance = new Chart(ctxWeight, {
           type: 'line',
           data: {
@@ -1557,7 +1558,7 @@
       }
 
       const ctxMeals = document.getElementById('chartMeals')?.getContext('2d');
-      if (ctxMeals) {
+      if (ctxMeals && !chartMealsInstance) {
         chartMealsInstance = new Chart(ctxMeals, {
           type: 'bar',
           data: {
@@ -1576,13 +1577,18 @@
           }
         });
       }
+      updateTempChart();
+      renderTempList();
+      updateWeightChart();
+      renderWeightList();
+      updateMealsChart();
     }
 
     function updateTempChart() {
       if (!chartTempInstance) return;
-      chartTempInstance.data.labels = window.tempHistory.map(p => p.time);
-      chartTempInstance.data.datasets[0].data = window.tempHistory.map(p => p.tempBaby);
-      chartTempInstance.data.datasets[1].data = window.tempHistory.map(p => p.tempIncubator);
+      chartTempInstance.data.labels = (window.tempHistory || []).map(p => p.time);
+      chartTempInstance.data.datasets[0].data = (window.tempHistory || []).map(p => p.tempBaby);
+      chartTempInstance.data.datasets[1].data = (window.tempHistory || []).map(p => p.tempIncubator);
       chartTempInstance.update();
     }
 
@@ -1590,14 +1596,14 @@
       const container = document.getElementById('tempPointsList');
       if (!container) return;
       container.innerHTML = '';
-      window.tempHistory.forEach((p, idx) => {
+      (window.tempHistory || []).forEach((p, idx) => {
         const div = document.createElement('div');
         div.className = 'flex justify-between items-center bg-white/70 p-2 rounded-xl border border-slate-100';
         div.innerHTML = `<span><strong>${p.time}</strong> : Bébé ${p.tempBaby}°C ${p.tempIncubator ? `(Couv. ${p.tempIncubator}°C)` : ''}</span>
           <button onclick="deleteTempPoint(${idx})" class="text-red-500 hover:text-red-700 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>`;
         container.appendChild(div);
       });
-      if (window.tempHistory.length > 0) {
+      if (window.tempHistory && window.tempHistory.length > 0) {
         const last = window.tempHistory[window.tempHistory.length - 1];
         document.getElementById('statLastTemp').innerText = `${last.tempBaby} °C`;
       }
@@ -1608,6 +1614,7 @@
       const time = document.getElementById('tempPointTime').value;
       const baby = parseFloat(document.getElementById('tempPointBaby').value);
       const inc = parseFloat(document.getElementById('tempPointIncubator').value) || null;
+      if (!window.tempHistory) window.tempHistory = [];
       window.tempHistory.push({ time, tempBaby: baby, tempIncubator: inc });
       saveAllToStorage();
       updateTempChart();
@@ -1623,8 +1630,8 @@
 
     function updateWeightChart() {
       if (!chartWeightInstance) return;
-      chartWeightInstance.data.labels = window.weightHistory.map(p => p.date);
-      chartWeightInstance.data.datasets[0].data = window.weightHistory.map(p => p.weight);
+      chartWeightInstance.data.labels = (window.weightHistory || []).map(p => p.date);
+      chartWeightInstance.data.datasets[0].data = (window.weightHistory || []).map(p => p.weight);
       chartWeightInstance.update();
     }
 
@@ -1632,14 +1639,14 @@
       const container = document.getElementById('weightPointsList');
       if (!container) return;
       container.innerHTML = '';
-      window.weightHistory.forEach((p, idx) => {
+      (window.weightHistory || []).forEach((p, idx) => {
         const div = document.createElement('div');
         div.className = 'flex justify-between items-center bg-white/70 p-2 rounded-xl border border-slate-100';
         div.innerHTML = `<span><strong>${p.date}</strong> : ${p.weight} kg</span>
           <button onclick="deleteWeightPoint(${idx})" class="text-red-500 hover:text-red-700 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>`;
         container.appendChild(div);
       });
-      if (window.weightHistory.length > 0) {
+      if (window.weightHistory && window.weightHistory.length > 0) {
         const last = window.weightHistory[window.weightHistory.length - 1];
         document.getElementById('statCurrentWeight').innerText = `${last.weight} kg`;
       }
@@ -1649,6 +1656,7 @@
       e.preventDefault();
       const date = document.getElementById('weightPointDate').value;
       const weight = parseFloat(document.getElementById('weightPointVal').value);
+      if (!window.weightHistory) window.weightHistory = [];
       window.weightHistory.push({ date, weight });
       window.weightHistory.sort((a,b) => new Date(a.date) - new Date(b.date));
       saveAllToStorage();
@@ -1681,7 +1689,7 @@
           labels.push(d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }));
 
           let meals = 0, diapers = 0;
-          window.careEntries.forEach(c => {
+          (window.careEntries || []).forEach(c => {
             if ((c.date || iso) === iso) {
               if (c.feeding > 0) meals++;
               if (c.diaper && c.diaper !== 'Propre / Rien') diapers++;
@@ -1699,7 +1707,7 @@
           const start = new Date(end);
           start.setDate(end.getDate() - 6);
 
-          window.careEntries.forEach(c => {
+          (window.careEntries || []).forEach(c => {
             const entryDate = new Date(c.date || todayIsoStr);
             if (entryDate >= start && entryDate <= end) {
               if (c.feeding > 0) meals++;
@@ -1715,7 +1723,7 @@
           labels.push(d.toLocaleDateString('fr-FR', { month: 'short' }));
 
           let meals = 0, diapers = 0;
-          window.careEntries.forEach(c => {
+          (window.careEntries || []).forEach(c => {
             const entryDate = new Date(c.date || todayIsoStr);
             if (entryDate.getMonth() === d.getMonth() && entryDate.getFullYear() === d.getFullYear()) {
               if (c.feeding > 0) meals++;
@@ -1751,7 +1759,7 @@
     }
 
     function archiveAndResetDay(dateToArchive) {
-      const dayEntries = window.careEntries.filter(c => c.date === dateToArchive);
+      const dayEntries = (window.careEntries || []).filter(c => c.date === dateToArchive);
       let totalMeals = 0;
       let totalVol = 0;
       let totalDiapers = 0;
@@ -1766,6 +1774,7 @@
         }
       });
 
+      if (!window.dailyArchive) window.dailyArchive = {};
       window.dailyArchive[dateToArchive] = {
         mealsCount: totalMeals,
         mealsVolume: totalVol,
@@ -1780,7 +1789,7 @@
       const timerEl = document.getElementById('nextFeedingTimer');
       if (!timerEl) return;
 
-      const feedingEntries = window.careEntries.filter(c => c.feeding > 0);
+      const feedingEntries = (window.careEntries || []).filter(c => c.feeding > 0);
       if (feedingEntries.length === 0) {
         timerEl.innerText = "Dernier repas enregistré : --:--";
         return;
@@ -1820,7 +1829,7 @@
       const dateEl = document.getElementById('currentTrackingDate');
       if (dateEl) dateEl.innerText = `Date du jour : ${formattedDate}`;
 
-      const todayEntries = window.careEntries.filter(c => (c.date || today) === today);
+      const todayEntries = (window.careEntries || []).filter(c => (c.date || today) === today);
 
       let mealsCount = 0;
       let mealsVol = 0;
@@ -1843,8 +1852,6 @@
       if (quickMealCount) quickMealCount.innerText = mealsCount;
       if (quickMealVolume) quickMealVolume.innerText = mealsVol;
       if (quickDiaperCount) quickDiaperCount.innerText = diapersCount;
-
-      renderQuickHistoryList(todayEntries);
     }
 
     function quickAddMeal() {
@@ -1865,6 +1872,7 @@
         author: currentUser || "Parent"
       };
 
+      if (!window.careEntries) window.careEntries = [];
       window.careEntries.push(entry);
       saveAllToStorage();
       renderCareEntries();
@@ -1893,6 +1901,7 @@
         author: currentUser || "Parent"
       };
 
+      if (!window.careEntries) window.careEntries = [];
       window.careEntries.push(entry);
       saveAllToStorage();
       renderCareEntries();
@@ -1900,73 +1909,116 @@
       updateMealsChart();
     }
 
-    function renderQuickHistoryList(todayEntries) {
-      const container = document.getElementById('quickEntriesHistory');
-      if (!container) return;
-      container.innerHTML = '';
-
-      if (todayEntries.length === 0) {
-        container.innerHTML = `<p class="text-slate-400 italic py-2">Aucune saisie aujourd'hui pour le moment.</p>`;
-        return;
-      }
-
-      todayEntries.slice().reverse().forEach(entry => {
-        const originalIndex = window.careEntries.indexOf(entry);
-        const div = document.createElement('div');
-        div.className = 'flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm';
-        
-        let label = '';
-        let icon = '';
-
-        if (entry.feeding > 0) {
-          icon = '<i class="fa-solid fa-bottle-droplet text-pink-500"></i>';
-          label = `<strong>Biberon :</strong> ${entry.feeding} ml`;
-        } else if (entry.diaper && entry.diaper !== 'Propre / Rien') {
-          icon = '<i class="fa-solid fa-baby text-blue-500"></i>';
-          label = `<strong>Couche :</strong> ${entry.diaper}`;
-        } else {
-          icon = '<i class="fa-solid fa-notes-medical text-emerald-500"></i>';
-          label = `<strong>Soin :</strong> ${entry.notes || 'Observation'}`;
-        }
-
-        div.innerHTML = `
-          <div class="flex items-center gap-2">
-            ${icon}
-            <span>${label} <span class="text-slate-400">(${entry.time})</span></span>
-          </div>
-          <button onclick="deleteQuickEntry(${originalIndex})" class="text-red-400 hover:text-red-600 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
-        `;
-        container.appendChild(div);
-      });
+    function openSubscribeModal() {
+      document.getElementById('subscribeModal').classList.remove('hidden');
     }
 
-    function deleteQuickEntry(careIndex) {
-      if (confirm("Supprimer cette entrée ?")) {
-        window.careEntries.splice(careIndex, 1);
-        saveAllToStorage();
-        renderCareEntries();
-        renderDailyTracker();
-        updateMealsChart();
+    function closeSubscribeModal() {
+      document.getElementById('subscribeModal').classList.add('hidden');
+    }
+
+    function openEditStatsModal() {
+      document.getElementById('goalMealsDayInput').value = window.statsGoals.mealsDay;
+      document.getElementById('goalDiapersDayInput').value = window.statsGoals.diapersDay;
+      document.getElementById('editStatsModal').classList.remove('hidden');
+    }
+
+    function closeEditStatsModal() {
+      document.getElementById('editStatsModal').classList.add('hidden');
+    }
+
+    function saveStatsGoals(e) {
+      e.preventDefault();
+      window.statsGoals.mealsDay = parseInt(document.getElementById('goalMealsDayInput').value) || 8;
+      window.statsGoals.diapersDay = parseInt(document.getElementById('goalDiapersDayInput').value) || 6;
+      saveAllToStorage();
+      updateGoalsBadges();
+      closeEditStatsModal();
+    }
+
+    function updateGoalsBadges() {
+      const bM = document.getElementById('badgeMealsGoal');
+      const bD = document.getElementById('badgeDiapersGoal');
+      if (bM) bM.innerText = `Obj: ${window.statsGoals.mealsDay}/j`;
+      if (bD) bD.innerText = `Obj: ${window.statsGoals.diapersDay}/j`;
+    }
+
+    function toggleTimer() {
+      const btn = document.getElementById('btnStartTimer');
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
+        btn.classList.replace('bg-amber-500', 'bg-emerald-500');
+      } else {
+        timerInterval = setInterval(() => {
+          timerSeconds++;
+          const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+          const s = String(timerSeconds % 60).padStart(2, '0');
+          document.getElementById('timerDisplay').innerText = `${m}:${s}`;
+        }, 1000);
+        btn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
+        btn.classList.replace('bg-emerald-500', 'bg-amber-500');
       }
     }
 
-    // Modal & Utilitaires
-    function openEditStatsModal() { document.getElementById('editStatsModal').classList.remove('hidden'); }
-    function closeEditStatsModal() { document.getElementById('editStatsModal').classList.add('hidden'); }
-    function openSubscribeModal() { document.getElementById('subscribeModal').classList.remove('hidden'); }
-    function closeSubscribeModal() { document.getElementById('subscribeModal').classList.add('hidden'); }
-    function selectPlan(plan) { alert(`Merci d'avoir choisi la formule ${plan} ! Redirection vers la plateforme de paiement sécurisée...`); closeSubscribeModal(); }
+    function resetTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      timerSeconds = 0;
+      document.getElementById('timerDisplay').innerText = "00:00";
+      const btn = document.getElementById('btnStartTimer');
+      if (btn) {
+        btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
+        btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition";
+      }
+    }
 
-    window.onload = function() {
-      initCharts();
-      renderPredictions();
+    function saveTimerToCare() {
+      if (timerSeconds === 0) return alert("Le chronomètre est à 0.");
+      const type = document.getElementById('timerType').value;
+      const mins = Math.round(timerSeconds / 60);
+      const now = new Date();
+
+      const entry = {
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().substring(0, 5),
+        tempBaby: null,
+        tempIncubator: null,
+        diaper: "Propre / Rien",
+        feeding: 0,
+        notes: `Chrono ${type} : ${mins} min (${timerSeconds}s)`,
+        author: currentUser || "Parent"
+      };
+
+      if (!window.careEntries) window.careEntries = [];
+      window.careEntries.push(entry);
+      saveAllToStorage();
       renderCareEntries();
-      renderDailyTracker();
-      updateTempChart();
-      renderTempList();
-      updateWeightChart();
-      renderWeightList();
-    };
+      resetTimer();
+      alert(`Activité (${type}) enregistrée dans la fiche de soins !`);
+    }
+
+    // Initialisation au chargement de la page
+    window.addEventListener('DOMContentLoaded', () => {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const nowTimeStr = new Date().toTimeString().substring(0, 5);
+
+      if (document.getElementById('agendaStartDate')) document.getElementById('agendaStartDate').value = todayStr;
+      if (document.getElementById('agendaEndDate')) document.getElementById('agendaEndDate').value = todayStr;
+      if (document.getElementById('agendaStartTime')) document.getElementById('agendaStartTime').value = "09:00";
+      if (document.getElementById('agendaEndTime')) document.getElementById('agendaEndTime').value = "10:00";
+      
+      if (document.getElementById('careDate')) document.getElementById('careDate').value = todayStr;
+      if (document.getElementById('careTime')) document.getElementById('careTime').value = nowTimeStr;
+      
+      if (document.getElementById('predDate')) document.getElementById('predDate').value = todayStr;
+      if (document.getElementById('weightPointDate')) document.getElementById('weightPointDate').value = todayStr;
+
+      updateGoalsBadges();
+    });
   </script>
 </body>
 </html>
