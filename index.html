@@ -1054,7 +1054,9 @@
           week: 'Semaine',
           list: 'Liste'
         },
-        events: getFullCalendarEvents(),
+        events: function(fetchInfo, successCallback, failureCallback) {
+          successCallback(getFullCalendarEvents());
+        },
         eventClick: function(info) {
           const idx = info.event.extendedProps.index;
           if (idx !== undefined && idx !== null) {
@@ -1067,7 +1069,7 @@
 
     function getFullCalendarEvents() {
       const filterCat = document.getElementById('agendaFilterCat')?.value || 'TOUS';
-      return window.agendaEntries
+      return (window.agendaEntries || [])
         .map((entry, index) => ({ entry, index }))
         .filter(({ entry }) => filterCat === 'TOUS' || entry.category === filterCat)
         .map(({ entry, index }) => {
@@ -1083,6 +1085,157 @@
             extendedProps: { index: index, category: entry.category, notes: entry.notes }
           };
         });
+    }
+
+    // --- GESTION DE L'AGENDA & SYNCHRONISATION ---
+    function renderAgendaEntries() {
+      const container = document.getElementById('agendaListContainer');
+      if (container) {
+        container.innerHTML = '';
+        const filterCat = document.getElementById('agendaFilterCat')?.value || 'TOUS';
+        const filtered = (window.agendaEntries || [])
+          .map((entry, index) => ({ entry, index }))
+          .filter(({ entry }) => filterCat === 'TOUS' || entry.category === filterCat);
+
+        if (filtered.length === 0) {
+          container.innerHTML = `<p class="text-xs text-slate-400 italic p-4 text-center">Aucun événement enregistré.</p>`;
+        } else {
+          filtered.forEach(({ entry, index }) => {
+            const colorObj = parentColors[entry.assignee] || parentColors['Les deux'];
+            const div = document.createElement('div');
+            div.className = `p-4 rounded-2xl border ${colorObj.borderClass} ${colorObj.bgLight} flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition shadow-sm hover:shadow-md`;
+            div.innerHTML = `
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="w-2.5 h-2.5 rounded-full ${colorObj.dot}"></span>
+                  <span class="font-bold text-sm text-slate-800">${entry.title}</span>
+                  <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600">${entry.category}</span>
+                  <span class="text-xs font-bold ${colorObj.text}">(${entry.assignee})</span>
+                </div>
+                <p class="text-xs text-slate-500">
+                  <i class="fa-regular fa-clock mr-1"></i>
+                  Du <strong>${entry.startDate}</strong> (${entry.startTime}) au <strong>${entry.endDate}</strong> (${entry.endTime})
+                </p>
+                ${entry.notes ? `<p class="text-xs text-slate-600 italic bg-white/60 p-2 rounded-xl mt-1 border border-slate-100">${entry.notes}</p>` : ''}
+              </div>
+              <div class="flex items-center gap-2 self-end sm:self-center">
+                <button onclick="editAgendaEntry(${index})" class="p-2 text-indigo-600 hover:bg-indigo-100 rounded-xl transition" title="Modifier">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button onclick="deleteAgendaEntry(${index})" class="p-2 text-red-500 hover:bg-red-100 rounded-xl transition" title="Supprimer">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            `;
+            container.appendChild(div);
+          });
+        }
+      }
+
+      if (fullCalendarInstance) {
+        fullCalendarInstance.refetchEvents();
+      }
+    }
+
+    function addAgendaEntry(e) {
+      e.preventDefault();
+      const editIdx = parseInt(document.getElementById('editAgendaIndex').value);
+
+      const entry = {
+        title: document.getElementById('agendaTitle').value.trim(),
+        category: document.getElementById('agendaCategory').value,
+        startDate: document.getElementById('agendaStartDate').value,
+        startTime: document.getElementById('agendaStartTime').value,
+        endDate: document.getElementById('agendaEndDate').value,
+        endTime: document.getElementById('agendaEndTime').value,
+        assignee: document.getElementById('agendaAssignee').value,
+        notes: document.getElementById('agendaNotes').value.trim(),
+        author: currentUser || "Parent"
+      };
+
+      if (!window.agendaEntries) window.agendaEntries = [];
+
+      if (editIdx >= 0) {
+        window.agendaEntries[editIdx] = entry;
+      } else {
+        window.agendaEntries.push(entry);
+      }
+
+      saveAllToStorage();
+      renderAgendaEntries();
+      cancelAgendaEdit();
+    }
+
+    function editAgendaEntry(index) {
+      const entry = window.agendaEntries[index];
+      if (!entry) return;
+
+      document.getElementById('editAgendaIndex').value = index;
+      document.getElementById('agendaTitle').value = entry.title;
+      document.getElementById('agendaCategory').value = entry.category;
+      document.getElementById('agendaStartDate').value = entry.startDate;
+      document.getElementById('agendaStartTime').value = entry.startTime;
+      document.getElementById('agendaEndDate').value = entry.endDate;
+      document.getElementById('agendaEndTime').value = entry.endTime;
+      document.getElementById('agendaAssignee').value = entry.assignee;
+      document.getElementById('agendaNotes').value = entry.notes || '';
+
+      document.getElementById('formAgendaTitle').innerHTML = `<i class="fa-solid fa-pen text-indigo-500"></i> Modifier l'événement`;
+      document.getElementById('btnSubmitAgenda').innerText = "Mettre à jour l'événement";
+      document.getElementById('btnCancelAgendaEdit').classList.remove('hidden');
+    }
+
+    function cancelAgendaEdit() {
+      document.getElementById('editAgendaIndex').value = "-1";
+      document.getElementById('agendaForm').reset();
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('agendaStartDate').value = todayStr;
+      document.getElementById('agendaEndDate').value = todayStr;
+      document.getElementById('agendaStartTime').value = "09:00";
+      document.getElementById('agendaEndTime').value = "10:00";
+
+      document.getElementById('formAgendaTitle').innerHTML = `<i class="fa-solid fa-calendar-plus text-indigo-500"></i> Ajouter un événement`;
+      document.getElementById('btnSubmitAgenda').innerText = "Ajouter à l'agenda";
+      document.getElementById('btnCancelAgendaEdit').classList.add('hidden');
+    }
+
+    function deleteAgendaEntry(index) {
+      if (confirm("Voulez-vous supprimer cet événement de l'agenda ?")) {
+        window.agendaEntries.splice(index, 1);
+        saveAllToStorage();
+        renderAgendaEntries();
+      }
+    }
+
+    function exportAgendaICS() {
+      if (!window.agendaEntries || window.agendaEntries.length === 0) {
+        alert("Aucun événement à exporter.");
+        return;
+      }
+
+      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//BabyPredict2026//NONSGML v1.0//FR\nCALSCALE:GREGORIAN\n";
+
+      window.agendaEntries.forEach(entry => {
+        const startClean = (entry.startDate + 'T' + (entry.startTime || '00:00') + ':00').replace(/[-:]/g, '');
+        const endClean = (entry.endDate + 'T' + (entry.endTime || '00:00') + ':00').replace(/[-:]/g, '');
+
+        icsContent += "BEGIN:VEVENT\n";
+        icsContent += `SUMMARY:[${entry.assignee}] ${entry.title}\n`;
+        icsContent += `DTSTART:${startClean}\n`;
+        icsContent += `DTEND:${endClean}\n`;
+        icsContent += `DESCRIPTION:Catégorie : ${entry.category} | Notes : ${entry.notes || 'Aucune'}\n`;
+        icsContent += "END:VEVENT\n";
+      });
+
+      icsContent += "END:VCALENDAR";
+
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', 'agenda_famille_baby_predict.ics');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     // --- INITIALISATION DES GRAPHIQUES ---
@@ -1963,7 +2116,7 @@
       let totalWeight = 0;
       let totalHeight = 0;
 
-      window.predictions.forEach((p, idx) => {
+      (window.predictions || []).forEach((p, idx) => {
         if (p.gender === 'Fille') countFille++;
         totalWeight += p.weight;
         totalHeight += p.height;
@@ -1982,80 +2135,75 @@
           <td class="py-3 text-slate-500">${p.date}</td>
           <td class="py-3 text-right">
             ${isOwnerOrAdmin ? `
-              <button onclick="editPrediction(${idx})" class="p-1.5 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-amber-50" title="Modifier ce pronostic"><i class="fa-solid fa-pen text-xs"></i></button>
-              <button onclick="deletePrediction(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50" title="Supprimer ce pronostic"><i class="fa-solid fa-trash-can text-xs"></i></button>
-            ` : '<span class="text-xs text-slate-300">-</span>'}
+              <button onclick="editPrediction(${idx})" class="text-indigo-600 hover:bg-indigo-50 p-1.5 rounded-lg mr-1 transition"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deletePrediction(${idx})" class="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
+            ` : '-'}
           </td>
         `;
         tbody.appendChild(tr);
       });
 
-      document.getElementById('predCount').innerText = `${window.predictions.length} participation(s)`;
+      const total = (window.predictions || []).length;
+      document.getElementById('predCount').innerText = `${total} participation(s)`;
 
-      if (window.predictions.length > 0) {
-        const girlPct = Math.round((countFille / window.predictions.length) * 100);
-        document.getElementById('statGender').innerText = `${girlPct}% Fille / ${100 - girlPct}% Garçon`;
-        document.getElementById('statAvgWeight').innerText = `${(totalWeight / window.predictions.length).toFixed(2)} kg`;
-        document.getElementById('statAvgHeight').innerText = `${(totalHeight / window.predictions.length).toFixed(1)} cm`;
+      if (total > 0) {
+        document.getElementById('statGender').innerText = `${Math.round((countFille / total) * 100)}% Fille`;
+        document.getElementById('statAvgWeight').innerText = `${(totalWeight / total).toFixed(2)} kg`;
+        document.getElementById('statAvgHeight').innerText = `${(totalHeight / total).toFixed(1)} cm`;
+      } else {
+        document.getElementById('statGender').innerText = '--';
+        document.getElementById('statAvgWeight').innerText = '-- kg';
+        document.getElementById('statAvgHeight').innerText = '-- cm';
       }
     }
 
-    function saveOfficialResults(e) {
-      e.preventDefault();
-      if (!isAdmin) return;
+    function renderCareEntries() {
+      const tbody = document.getElementById('careTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
 
-      const name = document.getElementById('officialName').value.trim();
-      const gender = document.getElementById('officialGender').value;
-      const weight = parseFloat(document.getElementById('officialWeight').value);
-      const height = parseFloat(document.getElementById('officialHeight').value);
-
-      let bestWinner = "--";
-      let minDiff = Infinity;
-
-      window.predictions.forEach(p => {
-        const diffWeight = Math.abs(p.weight - weight);
-        const diffHeight = Math.abs(p.height - height);
-        const totalDiff = diffWeight + (diffHeight / 10);
-        if (totalDiff < minDiff) {
-          minDiff = totalDiff;
-          bestWinner = p.user;
-        }
+      (window.careEntries || []).slice().reverse().forEach((c, idx) => {
+        const realIdx = window.careEntries.length - 1 - idx;
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/50 transition';
+        tr.innerHTML = `
+          <td class="py-3 font-semibold text-slate-700">${c.date || '--'} à ${c.time || '--'}</td>
+          <td class="py-3">${c.tempBaby ? `${c.tempBaby}°C` : '-'} ${c.tempIncubator ? `<span class="text-xs text-slate-400">(${c.tempIncubator}°C)</span>` : ''}</td>
+          <td class="py-3">${c.diaper || '-'}</td>
+          <td class="py-3 font-bold text-pink-600">${c.feeding ? `${c.feeding} ml` : '-'}</td>
+          <td class="py-3 text-xs text-slate-600">${c.notes || '-'}</td>
+          <td class="py-3 text-xs font-bold text-slate-500">${c.author || 'Inconnu'}</td>
+          <td class="py-3 text-right no-pdf">
+            <button onclick="deleteCareEntry(${realIdx})" class="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
       });
 
-      window.officialResult = { name, gender, weight, height, winner: bestWinner };
-      saveAllToStorage();
-      displayOfficialBanner();
+      updateNextFeedingReminder();
     }
 
-    function displayOfficialBanner() {
-      if (!window.officialResult) return;
-      const banner = document.getElementById('resultBanner');
-      banner.classList.remove('hidden');
-      document.getElementById('resBabyName').innerText = `Bébé ${window.officialResult.name} est arrivé !`;
-      document.getElementById('resBabyDetails').innerText = `Sexe: ${window.officialResult.gender} | Poids: ${window.officialResult.weight} kg | Taille: ${window.officialResult.height} cm`;
-      document.getElementById('resWinnerName').innerText = window.officialResult.winner;
-    }
-
-    // --- LOGIQUE SOINS & OBSERVATIONS ---
     function addCareEntry(e) {
       e.preventDefault();
       const editIdx = parseInt(document.getElementById('editCareIndex').value);
 
-      const newEntry = {
+      const entry = {
         date: document.getElementById('careDate').value,
         time: document.getElementById('careTime').value,
         tempBaby: parseFloat(document.getElementById('careTempBaby').value) || null,
         tempIncubator: parseFloat(document.getElementById('careTempIncubator').value) || null,
         diaper: document.getElementById('careDiaper').value,
         feeding: parseInt(document.getElementById('careFeeding').value) || 0,
-        notes: document.getElementById('careNotes').value.trim() || 'RAS',
-        author: currentUser || "Soignant"
+        notes: document.getElementById('careNotes').value.trim(),
+        author: currentUser || "Parent"
       };
 
+      if (!window.careEntries) window.careEntries = [];
+
       if (editIdx >= 0) {
-        window.careEntries[editIdx] = newEntry;
+        window.careEntries[editIdx] = entry;
       } else {
-        window.careEntries.push(newEntry);
+        window.careEntries.push(entry);
       }
 
       saveAllToStorage();
@@ -2065,64 +2213,20 @@
       cancelCareEdit();
     }
 
-    function renderCareEntries() {
-      const tbody = document.getElementById('careTableBody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-
-      window.careEntries.forEach((c, idx) => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50/50 transition';
-        tr.innerHTML = `
-          <td class="py-3 font-semibold text-slate-700">${c.date} <span class="text-xs text-slate-400 font-normal">à ${c.time}</span></td>
-          <td class="py-3 font-bold text-red-500">${c.tempBaby ? c.tempBaby + ' °C' : '--'} ${c.tempIncubator ? `<span class="text-xs text-amber-500 font-normal">(C: ${c.tempIncubator}°)</span>` : ''}</td>
-          <td class="py-3"><span class="px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold">${c.diaper}</span></td>
-          <td class="py-3 font-bold text-pink-600">${c.feeding ? c.feeding + ' ml' : '--'}</td>
-          <td class="py-3 text-slate-600 text-xs">${c.notes}</td>
-          <td class="py-3 text-xs font-semibold text-purple-600">${c.author}</td>
-          <td class="py-3 text-right no-pdf">
-            <button onclick="editCareEntry(${idx})" class="p-1.5 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-amber-50" title="Modifier"><i class="fa-solid fa-pen text-xs"></i></button>
-            <button onclick="deleteCareEntry(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50" title="Supprimer"><i class="fa-solid fa-trash-can text-xs"></i></button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      updateNextFeedingReminder();
-    }
-
-    function editCareEntry(index) {
-      const c = window.careEntries[index];
-      document.getElementById('editCareIndex').value = index;
-      document.getElementById('careDate').value = c.date;
-      document.getElementById('careTime').value = c.time;
-      document.getElementById('careTempBaby').value = c.tempBaby || '';
-      document.getElementById('careTempIncubator').value = c.tempIncubator || '';
-      document.getElementById('careDiaper').value = c.diaper;
-      document.getElementById('careFeeding').value = c.feeding || '';
-      document.getElementById('careNotes').value = c.notes === 'RAS' ? '' : c.notes;
-
-      document.getElementById('formCareTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Modifier Transmission Soin`;
-      document.getElementById('btnSubmitCare').innerText = "Mettre à jour le soin";
-      document.getElementById('btnSubmitCare').className = "w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition text-sm";
-      document.getElementById('btnCancelCareEdit').classList.remove('hidden');
-    }
-
     function cancelCareEdit() {
       document.getElementById('editCareIndex').value = "-1";
       document.getElementById('careForm').reset();
-      const now = new Date();
-      document.getElementById('careDate').value = now.toISOString().split('T')[0];
-      document.getElementById('careTime').value = now.toTimeString().substring(0, 5);
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('careDate').value = todayStr;
+      document.getElementById('careTime').value = new Date().toTimeString().substring(0, 5);
 
       document.getElementById('formCareTitle').innerHTML = `<i class="fa-solid fa-notes-medical text-emerald-500"></i> Nouvelle Transmission Soin`;
       document.getElementById('btnSubmitCare').innerText = "Enregistrer l'observation";
-      document.getElementById('btnSubmitCare').className = "w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-md transition text-sm";
       document.getElementById('btnCancelCareEdit').classList.add('hidden');
     }
 
     function deleteCareEntry(index) {
-      if (confirm("Voulez-vous vraiment supprimer cette observation ?")) {
+      if (confirm("Voulez-vous supprimer ce soin ?")) {
         window.careEntries.splice(index, 1);
         saveAllToStorage();
         renderCareEntries();
@@ -2131,174 +2235,83 @@
       }
     }
 
-    // --- LOGIQUE AGENDA ---
-    function addAgendaEntry(e) {
+    function saveOfficialResults(e) {
       e.preventDefault();
-      const editIdx = parseInt(document.getElementById('editAgendaIndex').value);
+      if (!isAdmin) return;
 
-      const entry = {
-        title: document.getElementById('agendaTitle').value.trim(),
-        category: document.getElementById('agendaCategory').value,
-        startDate: document.getElementById('agendaStartDate').value,
-        startTime: document.getElementById('agendaStartTime').value,
-        endDate: document.getElementById('agendaEndDate').value,
-        endTime: document.getElementById('agendaEndTime').value,
-        assignee: document.getElementById('agendaAssignee').value,
-        notes: document.getElementById('agendaNotes').value.trim() || 'RAS',
-        author: currentUser || "Parent"
+      window.officialResult = {
+        name: document.getElementById('officialName').value.trim(),
+        gender: document.getElementById('officialGender').value,
+        weight: parseFloat(document.getElementById('officialWeight').value),
+        height: parseFloat(document.getElementById('officialHeight').value)
       };
 
-      if (editIdx >= 0) {
-        window.agendaEntries[editIdx] = entry;
-      } else {
-        window.agendaEntries.push(entry);
-      }
-
       saveAllToStorage();
-      renderAgendaEntries();
-      cancelAgendaEdit();
+      displayOfficialBanner();
     }
 
-    function renderAgendaEntries() {
-      const container = document.getElementById('agendaListContainer');
-      if (!container) return;
-      container.innerHTML = '';
+    function displayOfficialBanner() {
+      if (!window.officialResult) return;
+      const res = window.officialResult;
+      document.getElementById('resultBanner').classList.remove('hidden');
+      document.getElementById('resBabyName').innerText = `Bienvenue à ${res.name} !`;
+      document.getElementById('resBabyDetails').innerText = `Sexe : ${res.gender} | Poids : ${res.weight} kg | Taille : ${res.height} cm`;
 
-      const filterCat = document.getElementById('agendaFilterCat')?.value || 'TOUS';
+      let bestWinner = "--";
+      let minDiff = Infinity;
 
-      const filtered = window.agendaEntries.filter(a => filterCat === 'TOUS' || a.category === filterCat);
+      (window.predictions || []).forEach(p => {
+        const diffWeight = Math.abs(p.weight - res.weight);
+        const diffHeight = Math.abs(p.height - res.height);
+        const score = diffWeight * 2 + diffHeight;
 
-      if (filtered.length === 0) {
-        container.innerHTML = `<p class="text-slate-400 italic text-xs py-4 text-center">Aucun événement répertorié.</p>`;
-      } else {
-        filtered.forEach((a, idx) => {
-          const originalIdx = window.agendaEntries.indexOf(a);
-          const colorObj = parentColors[a.assignee] || parentColors['Les deux'];
-
-          const div = document.createElement('div');
-          div.className = `p-3.5 rounded-2xl border ${colorObj.borderClass} ${colorObj.bgLight} flex justify-between items-center gap-3 transition shadow-sm`;
-          div.innerHTML = `
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full ${colorObj.dot}"></span>
-                <span class="font-bold text-slate-800 text-sm">${a.title}</span>
-                <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600">${a.category}</span>
-              </div>
-              <p class="text-xs text-slate-500">
-                <i class="fa-regular fa-clock mr-1"></i>${a.startDate} à ${a.startTime} ➔ ${a.endDate} à ${a.endTime} | <strong class="${colorObj.text}">${a.assignee}</strong>
-              </p>
-              ${a.notes && a.notes !== 'RAS' ? `<p class="text-xs text-slate-600 italic mt-1 bg-white/70 p-1.5 rounded-lg border border-slate-100">${a.notes}</p>` : ''}
-            </div>
-            <div class="flex items-center gap-1">
-              <button onclick="editAgendaEntry(${originalIdx})" class="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-white transition" title="Modifier"><i class="fa-solid fa-pen text-xs"></i></button>
-              <button onclick="deleteAgendaEntry(${originalIdx})" class="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-white transition" title="Supprimer"><i class="fa-solid fa-trash-can text-xs"></i></button>
-            </div>
-          `;
-          container.appendChild(div);
-        });
-      }
-
-      if (fullCalendarInstance) {
-        fullCalendarInstance.removeAllEvents();
-        fullCalendarInstance.addEventSource(getFullCalendarEvents());
-      }
-    }
-
-    function editAgendaEntry(index) {
-      const a = window.agendaEntries[index];
-      document.getElementById('editAgendaIndex').value = index;
-      document.getElementById('agendaTitle').value = a.title;
-      document.getElementById('agendaCategory').value = a.category;
-      document.getElementById('agendaStartDate').value = a.startDate;
-      document.getElementById('agendaStartTime').value = a.startTime;
-      document.getElementById('agendaEndDate').value = a.endDate;
-      document.getElementById('agendaEndTime').value = a.endTime;
-      document.getElementById('agendaAssignee').value = a.assignee;
-      document.getElementById('agendaNotes').value = a.notes === 'RAS' ? '' : a.notes;
-
-      document.getElementById('formAgendaTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Modifier l'événement`;
-      document.getElementById('btnSubmitAgenda').innerText = "Mettre à jour l'événement";
-      document.getElementById('btnSubmitAgenda').className = "w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition text-sm";
-      document.getElementById('btnCancelAgendaEdit').classList.remove('hidden');
-      
-      switchTab('agenda');
-    }
-
-    function cancelAgendaEdit() {
-      document.getElementById('editAgendaIndex').value = "-1";
-      document.getElementById('agendaForm').reset();
-      const todayStr = new Date().toISOString().split('T')[0];
-      document.getElementById('agendaStartDate').value = todayStr;
-      document.getElementById('agendaEndDate').value = todayStr;
-
-      document.getElementById('formAgendaTitle').innerHTML = `<i class="fa-solid fa-calendar-plus text-indigo-500"></i> Ajouter un événement`;
-      document.getElementById('btnSubmitAgenda').innerText = "Ajouter à l'agenda";
-      document.getElementById('btnSubmitAgenda').className = "w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition text-sm";
-      document.getElementById('btnCancelAgendaEdit').classList.add('hidden');
-    }
-
-    function deleteAgendaEntry(index) {
-      if (confirm("Voulez-vous supprimer cet événement de l'agenda ?")) {
-        window.agendaEntries.splice(index, 1);
-        saveAllToStorage();
-        renderAgendaEntries();
-      }
-    }
-
-    function exportAgendaICS() {
-      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//BabyPredict2026//FR\n";
-      window.agendaEntries.forEach(a => {
-        const startFormatted = a.startDate.replace(/-/g, '') + 'T' + a.startTime.replace(':', '') + '00';
-        const endFormatted = a.endDate.replace(/-/g, '') + 'T' + a.endTime.replace(':', '') + '00';
-        icsContent += "BEGIN:VEVENT\n";
-        icsContent += `SUMMARY:[${a.assignee}] ${a.title}\n`;
-        icsContent += `DTSTART:${startFormatted}\n`;
-        icsContent += `DTEND:${endFormatted}\n`;
-        icsContent += `DESCRIPTION:${a.category} - ${a.notes}\n`;
-        icsContent += "END:VEVENT\n";
+        if (score < minDiff) {
+          minDiff = score;
+          bestWinner = p.user;
+        }
       });
-      icsContent += "END:VCALENDAR";
 
-      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.setAttribute('download', 'agenda_baby_predict.ics');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      document.getElementById('resWinnerName').innerText = bestWinner;
     }
 
     function exportCareCSV() {
-      let csv = "Date,Heure,Temp_Bebe,Temp_Couveuse,Couche,Repas_ml,Observations,Auteur\n";
+      if (!window.careEntries || window.careEntries.length === 0) {
+        alert("Aucune donnée à exporter.");
+        return;
+      }
+      let csv = "Date;Heure;Temp_Bebe;Temp_Couveuse;Couche;Repas_ml;Notes;Auteur\n";
       window.careEntries.forEach(c => {
-        csv += `"${c.date}","${c.time}","${c.tempBaby || ''}","${c.tempIncubator || ''}","${c.diaper}","${c.feeding || 0}","${c.notes}","${c.author}"\n`;
+        csv += `${c.date};${c.time};${c.tempBaby||''};${c.tempIncubator||''};${c.diaper};${c.feeding};"${(c.notes||'').replace(/"/g, '""')}";${c.author}\n`;
       });
-
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.setAttribute('download', 'suivi_soins_maternite.csv');
+      link.setAttribute('download', 'fiche_soins_maternite.csv');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
     function exportCareExcel() {
+      if (!window.careEntries || window.careEntries.length === 0) {
+        alert("Aucune donnée à exporter.");
+        return;
+      }
       const ws = XLSX.utils.json_to_sheet(window.careEntries);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Fiche de Soins");
-      XLSX.writeFile(wb, "suivi_soins_maternite.xlsx");
+      XLSX.writeFile(wb, "fiche_soins_maternite.xlsx");
     }
 
     function exportCarePDF() {
       const element = document.getElementById('careJournalContainer');
       element.classList.add('pdf-compact');
       const opt = {
-        margin:       0.5,
-        filename:     'fiche_soins_maternite.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        margin: 0.5,
+        filename: 'fiche_soins_maternite.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
       html2pdf().set(opt).from(element).save().then(() => {
         element.classList.remove('pdf-compact');
