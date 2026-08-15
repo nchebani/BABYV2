@@ -303,7 +303,7 @@
     <!-- SECTION 2 : SUIVI MATERNITÉ & SOINS -->
     <div id="section-maternite" class="hidden space-y-6">
       
-      <!-- NOUVEAU MODULE : SAISIE RAPIDE & SUIVI QUOTIDIEN -->
+      <!-- MODULE : SAISIE RAPIDE & SUIVI QUOTIDIEN -->
       <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -322,9 +322,7 @@
           </div>
         </div>
 
-        <!-- BOUTONS D'AJOUT RAPIDE ET COMPTEURS DYNAMIQUES -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Carte Biberons -->
           <div class="p-4 bg-white/70 rounded-2xl border border-pink-100 flex items-center justify-between gap-4 shadow-sm">
             <div>
               <span class="text-xs font-bold text-pink-600 uppercase tracking-wider block mb-1"><i class="fa-solid fa-bottle-droplet mr-1"></i> Biberons du jour</span>
@@ -338,7 +336,6 @@
             </button>
           </div>
 
-          <!-- Carte Couches -->
           <div class="p-4 bg-white/70 rounded-2xl border border-blue-100 flex items-center justify-between gap-4 shadow-sm">
             <div>
               <span class="text-xs font-bold text-blue-600 uppercase tracking-wider block mb-1"><i class="fa-solid fa-baby mr-1"></i> Couches du jour</span>
@@ -353,14 +350,11 @@
           </div>
         </div>
 
-        <!-- HISTORIQUE CHRONOLOGIQUE DES PRISES -->
         <div class="pt-2">
           <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> Historique de la journée en cours
           </h4>
-          <div id="quickEntriesHistory" class="max-h-40 overflow-y-auto space-y-1.5 pr-1 text-xs">
-            <!-- Injecté dynamiquement par le JS -->
-          </div>
+          <div id="quickEntriesHistory" class="max-h-40 overflow-y-auto space-y-1.5 pr-1 text-xs"></div>
         </div>
       </div>
 
@@ -403,7 +397,7 @@
         </div>
       </div>
 
-      <!-- MODULE CHRONOMÈTRE -->
+      <!-- CHRONOMÈTRE -->
       <div class="glassmorphism p-6 rounded-3xl border border-white/50">
         <div class="flex flex-col md:flex-row items-center justify-between gap-4">
           <div class="flex items-center gap-3">
@@ -443,7 +437,7 @@
         </div>
       </div>
 
-      <!-- BOUTON DE PERSONNALISATION DES OBJECTIFS & STATISTIQUES -->
+      <!-- PERSONNALISATION OBJECTIFS -->
       <div class="flex justify-between items-center bg-white/60 p-3 rounded-2xl border border-slate-200">
         <span class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
           <i class="fa-solid fa-chart-simple text-pink-500"></i> Bilan Statistiques & Objectifs
@@ -458,7 +452,7 @@
         </div>
       </div>
 
-      <!-- CARTE DES STATISTIQUES REPAS & COUCHES (JOUR, SEMAINE, MOIS) -->
+      <!-- STATISTIQUES REPAS & COUCHES -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="glassmorphism p-4 rounded-2xl">
           <div class="flex justify-between items-center mb-1">
@@ -497,7 +491,7 @@
         </div>
       </div>
 
-      <!-- MODULE: STATISTIQUES PAR JOUR DÉTAILLÉES -->
+      <!-- HISTORIQUE QUOTIDIEN DÉTAILLÉ -->
       <div class="glassmorphism p-6 rounded-3xl border border-white/50">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
@@ -505,15 +499,12 @@
           </h3>
           <span class="text-xs text-slate-500 font-semibold">Mise à jour automatique</span>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2" id="dailyStatsGrid">
-          <!-- Injecté dynamiquement par le JS -->
-        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2" id="dailyStatsGrid"></div>
       </div>
 
-      <!-- COURBES INTERACTIVES (BIBERONS/COUCHES, TEMPÉRATURE ET POIDS) -->
+      <!-- COURBES INTERACTIVES -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- NOVELLE COURBE DES BIBERONS ET COUCHES -->
         <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-2">
             <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
@@ -544,7 +535,6 @@
           </div>
         </div>
 
-        <!-- COURBE DE TEMPÉRATURE INTERACTIVE -->
         <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
           <div class="flex items-center justify-between">
             <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
@@ -583,7 +573,6 @@
           </div>
         </div>
 
-        <!-- COURBE DE POIDS INTERACTIVE -->
         <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
           <div class="flex items-center justify-between">
             <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
@@ -1046,9 +1035,58 @@
     let timerInterval = null;
     let timerSeconds = 0;
 
+    // --- INITIALISATION DU CALENDRIER FULLCALENDAR ---
+    function initFullCalendar() {
+      const calendarEl = document.getElementById('fullCalendarContainer');
+      if (!calendarEl) return;
+
+      fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'fr',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,listWeek'
+        },
+        buttonText: {
+          today: "Aujourd'hui",
+          month: 'Mois',
+          week: 'Semaine',
+          list: 'Liste'
+        },
+        events: getFullCalendarEvents(),
+        eventClick: function(info) {
+          const idx = info.event.extendedProps.index;
+          if (idx !== undefined && idx !== null) {
+            editAgendaEntry(idx);
+          }
+        }
+      });
+      fullCalendarInstance.render();
+    }
+
+    function getFullCalendarEvents() {
+      const filterCat = document.getElementById('agendaFilterCat')?.value || 'TOUS';
+      return window.agendaEntries
+        .map((entry, index) => ({ entry, index }))
+        .filter(({ entry }) => filterCat === 'TOUS' || entry.category === filterCat)
+        .map(({ entry, index }) => {
+          const colorObj = parentColors[entry.assignee] || parentColors['Les deux'];
+          const start = entry.startTime ? `${entry.startDate}T${entry.startTime}` : entry.startDate;
+          const end = entry.endTime ? `${entry.endDate}T${entry.endTime}` : entry.endDate;
+          return {
+            title: `[${entry.assignee}] ${entry.title}`,
+            start: start,
+            end: end,
+            backgroundColor: colorObj.bg,
+            borderColor: colorObj.border,
+            extendedProps: { index: index, category: entry.category, notes: entry.notes }
+          };
+        });
+    }
+
     // --- INITIALISATION DES GRAPHIQUES ---
     function initCharts() {
-      // Graphique Température
       const ctxTemp = document.getElementById('chartTemp')?.getContext('2d');
       if (ctxTemp) {
         chartTempInstance = new Chart(ctxTemp, {
@@ -1064,7 +1102,6 @@
         });
       }
 
-      // Graphique Poids
       const ctxWeight = document.getElementById('chartWeight')?.getContext('2d');
       if (ctxWeight) {
         chartWeightInstance = new Chart(ctxWeight, {
@@ -1077,7 +1114,6 @@
         });
       }
 
-      // NOUVEAU GRAPHIQUE BIBERONS ET COUCHES
       const ctxMeals = document.getElementById('chartMeals')?.getContext('2d');
       if (ctxMeals) {
         chartMealsInstance = new Chart(ctxMeals, {
@@ -1185,7 +1221,6 @@
       renderWeightList();
     }
 
-    // NOUVELLE FONCTION : MISE À JOUR DU GRAPHIQUE BIBERONS ET COUCHES (J/S/M)
     function updateMealsChart() {
       if (!chartMealsInstance) return;
 
@@ -1197,7 +1232,6 @@
       const now = new Date();
 
       if (mode === 'day') {
-        // 7 derniers jours
         for (let i = 6; i >= 0; i--) {
           const d = new Date(now);
           d.setDate(now.getDate() - i);
@@ -1215,7 +1249,6 @@
           diapersData.push(diapers);
         }
       } else if (mode === 'week') {
-        // 4 dernières semaines
         for (let i = 3; i >= 0; i--) {
           labels.push(`S-${i}`);
           let meals = 0, diapers = 0;
@@ -1235,7 +1268,6 @@
           diapersData.push(diapers);
         }
       } else if (mode === 'month') {
-        // 6 derniers mois
         for (let i = 5; i >= 0; i--) {
           const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
           labels.push(d.toLocaleDateString('fr-FR', { month: 'short' }));
@@ -1267,7 +1299,6 @@
       if (avgDEl) avgDEl.innerText = `${avgD} / période`;
     }
 
-    // --- LOGIQUE DE REMISE À ZÉRO ET ARCHIVAGE AUTOMATIQUE ---
     function checkMidnightReset() {
       const today = new Date().toISOString().split('T')[0];
       if (window.lastActiveDate !== today) {
@@ -1964,48 +1995,67 @@
       if (window.predictions.length > 0) {
         const girlPct = Math.round((countFille / window.predictions.length) * 100);
         document.getElementById('statGender').innerText = `${girlPct}% Fille / ${100 - girlPct}% Garçon`;
-        document.getElementById('statAvgWeight').innerText = `${(totalWeight / window.predictions.length).toFixed(3)} kg`;
+        document.getElementById('statAvgWeight').innerText = `${(totalWeight / window.predictions.length).toFixed(2)} kg`;
         document.getElementById('statAvgHeight').innerText = `${(totalHeight / window.predictions.length).toFixed(1)} cm`;
-      } else {
-        document.getElementById('statGender').innerText = `--`;
-        document.getElementById('statAvgWeight').innerText = `-- kg`;
-        document.getElementById('statAvgHeight').innerText = `-- cm`;
       }
     }
 
+    function saveOfficialResults(e) {
+      e.preventDefault();
+      if (!isAdmin) return;
+
+      const name = document.getElementById('officialName').value.trim();
+      const gender = document.getElementById('officialGender').value;
+      const weight = parseFloat(document.getElementById('officialWeight').value);
+      const height = parseFloat(document.getElementById('officialHeight').value);
+
+      let bestWinner = "--";
+      let minDiff = Infinity;
+
+      window.predictions.forEach(p => {
+        const diffWeight = Math.abs(p.weight - weight);
+        const diffHeight = Math.abs(p.height - height);
+        const totalDiff = diffWeight + (diffHeight / 10);
+        if (totalDiff < minDiff) {
+          minDiff = totalDiff;
+          bestWinner = p.user;
+        }
+      });
+
+      window.officialResult = { name, gender, weight, height, winner: bestWinner };
+      saveAllToStorage();
+      displayOfficialBanner();
+    }
+
+    function displayOfficialBanner() {
+      if (!window.officialResult) return;
+      const banner = document.getElementById('resultBanner');
+      banner.classList.remove('hidden');
+      document.getElementById('resBabyName').innerText = `Bébé ${window.officialResult.name} est arrivé !`;
+      document.getElementById('resBabyDetails').innerText = `Sexe: ${window.officialResult.gender} | Poids: ${window.officialResult.weight} kg | Taille: ${window.officialResult.height} cm`;
+      document.getElementById('resWinnerName').innerText = window.officialResult.winner;
+    }
+
+    // --- LOGIQUE SOINS & OBSERVATIONS ---
     function addCareEntry(e) {
       e.preventDefault();
       const editIdx = parseInt(document.getElementById('editCareIndex').value);
 
-      const date = document.getElementById('careDate').value || new Date().toISOString().split('T')[0];
-      const time = document.getElementById('careTime').value;
-      const tempBaby = parseFloat(document.getElementById('careTempBaby').value) || null;
-      const tempIncubator = parseFloat(document.getElementById('careTempIncubator').value) || null;
-      const diaper = document.getElementById('careDiaper').value;
-      const feeding = parseInt(document.getElementById('careFeeding').value) || 0;
-      const notes = document.getElementById('careNotes').value.trim();
-
-      const entry = {
-        date,
-        time,
-        tempBaby,
-        tempIncubator,
-        diaper,
-        feeding,
-        notes: notes || 'RAS',
-        author: editIdx >= 0 ? window.careEntries[editIdx].author : (currentUser || 'Soignant')
+      const newEntry = {
+        date: document.getElementById('careDate').value,
+        time: document.getElementById('careTime').value,
+        tempBaby: parseFloat(document.getElementById('careTempBaby').value) || null,
+        tempIncubator: parseFloat(document.getElementById('careTempIncubator').value) || null,
+        diaper: document.getElementById('careDiaper').value,
+        feeding: parseInt(document.getElementById('careFeeding').value) || 0,
+        notes: document.getElementById('careNotes').value.trim() || 'RAS',
+        author: currentUser || "Soignant"
       };
 
       if (editIdx >= 0) {
-        window.careEntries[editIdx] = entry;
+        window.careEntries[editIdx] = newEntry;
       } else {
-        window.careEntries.push(entry);
-      }
-
-      if (tempBaby !== null && editIdx === -1) {
-        window.tempHistory.push({ time, tempBaby, tempIncubator });
-        renderTempList();
-        updateTempChart();
+        window.careEntries.push(newEntry);
       }
 
       saveAllToStorage();
@@ -2015,10 +2065,36 @@
       cancelCareEdit();
     }
 
+    function renderCareEntries() {
+      const tbody = document.getElementById('careTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      window.careEntries.forEach((c, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/50 transition';
+        tr.innerHTML = `
+          <td class="py-3 font-semibold text-slate-700">${c.date} <span class="text-xs text-slate-400 font-normal">à ${c.time}</span></td>
+          <td class="py-3 font-bold text-red-500">${c.tempBaby ? c.tempBaby + ' °C' : '--'} ${c.tempIncubator ? `<span class="text-xs text-amber-500 font-normal">(C: ${c.tempIncubator}°)</span>` : ''}</td>
+          <td class="py-3"><span class="px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold">${c.diaper}</span></td>
+          <td class="py-3 font-bold text-pink-600">${c.feeding ? c.feeding + ' ml' : '--'}</td>
+          <td class="py-3 text-slate-600 text-xs">${c.notes}</td>
+          <td class="py-3 text-xs font-semibold text-purple-600">${c.author}</td>
+          <td class="py-3 text-right no-pdf">
+            <button onclick="editCareEntry(${idx})" class="p-1.5 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-amber-50" title="Modifier"><i class="fa-solid fa-pen text-xs"></i></button>
+            <button onclick="deleteCareEntry(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50" title="Supprimer"><i class="fa-solid fa-trash-can text-xs"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      updateNextFeedingReminder();
+    }
+
     function editCareEntry(index) {
       const c = window.careEntries[index];
       document.getElementById('editCareIndex').value = index;
-      document.getElementById('careDate').value = c.date || new Date().toISOString().split('T')[0];
+      document.getElementById('careDate').value = c.date;
       document.getElementById('careTime').value = c.time;
       document.getElementById('careTempBaby').value = c.tempBaby || '';
       document.getElementById('careTempIncubator').value = c.tempIncubator || '';
@@ -2026,8 +2102,8 @@
       document.getElementById('careFeeding').value = c.feeding || '';
       document.getElementById('careNotes').value = c.notes === 'RAS' ? '' : c.notes;
 
-      document.getElementById('formCareTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Modifier l'observation`;
-      document.getElementById('btnSubmitCare').innerText = "Mettre à jour l'observation";
+      document.getElementById('formCareTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Modifier Transmission Soin`;
+      document.getElementById('btnSubmitCare').innerText = "Mettre à jour le soin";
       document.getElementById('btnSubmitCare').className = "w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition text-sm";
       document.getElementById('btnCancelCareEdit').classList.remove('hidden');
     }
@@ -2035,9 +2111,9 @@
     function cancelCareEdit() {
       document.getElementById('editCareIndex').value = "-1";
       document.getElementById('careForm').reset();
-      const todayStr = new Date().toISOString().split('T')[0];
-      document.getElementById('careDate').value = todayStr;
-      document.getElementById('careTime').value = new Date().toTimeString().substring(0, 5);
+      const now = new Date();
+      document.getElementById('careDate').value = now.toISOString().split('T')[0];
+      document.getElementById('careTime').value = now.toTimeString().substring(0, 5);
 
       document.getElementById('formCareTitle').innerHTML = `<i class="fa-solid fa-notes-medical text-emerald-500"></i> Nouvelle Transmission Soin`;
       document.getElementById('btnSubmitCare').innerText = "Enregistrer l'observation";
@@ -2046,7 +2122,7 @@
     }
 
     function deleteCareEntry(index) {
-      if (confirm("Voulez-vous vraiment supprimer cette entrée de la fiche de soins ?")) {
+      if (confirm("Voulez-vous vraiment supprimer cette observation ?")) {
         window.careEntries.splice(index, 1);
         saveAllToStorage();
         renderCareEntries();
@@ -2055,246 +2131,7 @@
       }
     }
 
-    function renderCareEntries() {
-      const tbody = document.getElementById('careTableBody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-
-      const now = new Date();
-      const todayStr = now.toISOString().split('T')[0];
-      
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(now.getDate() - 7);
-      
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(now.getDate() - 30);
-
-      let mealsToday = 0, volToday = 0, diapersToday = 0;
-      let mealsWeek = 0, volWeek = 0, diapersWeek = 0;
-      let mealsMonth = 0, volMonth = 0, diapersMonth = 0;
-
-      window.careEntries.forEach((c, idx) => {
-        const entryDateStr = c.date || todayStr;
-        const entryDate = new Date(entryDateStr);
-
-        if (c.feeding > 0) {
-          if (entryDateStr === todayStr) { mealsToday++; volToday += c.feeding; }
-          if (entryDate >= sevenDaysAgo) { mealsWeek++; volWeek += c.feeding; }
-          if (entryDate >= thirtyDaysAgo) { mealsMonth++; volMonth += c.feeding; }
-        }
-
-        if (c.diaper && c.diaper !== 'Propre / Rien') {
-          if (entryDateStr === todayStr) diapersToday++;
-          if (entryDate >= sevenDaysAgo) diapersWeek++;
-          if (entryDate >= thirtyDaysAgo) diapersMonth++;
-        }
-
-        let tempHtml = '--';
-        if (c.tempBaby) {
-          if (c.tempBaby >= 37.5) {
-            tempHtml = `<span class="font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full animate-pulse"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${c.tempBaby}°C</span>`;
-          } else if (c.tempBaby <= 35.5) {
-            tempHtml = `<span class="font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full animate-pulse"><i class="fa-solid fa-temperature-arrow-down mr-1"></i>${c.tempBaby}°C</span>`;
-          } else {
-            tempHtml = `<span class="font-bold text-emerald-600">${c.tempBaby}°C</span>`;
-          }
-        }
-
-        const formattedDate = new Date(entryDateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
-
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50/50 transition';
-        tr.innerHTML = `
-          <td class="py-3 font-bold text-slate-700">${formattedDate} ${c.time}</td>
-          <td class="py-3">${tempHtml} ${c.tempIncubator ? `<span class="text-xs text-slate-400">(${c.tempIncubator}°C)</span>` : ''}</td>
-          <td class="py-3"><span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">${c.diaper}</span></td>
-          <td class="py-3 font-bold text-emerald-600">${c.feeding > 0 ? c.feeding + ' ml' : '--'}</td>
-          <td class="py-3 text-slate-600 text-xs italic">${c.notes}</td>
-          <td class="py-3 text-slate-400 text-xs">${c.author}</td>
-          <td class="py-3 text-right no-pdf flex justify-end gap-1">
-            <button onclick="editCareEntry(${idx})" class="p-1.5 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-amber-50" title="Modifier ce soin">
-              <i class="fa-solid fa-pen text-xs"></i>
-            </button>
-            <button onclick="deleteCareEntry(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-red-50" title="Supprimer ce soin">
-              <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById('statMealsToday').innerText = mealsToday;
-      document.getElementById('statMealsVolToday').innerText = `${volToday} ml`;
-      document.getElementById('statMealsWeek').innerText = mealsWeek;
-      document.getElementById('statMealsVolWeek').innerText = `${volWeek} ml`;
-      document.getElementById('statMealsMonth').innerText = mealsMonth;
-      document.getElementById('statMealsVolMonth').innerText = `${volMonth} ml`;
-
-      document.getElementById('statDiapersToday').innerText = diapersToday;
-      document.getElementById('statDiapersWeek').innerText = diapersWeek;
-      document.getElementById('statDiapersMonth').innerText = diapersMonth;
-
-      renderDailyStatsGrid();
-      updateNextFeedingReminder();
-    }
-
-    function renderDailyStatsGrid() {
-      const grid = document.getElementById('dailyStatsGrid');
-      if (!grid) return;
-      grid.innerHTML = '';
-
-      const now = new Date();
-      const currentDayOfWeek = now.getDay();
-      const distanceToMonday = (currentDayOfWeek + 6) % 7;
-      
-      const monday = new Date(now);
-      monday.setDate(now.getDate() - distanceToMonday);
-
-      const daysOfWeek = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-
-      daysOfWeek.forEach((dayName, idx) => {
-        const dayDate = new Date(monday);
-        dayDate.setDate(monday.getDate() + idx);
-        const dayIsoStr = dayDate.toISOString().split('T')[0];
-
-        let mealsCount = 0;
-        let mealsVol = 0;
-        let diapersCount = 0;
-
-        window.careEntries.forEach(c => {
-          if (c.date === dayIsoStr) {
-            if (c.feeding > 0) {
-              mealsCount++;
-              mealsVol += c.feeding;
-            }
-            if (c.diaper && c.diaper !== 'Propre / Rien') {
-              diapersCount++;
-            }
-          }
-        });
-
-        const isToday = dayIsoStr === now.toISOString().split('T')[0];
-
-        const dayCard = document.createElement('div');
-        dayCard.className = `p-3 rounded-2xl border text-center transition ${isToday ? 'bg-pink-50/80 border-pink-300 ring-2 ring-pink-400' : 'bg-white/60 border-slate-100'}`;
-        dayCard.innerHTML = `
-          <p class="text-[11px] font-bold uppercase ${isToday ? 'text-pink-600' : 'text-slate-400'}">${dayName}</p>
-          <p class="text-[10px] text-slate-400 mb-1.5">${dayDate.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</p>
-          <div class="space-y-1 text-xs">
-            <div class="bg-pink-100/50 py-1 px-1.5 rounded-lg border border-pink-100">
-              <span class="block text-[9px] font-bold text-pink-700 uppercase">Repas</span>
-              <span class="font-extrabold text-pink-600">${mealsCount}</span> <span class="text-[10px] text-slate-500">(${mealsVol}ml)</span>
-            </div>
-            <div class="bg-blue-100/50 py-1 px-1.5 rounded-lg border border-blue-100">
-              <span class="block text-[9px] font-bold text-blue-700 uppercase">Couches</span>
-              <span class="font-extrabold text-blue-600">${diapersCount}</span>
-            </div>
-          </div>
-        `;
-        grid.appendChild(dayCard);
-      });
-    }
-
-    // --- FONCTIONS AGENDA FULLCALENDAR ---
-    function initFullCalendar() {
-      const calendarEl = document.getElementById('fullCalendarContainer');
-      if (!calendarEl) return;
-
-      fullCalendarInstance = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'fr',
-        headerToolbar: {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,listWeek'
-        },
-        buttonText: {
-          today: 'Aujourd\'hui',
-          month: 'Mois',
-          week: 'Semaine',
-          list: 'Liste'
-        },
-        events: getFullCalendarEvents(),
-        eventClick: function(info) {
-          const idx = info.event.extendedProps.index;
-          if (idx !== undefined) {
-            editAgendaEntry(idx);
-          }
-        }
-      });
-
-      fullCalendarInstance.render();
-    }
-
-    function getFullCalendarEvents() {
-      const catFilter = document.getElementById('agendaFilterCat')?.value || 'TOUS';
-      
-      return window.agendaEntries
-        .map((a, idx) => ({ entry: a, originalIndex: idx }))
-        .filter(item => catFilter === 'TOUS' || item.entry.category === catFilter)
-        .map(item => {
-          const colorObj = parentColors[item.entry.assignee] || parentColors['Les deux'];
-          return {
-            title: `${item.entry.title} (${item.entry.assignee})`,
-            start: `${item.entry.startDate}T${item.entry.startTime}`,
-            end: `${item.entry.endDate}T${item.entry.endTime}`,
-            backgroundColor: colorObj.bg,
-            borderColor: colorObj.border,
-            extendedProps: { index: item.originalIndex }
-          };
-        });
-    }
-
-    function renderAgendaEntries() {
-      if (fullCalendarInstance) {
-        fullCalendarInstance.removeAllEvents();
-        fullCalendarInstance.addEventSource(getFullCalendarEvents());
-      }
-
-      const container = document.getElementById('agendaListContainer');
-      if (!container) return;
-      container.innerHTML = '';
-
-      const catFilter = document.getElementById('agendaFilterCat')?.value || 'TOUS';
-      const filtered = window.agendaEntries
-        .map((a, idx) => ({ entry: a, idx }))
-        .filter(item => catFilter === 'TOUS' || item.entry.category === catFilter)
-        .sort((a,b) => new Date(`${a.entry.startDate}T${a.entry.startTime}`) - new Date(`${b.entry.startDate}T${b.entry.startTime}`));
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-400 italic py-4 text-center">Aucun événement enregistré.</p>`;
-        return;
-      }
-
-      filtered.forEach(({ entry, idx }) => {
-        const color = parentColors[entry.assignee] || parentColors['Les deux'];
-        const div = document.createElement('div');
-        div.className = `p-3 rounded-2xl border ${color.bgLight} ${color.borderClass} flex items-center justify-between gap-3`;
-        
-        div.innerHTML = `
-          <div class="flex items-center gap-3">
-            <span class="w-3 h-3 rounded-full ${color.dot} shrink-0"></span>
-            <div>
-              <div class="flex items-center gap-2">
-                <h5 class="font-bold text-xs ${color.text}">${entry.title}</h5>
-                <span class="text-[10px] bg-white px-2 py-0.5 rounded-full border text-slate-500 font-semibold">${entry.category}</span>
-              </div>
-              <p class="text-[11px] text-slate-600 mt-0.5">
-                <i class="fa-regular fa-clock text-slate-400 mr-1"></i>
-                Du <strong>${entry.startDate} à ${entry.startTime}</strong> au <strong>${entry.endDate} à ${entry.endTime}</strong>
-              </p>
-              ${entry.notes ? `<p class="text-[10px] text-slate-500 italic mt-0.5">${entry.notes}</p>` : ''}
-            </div>
-          </div>
-          <div class="flex items-center gap-1 shrink-0">
-            <button onclick="editAgendaEntry(${idx})" class="p-1.5 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-white" title="Modifier"><i class="fa-solid fa-pen text-xs"></i></button>
-            <button onclick="deleteAgendaEntry(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-white" title="Supprimer"><i class="fa-solid fa-trash-can text-xs"></i></button>
-          </div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
+    // --- LOGIQUE AGENDA ---
     function addAgendaEntry(e) {
       e.preventDefault();
       const editIdx = parseInt(document.getElementById('editAgendaIndex').value);
@@ -2307,8 +2144,8 @@
         endDate: document.getElementById('agendaEndDate').value,
         endTime: document.getElementById('agendaEndTime').value,
         assignee: document.getElementById('agendaAssignee').value,
-        notes: document.getElementById('agendaNotes').value.trim(),
-        author: currentUser || 'Parent'
+        notes: document.getElementById('agendaNotes').value.trim() || 'RAS',
+        author: currentUser || "Parent"
       };
 
       if (editIdx >= 0) {
@@ -2322,6 +2159,51 @@
       cancelAgendaEdit();
     }
 
+    function renderAgendaEntries() {
+      const container = document.getElementById('agendaListContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const filterCat = document.getElementById('agendaFilterCat')?.value || 'TOUS';
+
+      const filtered = window.agendaEntries.filter(a => filterCat === 'TOUS' || a.category === filterCat);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-slate-400 italic text-xs py-4 text-center">Aucun événement répertorié.</p>`;
+      } else {
+        filtered.forEach((a, idx) => {
+          const originalIdx = window.agendaEntries.indexOf(a);
+          const colorObj = parentColors[a.assignee] || parentColors['Les deux'];
+
+          const div = document.createElement('div');
+          div.className = `p-3.5 rounded-2xl border ${colorObj.borderClass} ${colorObj.bgLight} flex justify-between items-center gap-3 transition shadow-sm`;
+          div.innerHTML = `
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full ${colorObj.dot}"></span>
+                <span class="font-bold text-slate-800 text-sm">${a.title}</span>
+                <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600">${a.category}</span>
+              </div>
+              <p class="text-xs text-slate-500">
+                <i class="fa-regular fa-clock mr-1"></i>${a.startDate} à ${a.startTime} ➔ ${a.endDate} à ${a.endTime} | <strong class="${colorObj.text}">${a.assignee}</strong>
+              </p>
+              ${a.notes && a.notes !== 'RAS' ? `<p class="text-xs text-slate-600 italic mt-1 bg-white/70 p-1.5 rounded-lg border border-slate-100">${a.notes}</p>` : ''}
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="editAgendaEntry(${originalIdx})" class="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-white transition" title="Modifier"><i class="fa-solid fa-pen text-xs"></i></button>
+              <button onclick="deleteAgendaEntry(${originalIdx})" class="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-white transition" title="Supprimer"><i class="fa-solid fa-trash-can text-xs"></i></button>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      }
+
+      if (fullCalendarInstance) {
+        fullCalendarInstance.removeAllEvents();
+        fullCalendarInstance.addEventSource(getFullCalendarEvents());
+      }
+    }
+
     function editAgendaEntry(index) {
       const a = window.agendaEntries[index];
       document.getElementById('editAgendaIndex').value = index;
@@ -2332,13 +2214,13 @@
       document.getElementById('agendaEndDate').value = a.endDate;
       document.getElementById('agendaEndTime').value = a.endTime;
       document.getElementById('agendaAssignee').value = a.assignee;
-      document.getElementById('agendaNotes').value = a.notes || '';
+      document.getElementById('agendaNotes').value = a.notes === 'RAS' ? '' : a.notes;
 
       document.getElementById('formAgendaTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Modifier l'événement`;
       document.getElementById('btnSubmitAgenda').innerText = "Mettre à jour l'événement";
       document.getElementById('btnSubmitAgenda').className = "w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition text-sm";
       document.getElementById('btnCancelAgendaEdit').classList.remove('hidden');
-
+      
       switchTab('agenda');
     }
 
@@ -2348,8 +2230,6 @@
       const todayStr = new Date().toISOString().split('T')[0];
       document.getElementById('agendaStartDate').value = todayStr;
       document.getElementById('agendaEndDate').value = todayStr;
-      document.getElementById('agendaStartTime').value = "09:00";
-      document.getElementById('agendaEndTime').value = "10:00";
 
       document.getElementById('formAgendaTitle').innerHTML = `<i class="fa-solid fa-calendar-plus text-indigo-500"></i> Ajouter un événement`;
       document.getElementById('btnSubmitAgenda').innerText = "Ajouter à l'agenda";
@@ -2358,7 +2238,7 @@
     }
 
     function deleteAgendaEntry(index) {
-      if (confirm("Supprimer cet événement de l'agenda ?")) {
+      if (confirm("Voulez-vous supprimer cet événement de l'agenda ?")) {
         window.agendaEntries.splice(index, 1);
         saveAllToStorage();
         renderAgendaEntries();
@@ -2366,25 +2246,17 @@
     }
 
     function exportAgendaICS() {
-      if (window.agendaEntries.length === 0) {
-        alert("Aucun événement à exporter.");
-        return;
-      }
-
-      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//BabyPredict2026//FR\nCALSCALE:GREGORIAN\n";
-
+      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//BabyPredict2026//FR\n";
       window.agendaEntries.forEach(a => {
-        const startStr = a.startDate.replace(/-/g, '') + 'T' + a.startTime.replace(':', '') + '00';
-        const endStr = a.endDate.replace(/-/g, '') + 'T' + a.endTime.replace(':', '') + '00';
-
+        const startFormatted = a.startDate.replace(/-/g, '') + 'T' + a.startTime.replace(':', '') + '00';
+        const endFormatted = a.endDate.replace(/-/g, '') + 'T' + a.endTime.replace(':', '') + '00';
         icsContent += "BEGIN:VEVENT\n";
-        icsContent += `SUMMARY:${a.title} (${a.assignee})\n`;
-        icsContent += `DESCRIPTION:${a.category} - ${a.notes || ''}\n`;
-        icsContent += `DTSTART:${startStr}\n`;
-        icsContent += `DTEND:${endStr}\n`;
+        icsContent += `SUMMARY:[${a.assignee}] ${a.title}\n`;
+        icsContent += `DTSTART:${startFormatted}\n`;
+        icsContent += `DTEND:${endFormatted}\n`;
+        icsContent += `DESCRIPTION:${a.category} - ${a.notes}\n`;
         icsContent += "END:VEVENT\n";
       });
-
       icsContent += "END:VCALENDAR";
 
       const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
@@ -2396,59 +2268,16 @@
       document.body.removeChild(link);
     }
 
-    // --- FONCTIONS D'EXPORTATION ET RESULTATS OFFICIELS ---
-    function saveOfficialResults(e) {
-      e.preventDefault();
-      if (!isAdmin) return;
-
-      window.officialResult = {
-        name: document.getElementById('officialName').value.trim(),
-        gender: document.getElementById('officialGender').value,
-        weight: parseFloat(document.getElementById('officialWeight').value),
-        height: parseFloat(document.getElementById('officialHeight').value),
-        date: new Date().toLocaleDateString('fr-FR')
-      };
-
-      saveAllToStorage();
-      displayOfficialBanner();
-    }
-
-    function displayOfficialBanner() {
-      if (!window.officialResult) return;
-
-      const banner = document.getElementById('resultBanner');
-      banner.classList.remove('hidden');
-
-      document.getElementById('resBabyName').innerText = `Bienvenue à ${window.officialResult.name} !`;
-      document.getElementById('resBabyDetails').innerText = `Né(e) le ${window.officialResult.date} | ${window.officialResult.weight} kg | ${window.officialResult.height} cm (${window.officialResult.gender})`;
-
-      let minDiff = Infinity;
-      let winner = "--";
-
-      window.predictions.forEach(p => {
-        const diffWeight = Math.abs(p.weight - window.officialResult.weight);
-        const diffHeight = Math.abs(p.height - window.officialResult.height);
-        const totalDiff = diffWeight + (diffHeight / 10);
-
-        if (totalDiff < minDiff) {
-          minDiff = totalDiff;
-          winner = p.user;
-        }
-      });
-
-      document.getElementById('resWinnerName').innerText = winner;
-    }
-
     function exportCareCSV() {
-      let csv = "Date;Heure;Temp_Bebe;Temp_Couveuse;Couche;Repas_ml;Notes;Auteur\n";
+      let csv = "Date,Heure,Temp_Bebe,Temp_Couveuse,Couche,Repas_ml,Observations,Auteur\n";
       window.careEntries.forEach(c => {
-        csv += `${c.date};${c.time};${c.tempBaby || ''};${c.tempIncubator || ''};${c.diaper};${c.feeding};"${c.notes}";${c.author}\n`;
+        csv += `"${c.date}","${c.time}","${c.tempBaby || ''}","${c.tempIncubator || ''}","${c.diaper}","${c.feeding || 0}","${c.notes}","${c.author}"\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.setAttribute('download', 'fiche_soins_maternite.csv');
+      link.setAttribute('download', 'suivi_soins_maternite.csv');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -2457,22 +2286,20 @@
     function exportCareExcel() {
       const ws = XLSX.utils.json_to_sheet(window.careEntries);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Fiche Soins");
-      XLSX.writeFile(wb, "fiche_soins_maternite.xlsx");
+      XLSX.utils.book_append_sheet(wb, ws, "Fiche de Soins");
+      XLSX.writeFile(wb, "suivi_soins_maternite.xlsx");
     }
 
     function exportCarePDF() {
       const element = document.getElementById('careJournalContainer');
       element.classList.add('pdf-compact');
-      
       const opt = {
-        margin: 0.5,
-        filename: 'fiche_soins_maternite.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        margin:       0.5,
+        filename:     'fiche_soins_maternite.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
-
       html2pdf().set(opt).from(element).save().then(() => {
         element.classList.remove('pdf-compact');
       });
