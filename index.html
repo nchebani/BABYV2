@@ -510,8 +510,39 @@
         </div>
       </div>
 
-      <!-- COURBES INTERACTIVES TEMPE ET POIDS -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- COURBES INTERACTIVES (BIBERONS/COUCHES, TEMPÉRATURE ET POIDS) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- NOVELLE COURBE DES BIBERONS ET COUCHES -->
+        <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-chart-column text-pink-500"></i> Suivi Repas & Couches
+            </h4>
+            <div class="flex items-center gap-1">
+              <select id="mealsChartMode" onchange="updateMealsChart()" class="text-xs px-2 py-1 bg-white rounded-lg border border-slate-200 outline-none font-bold text-slate-700">
+                <option value="day">Comparaison : Jours (7d)</option>
+                <option value="week">Comparaison : Semaines (4w)</option>
+                <option value="month">Comparaison : Mois (6m)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="h-52">
+            <canvas id="chartMeals"></canvas>
+          </div>
+
+          <div class="text-[11px] text-slate-500 bg-white/50 p-2.5 rounded-xl border border-slate-100 space-y-1">
+            <div class="flex justify-between items-center">
+              <span>Moyenne Biberons / période :</span>
+              <strong id="avgMealsPeriod" class="text-pink-600">--</strong>
+            </div>
+            <div class="flex justify-between items-center">
+              <span>Moyenne Couches / période :</span>
+              <strong id="avgDiapersPeriod" class="text-blue-600">--</strong>
+            </div>
+          </div>
+        </div>
 
         <!-- COURBE DE TEMPÉRATURE INTERACTIVE -->
         <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
@@ -941,8 +972,8 @@
     const nodes = [
       { key: 'predictions', render: () => renderPredictions() },
       { key: 'officialResult', render: () => displayOfficialBanner() },
-      { key: 'careEntries', render: () => { renderCareEntries(); renderDailyTracker(); } },
-      { key: 'dailyArchive', render: () => renderDailyTracker() },
+      { key: 'careEntries', render: () => { renderCareEntries(); renderDailyTracker(); updateMealsChart(); } },
+      { key: 'dailyArchive', render: () => { renderDailyTracker(); updateMealsChart(); } },
       { key: 'tempHistory', render: () => { updateTempChart(); renderTempList(); } },
       { key: 'weightHistory', render: () => { updateWeightChart(); renderWeightList(); } },
       { key: 'agendaEntries', render: () => renderAgendaEntries() },
@@ -1011,8 +1042,230 @@
 
     let chartTempInstance = null;
     let chartWeightInstance = null;
+    let chartMealsInstance = null;
     let timerInterval = null;
     let timerSeconds = 0;
+
+    // --- INITIALISATION DES GRAPHIQUES ---
+    function initCharts() {
+      // Graphique Température
+      const ctxTemp = document.getElementById('chartTemp')?.getContext('2d');
+      if (ctxTemp) {
+        chartTempInstance = new Chart(ctxTemp, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [
+              { label: 'T° Bébé (°C)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.3 },
+              { label: 'T° Couveuse (°C)', data: [], borderColor: '#f59e0b', borderDash: [4, 4], fill: false, tension: 0.3 }
+            ]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
+      // Graphique Poids
+      const ctxWeight = document.getElementById('chartWeight')?.getContext('2d');
+      if (ctxWeight) {
+        chartWeightInstance = new Chart(ctxWeight, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{ label: 'Poids (kg)', data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.2 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
+      // NOUVEAU GRAPHIQUE BIBERONS ET COUCHES
+      const ctxMeals = document.getElementById('chartMeals')?.getContext('2d');
+      if (ctxMeals) {
+        chartMealsInstance = new Chart(ctxMeals, {
+          type: 'bar',
+          data: {
+            labels: [],
+            datasets: [
+              { label: 'Biberons (nb)', data: [], backgroundColor: '#ec4899', borderRadius: 6, yAxisID: 'y' },
+              { label: 'Couches (nb)', data: [], backgroundColor: '#3b82f6', borderRadius: 6, yAxisID: 'y' }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, ticks: { precision: 0 } }
+            }
+          }
+        });
+      }
+    }
+
+    function updateTempChart() {
+      if (!chartTempInstance) return;
+      chartTempInstance.data.labels = window.tempHistory.map(p => p.time);
+      chartTempInstance.data.datasets[0].data = window.tempHistory.map(p => p.tempBaby);
+      chartTempInstance.data.datasets[1].data = window.tempHistory.map(p => p.tempIncubator);
+      chartTempInstance.update();
+    }
+
+    function renderTempList() {
+      const container = document.getElementById('tempPointsList');
+      if (!container) return;
+      container.innerHTML = '';
+      window.tempHistory.forEach((p, idx) => {
+        const div = document.createElement('div');
+        div.className = 'flex justify-between items-center bg-white/70 p-2 rounded-xl border border-slate-100';
+        div.innerHTML = `<span><strong>${p.time}</strong> : Bébé ${p.tempBaby}°C ${p.tempIncubator ? `(Couv. ${p.tempIncubator}°C)` : ''}</span>
+          <button onclick="deleteTempPoint(${idx})" class="text-red-500 hover:text-red-700 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>`;
+        container.appendChild(div);
+      });
+      if (window.tempHistory.length > 0) {
+        const last = window.tempHistory[window.tempHistory.length - 1];
+        document.getElementById('statLastTemp').innerText = `${last.tempBaby} °C`;
+      }
+    }
+
+    function addTempPoint(e) {
+      e.preventDefault();
+      const time = document.getElementById('tempPointTime').value;
+      const baby = parseFloat(document.getElementById('tempPointBaby').value);
+      const inc = parseFloat(document.getElementById('tempPointIncubator').value) || null;
+      window.tempHistory.push({ time, tempBaby: baby, tempIncubator: inc });
+      saveAllToStorage();
+      updateTempChart();
+      renderTempList();
+    }
+
+    function deleteTempPoint(idx) {
+      window.tempHistory.splice(idx, 1);
+      saveAllToStorage();
+      updateTempChart();
+      renderTempList();
+    }
+
+    function updateWeightChart() {
+      if (!chartWeightInstance) return;
+      chartWeightInstance.data.labels = window.weightHistory.map(p => p.date);
+      chartWeightInstance.data.datasets[0].data = window.weightHistory.map(p => p.weight);
+      chartWeightInstance.update();
+    }
+
+    function renderWeightList() {
+      const container = document.getElementById('weightPointsList');
+      if (!container) return;
+      container.innerHTML = '';
+      window.weightHistory.forEach((p, idx) => {
+        const div = document.createElement('div');
+        div.className = 'flex justify-between items-center bg-white/70 p-2 rounded-xl border border-slate-100';
+        div.innerHTML = `<span><strong>${p.date}</strong> : ${p.weight} kg</span>
+          <button onclick="deleteWeightPoint(${idx})" class="text-red-500 hover:text-red-700 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>`;
+        container.appendChild(div);
+      });
+      if (window.weightHistory.length > 0) {
+        const last = window.weightHistory[window.weightHistory.length - 1];
+        document.getElementById('statCurrentWeight').innerText = `${last.weight} kg`;
+      }
+    }
+
+    function addWeightPoint(e) {
+      e.preventDefault();
+      const date = document.getElementById('weightPointDate').value;
+      const weight = parseFloat(document.getElementById('weightPointVal').value);
+      window.weightHistory.push({ date, weight });
+      window.weightHistory.sort((a,b) => new Date(a.date) - new Date(b.date));
+      saveAllToStorage();
+      updateWeightChart();
+      renderWeightList();
+    }
+
+    function deleteWeightPoint(idx) {
+      window.weightHistory.splice(idx, 1);
+      saveAllToStorage();
+      updateWeightChart();
+      renderWeightList();
+    }
+
+    // NOUVELLE FONCTION : MISE À JOUR DU GRAPHIQUE BIBERONS ET COUCHES (J/S/M)
+    function updateMealsChart() {
+      if (!chartMealsInstance) return;
+
+      const mode = document.getElementById('mealsChartMode')?.value || 'day';
+      let labels = [];
+      let mealsData = [];
+      let diapersData = [];
+
+      const now = new Date();
+
+      if (mode === 'day') {
+        // 7 derniers jours
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(now);
+          d.setDate(now.getDate() - i);
+          const iso = d.toISOString().split('T')[0];
+          labels.push(d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }));
+
+          let meals = 0, diapers = 0;
+          window.careEntries.forEach(c => {
+            if ((c.date || iso) === iso) {
+              if (c.feeding > 0) meals++;
+              if (c.diaper && c.diaper !== 'Propre / Rien') diapers++;
+            }
+          });
+          mealsData.push(meals);
+          diapersData.push(diapers);
+        }
+      } else if (mode === 'week') {
+        // 4 dernières semaines
+        for (let i = 3; i >= 0; i--) {
+          labels.push(`S-${i}`);
+          let meals = 0, diapers = 0;
+          const end = new Date(now);
+          end.setDate(now.getDate() - (i * 7));
+          const start = new Date(end);
+          start.setDate(end.getDate() - 6);
+
+          window.careEntries.forEach(c => {
+            const entryDate = new Date(c.date || todayIsoStr);
+            if (entryDate >= start && entryDate <= end) {
+              if (c.feeding > 0) meals++;
+              if (c.diaper && c.diaper !== 'Propre / Rien') diapers++;
+            }
+          });
+          mealsData.push(meals);
+          diapersData.push(diapers);
+        }
+      } else if (mode === 'month') {
+        // 6 derniers mois
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          labels.push(d.toLocaleDateString('fr-FR', { month: 'short' }));
+
+          let meals = 0, diapers = 0;
+          window.careEntries.forEach(c => {
+            const entryDate = new Date(c.date || todayIsoStr);
+            if (entryDate.getMonth() === d.getMonth() && entryDate.getFullYear() === d.getFullYear()) {
+              if (c.feeding > 0) meals++;
+              if (c.diaper && c.diaper !== 'Propre / Rien') diapers++;
+            }
+          });
+          mealsData.push(meals);
+          diapersData.push(diapers);
+        }
+      }
+
+      chartMealsInstance.data.labels = labels;
+      chartMealsInstance.data.datasets[0].data = mealsData;
+      chartMealsInstance.data.datasets[1].data = diapersData;
+      chartMealsInstance.update();
+
+      const avgM = mealsData.length ? (mealsData.reduce((a,b)=>a+b,0)/mealsData.length).toFixed(1) : 0;
+      const avgD = diapersData.length ? (diapersData.reduce((a,b)=>a+b,0)/diapersData.length).toFixed(1) : 0;
+
+      const avgMEl = document.getElementById('avgMealsPeriod');
+      const avgDEl = document.getElementById('avgDiapersPeriod');
+      if (avgMEl) avgMEl.innerText = `${avgM} / période`;
+      if (avgDEl) avgDEl.innerText = `${avgD} / période`;
+    }
 
     // --- LOGIQUE DE REMISE À ZÉRO ET ARCHIVAGE AUTOMATIQUE ---
     function checkMidnightReset() {
@@ -1143,6 +1396,7 @@
       saveAllToStorage();
       renderCareEntries();
       renderDailyTracker();
+      updateMealsChart();
     }
 
     function quickAddDiaper() {
@@ -1170,6 +1424,7 @@
       saveAllToStorage();
       renderCareEntries();
       renderDailyTracker();
+      updateMealsChart();
     }
 
     function deleteQuickEntry(careIndex) {
@@ -1178,6 +1433,7 @@
         saveAllToStorage();
         renderCareEntries();
         renderDailyTracker();
+        updateMealsChart();
       }
     }
 
@@ -1231,10 +1487,10 @@
         saveAllToStorage();
         renderCareEntries();
         renderDailyTracker();
+        updateMealsChart();
       }
     }
 
-    // --- NOUVELLE FONCTION : RÉINITIALISATION DES STATISTIQUES SEMAINE / MOIS ---
     function resetStatsPeriod() {
       const choice = prompt("Quelle période souhaitez-vous initialiser ?\n1: Cette semaine (7 derniers jours)\n2: Ce mois-ci (30 derniers jours)", "1");
       if (choice === null) return;
@@ -1257,7 +1513,6 @@
           return entryDate < limitDate;
         });
 
-        // Nettoyage de l'archive quotidienne
         Object.keys(window.dailyArchive).forEach(dateStr => {
           const d = new Date(dateStr);
           if (d >= limitDate) {
@@ -1268,6 +1523,7 @@
         saveAllToStorage();
         renderCareEntries();
         renderDailyTracker();
+        updateMealsChart();
         alert("Les statistiques de la période sélectionnée ont été réinitialisées.");
       }
     }
@@ -1367,6 +1623,7 @@
           saveAllToStorage();
           renderCareEntries();
           renderDailyTracker();
+          updateMealsChart();
 
           alert(`Analyse terminée avec succès !\n\n• Type : ${d.type_document}\n• Poids extrait : ${d.poids_kg ? d.poids_kg + ' kg' : 'Non spécifié'}\n• Volume repas : ${d.volume_sondage_ml ? d.volume_sondage_ml + ' ml' : 'Non spécifié'}\n• Notes : ${d.notes || 'Rien à signaler'}`);
         } else {
@@ -1468,6 +1725,7 @@
       saveAllToStorage();
       renderCareEntries();
       renderDailyTracker();
+      updateMealsChart();
       resetTimer();
     }
 
@@ -1501,6 +1759,7 @@
       renderAgendaEntries();
       updateWeightChart();
       updateTempChart();
+      updateMealsChart();
 
       if (window.officialResult) {
         displayOfficialBanner();
@@ -1752,6 +2011,7 @@
       saveAllToStorage();
       renderCareEntries();
       renderDailyTracker();
+      updateMealsChart();
       cancelCareEdit();
     }
 
@@ -1791,6 +2051,7 @@
         saveAllToStorage();
         renderCareEntries();
         renderDailyTracker();
+        updateMealsChart();
       }
     }
 
@@ -1930,11 +2191,11 @@
             </div>
           </div>
         `;
-
         grid.appendChild(dayCard);
       });
     }
 
+    // --- FONCTIONS AGENDA FULLCALENDAR ---
     function initFullCalendar() {
       const calendarEl = document.getElementById('fullCalendarContainer');
       if (!calendarEl) return;
@@ -1948,17 +2209,16 @@
           right: 'dayGridMonth,timeGridWeek,listWeek'
         },
         buttonText: {
-          today: "Aujourd'hui",
+          today: 'Aujourd\'hui',
           month: 'Mois',
           week: 'Semaine',
           list: 'Liste'
         },
-        height: 'auto',
-        editable: false,
+        events: getFullCalendarEvents(),
         eventClick: function(info) {
-          const origIdx = info.event.extendedProps.originalIndex;
-          if (origIdx !== undefined && origIdx >= 0) {
-            editAgendaEntry(origIdx);
+          const idx = info.event.extendedProps.index;
+          if (idx !== undefined) {
+            editAgendaEntry(idx);
           }
         }
       });
@@ -1966,38 +2226,80 @@
       fullCalendarInstance.render();
     }
 
-    function updateFullCalendarEvents(filteredEntries) {
-      if (!fullCalendarInstance) return;
+    function getFullCalendarEvents() {
+      const catFilter = document.getElementById('agendaFilterCat')?.value || 'TOUS';
+      
+      return window.agendaEntries
+        .map((a, idx) => ({ entry: a, originalIndex: idx }))
+        .filter(item => catFilter === 'TOUS' || item.entry.category === catFilter)
+        .map(item => {
+          const colorObj = parentColors[item.entry.assignee] || parentColors['Les deux'];
+          return {
+            title: `${item.entry.title} (${item.entry.assignee})`,
+            start: `${item.entry.startDate}T${item.entry.startTime}`,
+            end: `${item.entry.endDate}T${item.entry.endTime}`,
+            backgroundColor: colorObj.bg,
+            borderColor: colorObj.border,
+            extendedProps: { index: item.originalIndex }
+          };
+        });
+    }
 
-      fullCalendarInstance.removeAllEvents();
+    function renderAgendaEntries() {
+      if (fullCalendarInstance) {
+        fullCalendarInstance.removeAllEvents();
+        fullCalendarInstance.addEventSource(getFullCalendarEvents());
+      }
 
-      const fcEvents = filteredEntries.map(item => {
-        const origIndex = window.agendaEntries.indexOf(item);
-        const colors = parentColors[item.assignee] || parentColors['Les deux'];
+      const container = document.getElementById('agendaListContainer');
+      if (!container) return;
+      container.innerHTML = '';
 
-        return {
-          title: `[${item.assignee}] ${item.title}`,
-          start: `${item.startDate}T${item.startTime}:00`,
-          end: `${item.endDate}T${item.endTime}:00`,
-          backgroundColor: colors.bg,
-          borderColor: colors.border,
-          textColor: '#ffffff',
-          extendedProps: {
-            category: item.category,
-            notes: item.notes,
-            originalIndex: origIndex
-          }
-        };
+      const catFilter = document.getElementById('agendaFilterCat')?.value || 'TOUS';
+      const filtered = window.agendaEntries
+        .map((a, idx) => ({ entry: a, idx }))
+        .filter(item => catFilter === 'TOUS' || item.entry.category === catFilter)
+        .sort((a,b) => new Date(`${a.entry.startDate}T${a.entry.startTime}`) - new Date(`${b.entry.startDate}T${b.entry.startTime}`));
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 italic py-4 text-center">Aucun événement enregistré.</p>`;
+        return;
+      }
+
+      filtered.forEach(({ entry, idx }) => {
+        const color = parentColors[entry.assignee] || parentColors['Les deux'];
+        const div = document.createElement('div');
+        div.className = `p-3 rounded-2xl border ${color.bgLight} ${color.borderClass} flex items-center justify-between gap-3`;
+        
+        div.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="w-3 h-3 rounded-full ${color.dot} shrink-0"></span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h5 class="font-bold text-xs ${color.text}">${entry.title}</h5>
+                <span class="text-[10px] bg-white px-2 py-0.5 rounded-full border text-slate-500 font-semibold">${entry.category}</span>
+              </div>
+              <p class="text-[11px] text-slate-600 mt-0.5">
+                <i class="fa-regular fa-clock text-slate-400 mr-1"></i>
+                Du <strong>${entry.startDate} à ${entry.startTime}</strong> au <strong>${entry.endDate} à ${entry.endTime}</strong>
+              </p>
+              ${entry.notes ? `<p class="text-[10px] text-slate-500 italic mt-0.5">${entry.notes}</p>` : ''}
+            </div>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button onclick="editAgendaEntry(${idx})" class="p-1.5 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-white" title="Modifier"><i class="fa-solid fa-pen text-xs"></i></button>
+            <button onclick="deleteAgendaEntry(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-white" title="Supprimer"><i class="fa-solid fa-trash-can text-xs"></i></button>
+          </div>
+        `;
+        container.appendChild(div);
       });
-
-      fullCalendarInstance.addEventSource(fcEvents);
     }
 
     function addAgendaEntry(e) {
       e.preventDefault();
       const editIdx = parseInt(document.getElementById('editAgendaIndex').value);
 
-      const newEntry = {
+      const entry = {
         title: document.getElementById('agendaTitle').value.trim(),
         category: document.getElementById('agendaCategory').value,
         startDate: document.getElementById('agendaStartDate').value,
@@ -2005,14 +2307,14 @@
         endDate: document.getElementById('agendaEndDate').value,
         endTime: document.getElementById('agendaEndTime').value,
         assignee: document.getElementById('agendaAssignee').value,
-        notes: document.getElementById('agendaNotes').value.trim() || 'RAS',
-        author: editIdx >= 0 ? window.agendaEntries[editIdx].author : (currentUser || 'Parent')
+        notes: document.getElementById('agendaNotes').value.trim(),
+        author: currentUser || 'Parent'
       };
 
       if (editIdx >= 0) {
-        window.agendaEntries[editIdx] = newEntry;
+        window.agendaEntries[editIdx] = entry;
       } else {
-        window.agendaEntries.push(newEntry);
+        window.agendaEntries.push(entry);
       }
 
       saveAllToStorage();
@@ -2021,18 +2323,16 @@
     }
 
     function editAgendaEntry(index) {
-      const item = window.agendaEntries[index];
-      if (!item) return;
-
+      const a = window.agendaEntries[index];
       document.getElementById('editAgendaIndex').value = index;
-      document.getElementById('agendaTitle').value = item.title;
-      document.getElementById('agendaCategory').value = item.category;
-      document.getElementById('agendaStartDate').value = item.startDate;
-      document.getElementById('agendaStartTime').value = item.startTime;
-      document.getElementById('agendaEndDate').value = item.endDate;
-      document.getElementById('agendaEndTime').value = item.endTime;
-      document.getElementById('agendaAssignee').value = item.assignee;
-      document.getElementById('agendaNotes').value = item.notes === 'RAS' ? '' : item.notes;
+      document.getElementById('agendaTitle').value = a.title;
+      document.getElementById('agendaCategory').value = a.category;
+      document.getElementById('agendaStartDate').value = a.startDate;
+      document.getElementById('agendaStartTime').value = a.startTime;
+      document.getElementById('agendaEndDate').value = a.endDate;
+      document.getElementById('agendaEndTime').value = a.endTime;
+      document.getElementById('agendaAssignee').value = a.assignee;
+      document.getElementById('agendaNotes').value = a.notes || '';
 
       document.getElementById('formAgendaTitle').innerHTML = `<i class="fa-solid fa-pen text-amber-500"></i> Modifier l'événement`;
       document.getElementById('btnSubmitAgenda').innerText = "Mettre à jour l'événement";
@@ -2045,7 +2345,6 @@
     function cancelAgendaEdit() {
       document.getElementById('editAgendaIndex').value = "-1";
       document.getElementById('agendaForm').reset();
-
       const todayStr = new Date().toISOString().split('T')[0];
       document.getElementById('agendaStartDate').value = todayStr;
       document.getElementById('agendaEndDate').value = todayStr;
@@ -2059,335 +2358,55 @@
     }
 
     function deleteAgendaEntry(index) {
-      if (confirm("Voulez-vous vraiment supprimer cet événement du planning ?")) {
+      if (confirm("Supprimer cet événement de l'agenda ?")) {
         window.agendaEntries.splice(index, 1);
         saveAllToStorage();
         renderAgendaEntries();
       }
     }
 
-    function renderAgendaEntries() {
-      const container = document.getElementById('agendaListContainer');
-      const filterCat = document.getElementById('agendaFilterCat') ? document.getElementById('agendaFilterCat').value : 'TOUS';
-
-      let filtered = window.agendaEntries;
-      if (filterCat !== 'TOUS') {
-        filtered = window.agendaEntries.filter(item => item.category === filterCat);
-      }
-
-      updateFullCalendarEvents(filtered);
-
-      if (!container) return;
-      container.innerHTML = '';
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<p class="text-slate-400 italic text-sm py-4 text-center">Aucun événement enregistré pour cette catégorie.</p>`;
-        return;
-      }
-
-      const sorted = filtered.slice().sort((a, b) => {
-        return new Date(`${a.startDate}T${a.startTime}`) - new Date(`${b.startDate}T${b.startTime}`);
-      });
-
-      sorted.forEach(item => {
-        const originalIndex = window.agendaEntries.indexOf(item);
-        const colors = parentColors[item.assignee] || parentColors['Les deux'];
-
-        const card = document.createElement('div');
-        card.className = `p-4 rounded-2xl border ${colors.bgLight} ${colors.borderClass} flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition shadow-sm hover:shadow-md`;
-        
-        card.innerHTML = `
-          <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full ${colors.dot}"></span>
-              <span class="font-extrabold text-sm ${colors.text}">${item.title}</span>
-              <span class="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-md bg-white border text-slate-600 shadow-xs">${item.category}</span>
-            </div>
-            <p class="text-xs text-slate-600 font-medium">
-              <i class="fa-regular fa-clock mr-1 text-slate-400"></i>
-              Du <strong>${item.startDate}</strong> à ${item.startTime} au <strong>${item.endDate}</strong> à ${item.endTime}
-            </p>
-            ${item.notes && item.notes !== 'RAS' ? `<p class="text-xs text-slate-500 italic"><i class="fa-solid fa-info-circle mr-1 text-indigo-400"></i>${item.notes}</p>` : ''}
-          </div>
-          <div class="flex items-center gap-2 self-end sm:self-center">
-            <span class="text-xs font-bold px-2.5 py-1 rounded-xl bg-white border border-slate-200 text-slate-700 shadow-xs">${item.assignee}</span>
-            <button onclick="editAgendaEntry(${originalIndex})" class="p-1.5 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-white" title="Modifier">
-              <i class="fa-solid fa-pen text-xs"></i>
-            </button>
-            <button onclick="deleteAgendaEntry(${originalIndex})" class="p-1.5 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-white" title="Supprimer">
-              <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
     function exportAgendaICS() {
       if (window.agendaEntries.length === 0) {
-        alert("Aucun événement à exporter !");
+        alert("Aucun événement à exporter.");
         return;
       }
 
-      let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//BabyPredict2026//NONSGML v1.0//FR\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n";
+      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//BabyPredict2026//FR\nCALSCALE:GREGORIAN\n";
 
-      window.agendaEntries.forEach(item => {
-        const startFormatted = item.startDate.replace(/-/g, '') + 'T' + item.startTime.replace(':', '') + '00';
-        const endFormatted = item.endDate.replace(/-/g, '') + 'T' + item.endTime.replace(':', '') + '00';
+      window.agendaEntries.forEach(a => {
+        const startStr = a.startDate.replace(/-/g, '') + 'T' + a.startTime.replace(':', '') + '00';
+        const endStr = a.endDate.replace(/-/g, '') + 'T' + a.endTime.replace(':', '') + '00';
 
-        icsContent += "BEGIN:VEVENT\r\n";
-        icsContent += `SUMMARY:[${item.assignee}] ${item.title}\r\n`;
-        icsContent += `DESCRIPTION:Catégorie: ${item.category} | Notes: ${item.notes}\r\n`;
-        icsContent += `DTSTART:${startFormatted}\r\n`;
-        icsContent += `DTEND:${endFormatted}\r\n`;
-        icsContent += "STATUS:CONFIRMED\r\n";
-        icsContent += "END:VEVENT\r\n";
+        icsContent += "BEGIN:VEVENT\n";
+        icsContent += `SUMMARY:${a.title} (${a.assignee})\n`;
+        icsContent += `DESCRIPTION:${a.category} - ${a.notes || ''}\n`;
+        icsContent += `DTSTART:${startStr}\n`;
+        icsContent += `DTEND:${endStr}\n`;
+        icsContent += "END:VEVENT\n";
       });
 
-      icsContent += "END:VCALENDAR\r\n";
+      icsContent += "END:VCALENDAR";
 
-      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
       const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'planning_familial_babypredict.ics');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', 'agenda_baby_predict.ics');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
-    function exportCareCSV() {
-      if (window.careEntries.length === 0) {
-        alert("Aucune donnée de soin à exporter.");
-        return;
-      }
-
-      let csv = "Date;Heure;Temp_Bebe_C;Temp_Couveuse_C;Couche;Repas_ml;Observations;Auteur\n";
-      window.careEntries.forEach(c => {
-        csv += `${c.date || ''};${c.time || ''};${c.tempBaby || ''};${c.tempIncubator || ''};${c.diaper || ''};${c.feeding || 0};"${(c.notes || '').replace(/"/g, '""')}";${c.author || ''}\n`;
-      });
-
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `fiche_soins_babypredict_${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
-    }
-
-    function exportCareExcel() {
-      if (window.careEntries.length === 0) {
-        alert("Aucune donnée à exporter !");
-        return;
-      }
-
-      const worksheetData = window.careEntries.map(c => ({
-        "Date": c.date || '',
-        "Heure": c.time || '',
-        "Température Bébé (°C)": c.tempBaby || '',
-        "Température Couveuse (°C)": c.tempIncubator || '',
-        "Etat Couche": c.diaper || '',
-        "Repas (ml)": c.feeding || 0,
-        "Observations": c.notes || '',
-        "Auteur": c.author || ''
-      }));
-
-      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Soins Maternité");
-      XLSX.writeFile(workbook, `fiche_soins_maternite_${new Date().toISOString().split('T')[0]}.xlsx`);
-    }
-
-    function exportCarePDF() {
-      const element = document.getElementById('careJournalContainer');
-      if (!element) return;
-
-      const opt = {
-        margin:       10,
-        filename:     `fiche_soins_maternite_${new Date().toISOString().split('T')[0]}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      element.classList.add('pdf-compact');
-      html2pdf().set(opt).from(element).save().then(() => {
-        element.classList.remove('pdf-compact');
-      });
-    }
-
-    function initCharts() {
-      const ctxTemp = document.getElementById('chartTemp');
-      if (ctxTemp) {
-        chartTempInstance = new Chart(ctxTemp, {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [
-              { label: 'T° Bébé (°C)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', tension: 0.3, fill: true },
-              { label: 'T° Couveuse (°C)', data: [], borderColor: '#3b82f6', borderDash: [5, 5], fill: false }
-            ]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
-      }
-
-      const ctxWeight = document.getElementById('chartWeight');
-      if (ctxWeight) {
-        chartWeightInstance = new Chart(ctxWeight, {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [
-              { label: 'Poids (kg)', data: [], borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', tension: 0.2, fill: true }
-            ]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
-      }
-    }
-
-    function addTempPoint(e) {
-      e.preventDefault();
-      const time = document.getElementById('tempPointTime').value;
-      const tempBaby = parseFloat(document.getElementById('tempPointBaby').value);
-      const tempIncubator = parseFloat(document.getElementById('tempPointIncubator').value) || null;
-
-      if (!time || isNaN(tempBaby)) return;
-
-      window.tempHistory.push({ time, tempBaby, tempIncubator });
-      saveAllToStorage();
-      updateTempChart();
-      renderTempList();
-
-      document.getElementById('tempPointBaby').value = '';
-      document.getElementById('tempPointIncubator').value = '';
-    }
-
-    function deleteTempPoint(idx) {
-      window.tempHistory.splice(idx, 1);
-      saveAllToStorage();
-      updateTempChart();
-      renderTempList();
-    }
-
-    function renderTempList() {
-      const container = document.getElementById('tempPointsList');
-      if (!container) return;
-      container.innerHTML = '';
-
-      window.tempHistory.forEach((t, idx) => {
-        const div = document.createElement('div');
-        div.className = 'flex items-center justify-between bg-white/70 p-2 rounded-xl border border-slate-100';
-        div.innerHTML = `
-          <span><strong>${t.time}</strong> : Bébé ${t.tempBaby}°C ${t.tempIncubator ? `(Couv. ${t.tempIncubator}°C)` : ''}</span>
-          <button onclick="deleteTempPoint(${idx})" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function updateTempChart() {
-      if (!chartTempInstance) return;
-      const labels = window.tempHistory.map(t => t.time);
-      const babyData = window.tempHistory.map(t => t.tempBaby);
-      const incData = window.tempHistory.map(t => t.tempIncubator);
-
-      chartTempInstance.data.labels = labels;
-      chartTempInstance.data.datasets[0].data = babyData;
-      chartTempInstance.data.datasets[1].data = incData;
-      chartTempInstance.update();
-
-      if (window.tempHistory.length > 0) {
-        const lastTemp = window.tempHistory[window.tempHistory.length - 1].tempBaby;
-        document.getElementById('statLastTemp').innerText = `${lastTemp} °C`;
-        const card = document.getElementById('cardTempStatus');
-        const statusEl = document.getElementById('statTempStatus');
-
-        if (lastTemp >= 37.5) {
-          statusEl.innerText = "Statut : Fièvre / Vigilance";
-          statusEl.className = "text-xs font-bold mt-1 text-red-600";
-          card.className = "glassmorphism p-4 rounded-2xl border-2 border-red-300 bg-red-50/50";
-        } else if (lastTemp <= 35.5) {
-          statusEl.innerText = "Statut : Hypothermie léger";
-          statusEl.className = "text-xs font-bold mt-1 text-blue-600";
-          card.className = "glassmorphism p-4 rounded-2xl border-2 border-blue-300 bg-blue-50/50";
-        } else {
-          statusEl.innerText = "Statut : Normal";
-          statusEl.className = "text-xs font-bold mt-1 text-emerald-600";
-          card.className = "glassmorphism p-4 rounded-2xl border border-white/50";
-        }
-      }
-    }
-
-    function addWeightPoint(e) {
-      e.preventDefault();
-      const date = document.getElementById('weightPointDate').value;
-      const weight = parseFloat(document.getElementById('weightPointVal').value);
-
-      if (!date || isNaN(weight)) return;
-
-      window.weightHistory.push({ date, weight });
-      window.weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
-      saveAllToStorage();
-      updateWeightChart();
-      renderWeightList();
-
-      document.getElementById('weightPointVal').value = '';
-    }
-
-    function deleteWeightPoint(idx) {
-      window.weightHistory.splice(idx, 1);
-      saveAllToStorage();
-      updateWeightChart();
-      renderWeightList();
-    }
-
-    function renderWeightList() {
-      const container = document.getElementById('weightPointsList');
-      if (!container) return;
-      container.innerHTML = '';
-
-      window.weightHistory.forEach((w, idx) => {
-        const div = document.createElement('div');
-        div.className = 'flex items-center justify-between bg-white/70 p-2 rounded-xl border border-slate-100';
-        div.innerHTML = `
-          <span><strong>${w.date}</strong> : ${w.weight.toFixed(3)} kg</span>
-          <button onclick="deleteWeightPoint(${idx})" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function updateWeightChart() {
-      if (!chartWeightInstance) return;
-      const labels = window.weightHistory.map(w => w.date);
-      const data = window.weightHistory.map(w => w.weight);
-
-      chartWeightInstance.data.labels = labels;
-      chartWeightInstance.data.datasets[0].data = data;
-      chartWeightInstance.update();
-
-      if (window.weightHistory.length > 0) {
-        const lastW = window.weightHistory[window.weightHistory.length - 1].weight;
-        document.getElementById('statCurrentWeight').innerText = `${lastW.toFixed(3)} kg`;
-
-        if (window.weightHistory.length > 1) {
-          const prevW = window.weightHistory[window.weightHistory.length - 2].weight;
-          const diff = lastW - prevW;
-          const diffText = diff >= 0 ? `+${(diff * 1000).toFixed(0)} g` : `${(diff * 1000).toFixed(0)} g`;
-          document.getElementById('statWeightDiff').innerText = `Évolution : ${diffText}`;
-        }
-      }
-    }
-
+    // --- FONCTIONS D'EXPORTATION ET RESULTATS OFFICIELS ---
     function saveOfficialResults(e) {
       e.preventDefault();
+      if (!isAdmin) return;
+
       window.officialResult = {
-        name: document.getElementById('officialName').value,
+        name: document.getElementById('officialName').value.trim(),
         gender: document.getElementById('officialGender').value,
         weight: parseFloat(document.getElementById('officialWeight').value),
-        height: parseFloat(document.getElementById('officialHeight').value)
+        height: parseFloat(document.getElementById('officialHeight').value),
+        date: new Date().toLocaleDateString('fr-FR')
       };
 
       saveAllToStorage();
@@ -2396,28 +2415,67 @@
 
     function displayOfficialBanner() {
       if (!window.officialResult) return;
-      const r = window.officialResult;
 
-      document.getElementById('resBabyName').innerText = `Bébé ${r.name} est là !`;
-      document.getElementById('resBabyDetails').innerText = `${r.gender} | ${r.weight.toFixed(3)} kg | ${r.height} cm`;
+      const banner = document.getElementById('resultBanner');
+      banner.classList.remove('hidden');
 
-      let bestScore = Infinity;
-      let winner = "Aucun participant";
+      document.getElementById('resBabyName').innerText = `Bienvenue à ${window.officialResult.name} !`;
+      document.getElementById('resBabyDetails').innerText = `Né(e) le ${window.officialResult.date} | ${window.officialResult.weight} kg | ${window.officialResult.height} cm (${window.officialResult.gender})`;
+
+      let minDiff = Infinity;
+      let winner = "--";
 
       window.predictions.forEach(p => {
-        let score = 0;
-        if (p.gender !== r.gender) score += 5;
-        score += Math.abs(p.weight - r.weight) * 2;
-        score += Math.abs(p.height - r.height) * 0.5;
+        const diffWeight = Math.abs(p.weight - window.officialResult.weight);
+        const diffHeight = Math.abs(p.height - window.officialResult.height);
+        const totalDiff = diffWeight + (diffHeight / 10);
 
-        if (score < bestScore) {
-          bestScore = score;
+        if (totalDiff < minDiff) {
+          minDiff = totalDiff;
           winner = p.user;
         }
       });
 
       document.getElementById('resWinnerName').innerText = winner;
-      document.getElementById('resultBanner').classList.remove('hidden');
+    }
+
+    function exportCareCSV() {
+      let csv = "Date;Heure;Temp_Bebe;Temp_Couveuse;Couche;Repas_ml;Notes;Auteur\n";
+      window.careEntries.forEach(c => {
+        csv += `${c.date};${c.time};${c.tempBaby || ''};${c.tempIncubator || ''};${c.diaper};${c.feeding};"${c.notes}";${c.author}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', 'fiche_soins_maternite.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportCareExcel() {
+      const ws = XLSX.utils.json_to_sheet(window.careEntries);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Fiche Soins");
+      XLSX.writeFile(wb, "fiche_soins_maternite.xlsx");
+    }
+
+    function exportCarePDF() {
+      const element = document.getElementById('careJournalContainer');
+      element.classList.add('pdf-compact');
+      
+      const opt = {
+        margin: 0.5,
+        filename: 'fiche_soins_maternite.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        element.classList.remove('pdf-compact');
+      });
     }
   </script>
 </body>
