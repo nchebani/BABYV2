@@ -82,12 +82,12 @@
         <i class="fa-solid fa-baby"></i>
       </div>
       <h1 class="text-2xl font-black text-slate-800 mb-2">BABY PREDICT 2026</h1>
-      <p class="text-sm text-slate-500 mb-6">Connectez-vous pour accéder au tableau de bord et à la fiche de soins.</p>
+      <p class="text-sm text-slate-500 mb-6">Connectez-vous pour accéder au tableau de bord et à l'agenda partagé.</p>
       
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 text-left">
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Votre Prénom / Pseudo</label>
-          <input type="text" id="usernameInput" required placeholder="ex: Julie, Oncle Marc..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-400 bg-white/80">
+          <input type="text" id="usernameInput" required placeholder="ex: Julie, Papa, Maman..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-400 bg-white/80">
         </div>
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Code d'accès</label>
@@ -702,7 +702,7 @@
       </div>
     </div>
 
-    <!-- SECTION 3 : AGENDA PARTAGÉ PARENTS -->
+    <!-- SECTION 3 : AGENDA PARTAGÉ PARENTS (REFACTORISÉE) -->
     <div id="section-agenda" class="hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
@@ -719,22 +719,32 @@
             <input type="hidden" id="editAgendaIndex" value="-1">
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Intitulé de l'activité / RDV</label>
-              <input type="text" id="agendaTitle" required placeholder="ex: RDV Dentiste, Séance Fitness, Poste du matin..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Intitulé de l'événement</label>
+              <input type="text" id="agendaTitle" required placeholder="ex: RDV Pédiatre, Shift Matin, Séance Musculation..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Catégorie</label>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Catégorie d'activité</label>
               <select id="agendaCategory" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
-                <option value="RDV / Consultation"> RDV / Consultation Médicale ou Pro</option>
-                <option value="Activité Sportive"> Activité Sportive / Loisir</option>
-                <option value="Travail (Matin)"> Travail - Matin</option>
-                <option value="Travail (Midi)"> Travail - Midi</option>
-                <option value="Travail (Soir)"> Travail - Soir</option>
-                <option value="Travail (Nuit)"> Travail - Nuit</option>
-                <option value="Travail (Régulier)"> Travail - Régulier / Horaires classiques</option>
-                <option value="Garde & Quotidien"> Garde & Quotidien (Nounou, Crèche...)</option>
-                <option value="Autre"> Autre</option>
+                <optgroup label="Bébé">
+                  <option value="RDV Bébé (Médical/Pédiatre)">RDV Bébé — Médical / Pédiatre</option>
+                  <option value="RDV Bébé (Crèche/Garde)">RDV Bébé — Crèche / Nounou / Garde</option>
+                  <option value="RDV Bébé (Autre)">RDV Bébé — Autre</option>
+                </optgroup>
+                <optgroup label="Travail Parents">
+                  <option value="Travail (Matin)">Travail — Shift Matin</option>
+                  <option value="Travail (Midi)">Travail — Shift Midi / Journée</option>
+                  <option value="Travail (Soir)">Travail — Shift Soir</option>
+                  <option value="Travail (Nuit)">Travail — Shift Nuit</option>
+                </optgroup>
+                <optgroup label="Activités & Loisirs">
+                  <option value="Activité (Sport)">Activité — Sport</option>
+                  <option value="Activité (Musique/Répétition)">Activité — Répétition musicale / Art</option>
+                  <option value="Activité (Sortie/Loisir)">Activité — Sortie / Loisir</option>
+                </optgroup>
+                <optgroup label="Autre">
+                  <option value="Autre">Autre</option>
+                </optgroup>
               </select>
             </div>
 
@@ -763,15 +773,15 @@
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Responsable / Code Couleur</label>
               <select id="agendaAssignee" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none font-bold">
-                <option value="Papa" class="text-blue-600"> Papa (Code couleur Bleu)</option>
-                <option value="Maman" class="text-pink-600"> Maman (Code couleur Rose)</option>
-                <option value="Les deux" class="text-purple-600"> Les deux (Code couleur Violet)</option>
+                <option value="Papa" class="text-blue-600">Papa (Code couleur Bleu)</option>
+                <option value="Maman" class="text-pink-600">Maman (Code couleur Rose)</option>
+                <option value="Les deux" class="text-purple-600">Les deux / Ensemble (Code couleur Violet)</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Notes / Rappels</label>
-              <textarea id="agendaNotes" rows="2" placeholder="ex: Lieu, matériel à prévoir, remarques..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none"></textarea>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Notes / Remarques</label>
+              <textarea id="agendaNotes" rows="2" placeholder="ex: Lieu du RDV, documents à apporter, matériel..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none"></textarea>
             </div>
 
             <button type="submit" id="btnSubmitAgenda" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition text-sm">
@@ -795,19 +805,20 @@
                 <label class="text-xs font-bold text-slate-500 uppercase">Filtrer :</label>
                 <select id="agendaFilterCat" onchange="renderAgendaEntries()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white outline-none">
                   <option value="TOUS">Toutes les catégories</option>
-                  <option value="RDV / Consultation"> RDV / Consultation</option>
-                  <option value="Activité Sportive"> Sport / Loisir</option>
-                  <option value="Travail (Matin)"> Travail - Matin</option>
-                  <option value="Travail (Midi)"> Travail - Midi</option>
-                  <option value="Travail (Soir)"> Travail - Soir</option>
-                  <option value="Travail (Nuit)"> Travail - Nuit</option>
-                  <option value="Travail (Régulier)"> Travail - Régulier</option>
-                  <option value="Garde & Quotidien"> Garde & Quotidien</option>
-                  <option value="Autre"> Autre</option>
+                  <option value="RDV Bébé (Médical/Pédiatre)">RDV Bébé (Pédiatre / Médical)</option>
+                  <option value="RDV Bébé (Crèche/Garde)">RDV Bébé (Crèche / Nounou)</option>
+                  <option value="Travail (Matin)">Travail - Matin</option>
+                  <option value="Travail (Midi)">Travail - Midi</option>
+                  <option value="Travail (Soir)">Travail - Soir</option>
+                  <option value="Travail (Nuit)">Travail - Nuit</option>
+                  <option value="Activité (Sport)">Activité - Sport</option>
+                  <option value="Activité (Musique/Répétition)">Activité - Musique</option>
+                  <option value="Activité (Sortie/Loisir)">Activité - Sortie / Loisir</option>
+                  <option value="Autre">Autre</option>
                 </select>
               </div>
 
-              <button onclick="exportAgendaICS()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5" title="Télécharger le fichier .ics compatible Apple Calendrier / iOS">
+              <button onclick="exportAgendaICS()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5" title="Télécharger le fichier .ics compatible Apple / Google / iOS">
                 <i class="fa-brands fa-apple text-sm"></i> Exporter (.ics)
               </button>
             </div>
@@ -987,6 +998,7 @@
     let isAdmin = false;
     let fullCalendarInstance = null;
 
+    // CODES COULEURS DEMANDÉS : Maman (Rose), Papa (Bleu), Les deux (Violet)
     const parentColors = {
       'Papa':     { bg: '#3b82f6', border: '#2563eb', text: 'text-blue-700', bgLight: 'bg-blue-50', borderClass: 'border-blue-200', dot: 'bg-blue-500' },
       'Maman':    { bg: '#ec4899', border: '#db2777', text: 'text-pink-700', bgLight: 'bg-pink-50', borderClass: 'border-pink-200', dot: 'bg-pink-500' },
@@ -1023,10 +1035,13 @@
       { date: "2026-08-05", weight: 3.28 }
     ];
 
+    // DONNÉES DE DÉMONSTRATION MISE À JOUR AVEC LES NOUVELLES CATÉGORIES
     window.agendaEntries = JSON.parse(localStorage.getItem('bp_agendaEntries')) || [
-      { title: "Planning Travail (Matin)", category: "Travail (Matin)", startDate: "2026-08-20", startTime: "06:00", endDate: "2026-08-20", endTime: "14:00", assignee: "Papa", notes: "Shift du matin", author: "Papa" },
-      { title: "Séance Natation / Sport", category: "Activité Sportive", startDate: "2026-08-21", startTime: "18:00", endDate: "2026-08-21", endTime: "19:30", assignee: "Maman", notes: "Reprise du sport", author: "Maman" },
-      { title: "RDV Pédiatre 1er mois", category: "RDV / Consultation", startDate: "2026-08-22", startTime: "10:00", endDate: "2026-08-22", endTime: "11:00", assignee: "Les deux", notes: "Apporter le carnet de santé", author: "Maman" }
+      { title: "Shift du Matin", category: "Travail (Matin)", startDate: "2026-08-20", startTime: "06:00", endDate: "2026-08-20", endTime: "14:00", assignee: "Papa", notes: "Garde du matin assurée par Maman", author: "Papa" },
+      { title: "Répétition Groupe de Musique", category: "Activité (Musique/Répétition)", startDate: "2026-08-21", startTime: "19:00", endDate: "2026-08-21", endTime: "21:00", assignee: "Maman", notes: "Prendre les partitions", author: "Maman" },
+      { title: "RDV Pédiatre - Suivi 1er Mois", category: "RDV Bébé (Médical/Pédiatre)", startDate: "2026-08-22", startTime: "10:00", endDate: "2026-08-22", endTime: "11:00", assignee: "Les deux", notes: "Prendre le carnet de santé et le produit de soin", author: "Maman" },
+      { title: "Adaptation Crèche", category: "RDV Bébé (Crèche/Garde)", startDate: "2026-08-23", startTime: "09:00", endDate: "2026-08-23", endTime: "11:30", assignee: "Maman", notes: "Première heure d'adaptation", author: "Maman" },
+      { title: "Entraînement de Football / Sport", category: "Activité (Sport)", startDate: "2026-08-24", startTime: "18:30", endDate: "2026-08-24", endTime: "20:00", assignee: "Papa", notes: "Stade municipal", author: "Papa" }
     ];
 
     let chartTempInstance = null;
@@ -1051,7 +1066,9 @@
 
       if (tabName === 'agenda') {
         setTimeout(() => {
-          if (fullCalendarInstance) {
+          if (!fullCalendarInstance) {
+            initFullCalendar();
+          } else {
             fullCalendarInstance.updateSize();
             fullCalendarInstance.refetchEvents();
           }
@@ -1081,6 +1098,7 @@
       renderPredictions();
       renderCareEntries();
       renderAgendaEntries();
+      initCharts();
     }
 
     function logout() {
@@ -1090,7 +1108,7 @@
       document.getElementById('loginForm').reset();
     }
 
-    // --- INITIALISATION DU CALENDRIER FULLCALENDAR ---
+    // --- INITIALISATION DE FULLCALENDAR ---
     function initFullCalendar() {
       const calendarEl = document.getElementById('fullCalendarContainer');
       if (!calendarEl) return;
@@ -1142,7 +1160,7 @@
         });
     }
 
-    // --- GESTION DE L'AGENDA & SYNCHRONISATION ---
+    // --- GESTION DE L'AGENDA PARTAGÉ ---
     function renderAgendaEntries() {
       const container = document.getElementById('agendaListContainer');
       if (container) {
@@ -1162,14 +1180,14 @@
             div.innerHTML = `
               <div class="space-y-1">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="w-2.5 h-2.5 rounded-full ${colorObj.dot}"></span>
+                  <span class="w-3 h-3 rounded-full ${colorObj.dot}"></span>
                   <span class="font-bold text-sm text-slate-800">${entry.title}</span>
                   <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600">${entry.category}</span>
                   <span class="text-xs font-bold ${colorObj.text}">(${entry.assignee})</span>
                 </div>
                 <p class="text-xs text-slate-500">
                   <i class="fa-regular fa-clock mr-1"></i>
-                  Du <strong>${entry.startDate}</strong> (${entry.startTime}) au <strong>${entry.endDate}</strong> (${entry.endTime})
+                  Du <strong>${entry.startDate}</strong> à <strong>${entry.startTime}</strong> au <strong>${entry.endDate}</strong> à <strong>${entry.endTime}</strong>
                 </p>
                 ${entry.notes ? `<p class="text-xs text-slate-600 italic bg-white/60 p-2 rounded-xl mt-1 border border-slate-100">${entry.notes}</p>` : ''}
               </div>
@@ -1238,6 +1256,8 @@
       document.getElementById('formAgendaTitle').innerHTML = `<i class="fa-solid fa-pen text-indigo-500"></i> Modifier l'événement`;
       document.getElementById('btnSubmitAgenda').innerText = "Mettre à jour l'événement";
       document.getElementById('btnCancelAgendaEdit').classList.remove('hidden');
+      
+      switchTab('agenda');
     }
 
     function cancelAgendaEdit() {
@@ -1293,7 +1313,25 @@
       document.body.removeChild(link);
     }
 
-    // --- FONCTIONS DE GESTION PRONOSTICS & MATERNITÉ ---
+    function saveAllToStorage() {
+      localStorage.setItem('bp_predictions', JSON.stringify(window.predictions));
+      localStorage.setItem('bp_careEntries', JSON.stringify(window.careEntries));
+      localStorage.setItem('bp_tempHistory', JSON.stringify(window.tempHistory));
+      localStorage.setItem('bp_weightHistory', JSON.stringify(window.weightHistory));
+      localStorage.setItem('bp_agendaEntries', JSON.stringify(window.agendaEntries));
+      localStorage.setItem('bp_statsGoals', JSON.stringify(window.statsGoals));
+
+      if (typeof window.saveToFirebase === 'function') {
+        window.saveToFirebase('predictions', window.predictions);
+        window.saveToFirebase('careEntries', window.careEntries);
+        window.saveToFirebase('tempHistory', window.tempHistory);
+        window.saveToFirebase('weightHistory', window.weightHistory);
+        window.saveToFirebase('agendaEntries', window.agendaEntries);
+        window.saveToFirebase('statsGoals', window.statsGoals);
+      }
+    }
+
+    // --- AUTRES FONCTIONS DU SUIVI MATERNITÉ & PRONOSTICS ---
     function renderPredictions() {
       const tbody = document.getElementById('predictionsTableBody');
       if (!tbody) return;
@@ -1501,10 +1539,9 @@
       });
     }
 
-    // --- INITIALISATION DES GRAPHIQUES ---
     function initCharts() {
       const ctxTemp = document.getElementById('chartTemp')?.getContext('2d');
-      if (ctxTemp) {
+      if (ctxTemp && !chartTempInstance) {
         chartTempInstance = new Chart(ctxTemp, {
           type: 'line',
           data: {
@@ -1519,7 +1556,7 @@
       }
 
       const ctxWeight = document.getElementById('chartWeight')?.getContext('2d');
-      if (ctxWeight) {
+      if (ctxWeight && !chartWeightInstance) {
         chartWeightInstance = new Chart(ctxWeight, {
           type: 'line',
           data: {
@@ -1531,7 +1568,7 @@
       }
 
       const ctxMeals = document.getElementById('chartMeals')?.getContext('2d');
-      if (ctxMeals) {
+      if (ctxMeals && !chartMealsInstance) {
         chartMealsInstance = new Chart(ctxMeals, {
           type: 'bar',
           data: {
@@ -1550,6 +1587,10 @@
           }
         });
       }
+
+      updateTempChart();
+      updateWeightChart();
+      updateMealsChart();
     }
 
     function updateTempChart() {
@@ -1718,36 +1759,9 @@
     function checkMidnightReset() {
       const today = new Date().toISOString().split('T')[0];
       if (window.lastActiveDate !== today) {
-        archiveAndResetDay(window.lastActiveDate);
         window.lastActiveDate = today;
         localStorage.setItem('bp_lastActiveDate', today);
       }
-    }
-
-    function archiveAndResetDay(dateToArchive) {
-      const dayEntries = window.careEntries.filter(c => c.date === dateToArchive);
-      let totalMeals = 0;
-      let totalVol = 0;
-      let totalDiapers = 0;
-
-      dayEntries.forEach(c => {
-        if (c.feeding > 0) {
-          totalMeals++;
-          totalVol += c.feeding;
-        }
-        if (c.diaper && c.diaper !== 'Propre / Rien') {
-          totalDiapers++;
-        }
-      });
-
-      window.dailyArchive[dateToArchive] = {
-        mealsCount: totalMeals,
-        mealsVolume: totalVol,
-        diapersCount: totalDiapers,
-        entriesCount: dayEntries.length
-      };
-
-      saveAllToStorage();
     }
 
     function updateNextFeedingReminder() {
@@ -1874,16 +1888,6 @@
       updateMealsChart();
     }
 
-    function deleteQuickEntry(careIndex) {
-      if (confirm("Supprimer cette entrée ?")) {
-        window.careEntries.splice(careIndex, 1);
-        saveAllToStorage();
-        renderCareEntries();
-        renderDailyTracker();
-        updateMealsChart();
-      }
-    }
-
     function renderQuickHistoryList(todayEntries) {
       const container = document.getElementById('quickEntriesHistory');
       if (!container) return;
@@ -1900,84 +1904,83 @@
         div.className = 'flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm';
         
         let label = '';
-        let icon = '';
-
         if (entry.feeding > 0) {
-          icon = '<i class="fa-solid fa-bottle-droplet text-pink-500"></i>';
-          label = `<strong>Biberon :</strong> ${entry.feeding} ml`;
+          label = `<span class="text-pink-600 font-bold"><i class="fa-solid fa-bottle-droplet mr-1"></i> Biberon (${entry.feeding} ml)</span>`;
         } else if (entry.diaper && entry.diaper !== 'Propre / Rien') {
-          icon = '<i class="fa-solid fa-baby text-blue-500"></i>';
-          label = `<strong>Couche :</strong> ${entry.diaper}`;
+          label = `<span class="text-blue-600 font-bold"><i class="fa-solid fa-baby mr-1"></i> Couche (${entry.diaper})</span>`;
         } else {
-          icon = '<i class="fa-solid fa-notes-medical text-emerald-500"></i>';
-          label = `<strong>Soin :</strong> ${entry.notes}`;
+          label = `<span class="text-slate-600 font-bold"><i class="fa-solid fa-notes-medical mr-1"></i> Soin</span>`;
         }
 
         div.innerHTML = `
-          <div class="flex items-center gap-2">
-            ${icon}
-            <span class="text-slate-700">${label}</span>
-            <span class="text-[10px] text-slate-400 font-bold">à ${entry.time}</span>
+          <div>
+            <strong class="text-slate-700">${entry.time}</strong> — ${label}
           </div>
-          <button onclick="deleteQuickEntry(${originalIndex})" class="text-slate-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition" title="Supprimer">
-            <i class="fa-solid fa-trash-can text-xs"></i>
-          </button>
+          <button onclick="deleteCareEntry(${originalIndex})" class="text-red-400 hover:text-red-600 font-bold px-2 py-1"><i class="fa-solid fa-xmark"></i></button>
         `;
         container.appendChild(div);
       });
     }
 
-    function resetDailyTracker() {
-      if (confirm("Voulez-vous réinitialiser l'historique et les compteurs de la journée en cours ?")) {
-        const today = new Date().toISOString().split('T')[0];
-        window.careEntries = window.careEntries.filter(c => c.date !== today);
-        saveAllToStorage();
-        renderCareEntries();
-        renderDailyTracker();
-        updateMealsChart();
+    // MODALES & CHRONOMÈTRE
+    function toggleTimer() {
+      const btn = document.getElementById('btnStartTimer');
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
+        btn.className = 'px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition';
+      } else {
+        timerInterval = setInterval(() => {
+          timerSeconds++;
+          const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+          const secs = String(timerSeconds % 60).padStart(2, '0');
+          document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
+        }, 1000);
+        btn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
+        btn.className = 'px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition';
       }
     }
 
-    function resetStatsPeriod() {
-      const choice = prompt("Quelle période souhaitez-vous initialiser ?\n1: Cette semaine (7 derniers jours)\n2: Ce mois-ci (30 derniers jours)", "1");
-      if (choice === null) return;
+    function resetTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      timerSeconds = 0;
+      document.getElementById('timerDisplay').innerText = "00:00";
+      const btn = document.getElementById('btnStartTimer');
+      btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
+      btn.className = 'px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition';
+    }
+
+    function saveTimerToCare() {
+      if (timerSeconds === 0) return alert("Le chronomètre est à 00:00.");
+      const type = document.getElementById('timerType').value;
+      const mins = Math.floor(timerSeconds / 60);
+      const secs = timerSeconds % 60;
+      const durationStr = `${mins}m ${secs}s`;
 
       const now = new Date();
-      let limitDate = new Date();
+      const entry = {
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().substring(0, 5),
+        tempBaby: null,
+        tempIncubator: null,
+        diaper: "Propre / Rien",
+        feeding: 0,
+        notes: `Chronomètre : ${type} (${durationStr})`,
+        author: currentUser || "Parent"
+      };
 
-      if (choice === "1") {
-        limitDate.setDate(now.getDate() - 7);
-      } else if (choice === "2") {
-        limitDate.setDate(now.getDate() - 30);
-      } else {
-        alert("Choix invalide.");
-        return;
-      }
-
-      if (confirm("Confirmez-vous la suppression des entrées de soins pour la période sélectionnée ?")) {
-        window.careEntries = window.careEntries.filter(c => {
-          const entryDate = new Date(c.date || now.toISOString().split('T')[0]);
-          return entryDate < limitDate;
-        });
-
-        Object.keys(window.dailyArchive).forEach(dateStr => {
-          const d = new Date(dateStr);
-          if (d >= limitDate) {
-            delete window.dailyArchive[dateStr];
-          }
-        });
-
-        saveAllToStorage();
-        renderCareEntries();
-        renderDailyTracker();
-        updateMealsChart();
-        alert("Les statistiques de la période sélectionnée ont été réinitialisées.");
-      }
+      window.careEntries.push(entry);
+      saveAllToStorage();
+      renderCareEntries();
+      resetTimer();
+      alert(`Activité "${type}" enregistrée (${durationStr}).`);
     }
 
     function openEditStatsModal() {
-      document.getElementById('goalMealsDayInput').value = window.statsGoals.mealsDay || 8;
-      document.getElementById('goalDiapersDayInput').value = window.statsGoals.diapersDay || 6;
+      document.getElementById('goalMealsDayInput').value = window.statsGoals.mealsDay;
+      document.getElementById('goalDiapersDayInput').value = window.statsGoals.diapersDay;
       document.getElementById('editStatsModal').classList.remove('hidden');
     }
 
@@ -1989,15 +1992,16 @@
       e.preventDefault();
       window.statsGoals.mealsDay = parseInt(document.getElementById('goalMealsDayInput').value) || 8;
       window.statsGoals.diapersDay = parseInt(document.getElementById('goalDiapersDayInput').value) || 6;
-
       saveAllToStorage();
       updateGoalsBadges();
       closeEditStatsModal();
     }
 
     function updateGoalsBadges() {
-      document.getElementById('badgeMealsGoal').innerText = `Obj: ${window.statsGoals.mealsDay || 8}/j`;
-      document.getElementById('badgeDiapersGoal').innerText = `Obj: ${window.statsGoals.diapersDay || 6}/j`;
+      const bM = document.getElementById('badgeMealsGoal');
+      const bD = document.getElementById('badgeDiapersGoal');
+      if (bM) bM.innerText = `Obj: ${window.statsGoals.mealsDay}/j`;
+      if (bD) bD.innerText = `Obj: ${window.statsGoals.diapersDay}/j`;
     }
 
     function openSubscribeModal() {
@@ -2008,249 +2012,22 @@
       document.getElementById('subscribeModal').classList.add('hidden');
     }
 
-    function selectPlan(planName) {
-      alert(`Redirection vers le paiement pour le plan ${planName}...`);
+    function selectPlan(plan) {
+      alert(`Vous avez sélectionné la formule ${plan}. Module de paiement à intégrer.`);
       closeSubscribeModal();
     }
 
-    async function traiterFichier(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-
-      if (file.type === "text/plain") {
-        reader.onload = async function(e) {
-          envoyerAuBackend({ fileType: 'txt', textContent: e.target.result });
-        };
-        reader.readAsText(file);
-      } else {
-        reader.onload = async function(e) {
-          const base64Data = e.target.result.split(',')[1];
-          const fileType = file.type.includes('pdf') ? 'pdf' : 'image';
-          envoyerAuBackend({ fileType, base64Data });
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    async function envoyerAuBackend(bodyData) {
-      try {
-        const response = await fetch('http://192.168.1.35:3000/api/analyser-document', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(bodyData)
-        });
-
-        const result = await response.json();
-
-        if (result.success && result.data) {
-          const d = result.data;
-          
-          if (d.poids_kg) {
-            const todayDate = d.date || new Date().toISOString().split('T')[0];
-            window.weightHistory.push({ date: todayDate, weight: d.poids_kg });
-            window.weightHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
-            updateWeightChart();
-            renderWeightList();
-          }
-
-          const currentTime = new Date().toTimeString().substring(0, 5);
-          window.careEntries.push({
-            date: new Date().toISOString().split('T')[0],
-            time: currentTime,
-            tempBaby: null,
-            tempIncubator: null,
-            diaper: "Propre / Rien",
-            feeding: d.volume_sondage_ml || 0,
-            notes: d.notes || `Document importé (${d.type_document || 'analyse IA'})`,
-            author: currentUser || "Scanner IA"
-          });
-
-          saveAllToStorage();
-          renderCareEntries();
-          renderDailyTracker();
-          updateMealsChart();
-
-          alert(`Analyse terminée avec succès !\n\n• Type : ${d.type_document}\n• Poids extrait : ${d.poids_kg ? d.poids_kg + ' kg' : 'Non spécifié'}\n• Volume repas : ${d.volume_sondage_ml ? d.volume_sondage_ml + ' ml' : 'Non spécifié'}\n• Notes : ${d.notes || 'Rien à signaler'}`);
-        } else {
-          alert("Erreur lors de l'analyse du document.");
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Impossible de joindre le serveur. Vérifiez que le serveur fonctionne.");
-      }
-    }
-
-    function saveAllToStorage() {
-      localStorage.setItem('bp_predictions', JSON.stringify(window.predictions));
-      localStorage.setItem('bp_officialResult', JSON.stringify(window.officialResult));
-      localStorage.setItem('bp_careEntries', JSON.stringify(window.careEntries));
-      localStorage.setItem('bp_dailyArchive', JSON.stringify(window.dailyArchive));
-      localStorage.setItem('bp_weightHistory', JSON.stringify(window.weightHistory));
-      localStorage.setItem('bp_tempHistory', JSON.stringify(window.tempHistory));
-      localStorage.setItem('bp_agendaEntries', JSON.stringify(window.agendaEntries));
-      localStorage.setItem('bp_statsGoals', JSON.stringify(window.statsGoals));
-
-      if (typeof window.saveToFirebase === 'function') {
-        window.saveToFirebase('predictions', window.predictions);
-        window.saveToFirebase('officialResult', window.officialResult);
-        window.saveToFirebase('careEntries', window.careEntries);
-        window.saveToFirebase('dailyArchive', window.dailyArchive);
-        window.saveToFirebase('weightHistory', window.weightHistory);
-        window.saveToFirebase('tempHistory', window.tempHistory);
-        window.saveToFirebase('agendaEntries', window.agendaEntries);
-        window.saveToFirebase('statsGoals', window.statsGoals);
-      }
-    }
-
-    function toggleTimer() {
-      const btn = document.getElementById('btnStartTimer');
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        btn.innerHTML = `<i class="fa-solid fa-play"></i> Reprendre`;
-        btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition";
-      } else {
-        timerInterval = setInterval(() => {
-          timerSeconds++;
-          updateTimerDisplay();
-        }, 1000);
-        btn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
-        btn.className = "px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition";
-      }
-    }
-
-    function resetTimer() {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
-      timerSeconds = 0;
-      updateTimerDisplay();
-      const btn = document.getElementById('btnStartTimer');
-      btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
-      btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition";
-    }
-
-    function updateTimerDisplay() {
-      const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-      const secs = String(timerSeconds % 60).padStart(2, '0');
-      document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
-    }
-
-    function saveTimerToCare() {
-      if (timerSeconds === 0) return;
-
-      const type = document.getElementById('timerType').value;
-      const mins = Math.floor(timerSeconds / 60);
-      const secs = timerSeconds % 60;
-      const durationStr = mins > 0 ? `${mins} min ${secs} s` : `${secs} s`;
-
-      let volume = 0;
-      if (type === 'Repas (Biberon)') {
-        const inputVol = prompt("Quantité bu au biberon (en ml) :", "60");
-        if (inputVol !== null) {
-          volume = parseInt(inputVol) || 0;
-        }
-      }
-
-      const now = new Date();
-      const timeStr = now.toTimeString().substring(0, 5);
-
-      window.careEntries.push({
-        date: now.toISOString().split('T')[0],
-        time: timeStr,
-        tempBaby: null,
-        tempIncubator: null,
-        diaper: "Propre / Rien",
-        feeding: volume,
-        notes: `Chronomètre : ${type} - Durée : ${durationStr}`,
-        author: currentUser || "Parent"
-      });
-
-      saveAllToStorage();
-      renderCareEntries();
-      renderDailyTracker();
-      updateMealsChart();
-      resetTimer();
-    }
-
-    function saveOfficialResults(e) {
-      e.preventDefault();
-      const name = document.getElementById('officialName').value.trim();
-      const gender = document.getElementById('officialGender').value;
-      const weight = parseFloat(document.getElementById('officialWeight').value);
-      const height = parseFloat(document.getElementById('officialHeight').value);
-
-      let bestDiff = Infinity;
-      let winner = "Aucun";
-
-      (window.predictions || []).forEach(pred => {
-        const diffW = Math.abs(pred.weight - weight);
-        const diffH = Math.abs(pred.height - height);
-        const score = diffW + diffH;
-        if (score < bestDiff) {
-          bestDiff = score;
-          winner = pred.user;
-        }
-      });
-
-      window.officialResult = { name, gender, weight, height, winner };
-      saveAllToStorage();
-      displayOfficialBanner();
-    }
-
-    function displayOfficialBanner() {
-      if (!window.officialResult) return;
-      const banner = document.getElementById('resultBanner');
-      if (!banner) return;
-      banner.classList.remove('hidden');
-      document.getElementById('resBabyName').innerText = `Bébé ${window.officialResult.name} est là !`;
-      document.getElementById('resBabyDetails').innerText = `Sexe: ${window.officialResult.gender} | Poids: ${window.officialResult.weight} kg | Taille: ${window.officialResult.height} cm`;
-      document.getElementById('resWinnerName').innerText = window.officialResult.winner;
-    }
-
+    // INITIALISATION INITIALE AU CHARGEMENT
     window.addEventListener('DOMContentLoaded', () => {
-      checkMidnightReset();
-
-      const todayStr = new Date().toISOString().split('T')[0];
-      document.getElementById('predDate').value = todayStr;
-      document.getElementById('weightPointDate').value = todayStr;
-      document.getElementById('careDate').value = todayStr;
-      
-      document.getElementById('agendaStartDate').value = todayStr;
-      document.getElementById('agendaEndDate').value = todayStr;
-      document.getElementById('agendaStartTime').value = "09:00";
-      document.getElementById('agendaEndTime').value = "10:00";
-
-      const now = new Date();
-      const currentTimeStr = now.toTimeString().substring(0, 5);
-      document.getElementById('careTime').value = currentTimeStr;
-      document.getElementById('tempPointTime').value = currentTimeStr;
-      document.getElementById('careDateHeader').innerText = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
-
-      initCharts();
-      initFullCalendar();
-      updateGoalsBadges();
+      cancelCareEdit();
+      cancelAgendaEdit();
+      cancelPredEdit();
       renderPredictions();
       renderCareEntries();
       renderDailyTracker();
-      renderWeightList();
       renderTempList();
-      renderAgendaEntries();
-      updateWeightChart();
-      updateTempChart();
-      updateMealsChart();
-
-      if (window.officialResult) {
-        displayOfficialBanner();
-      }
-
-      setInterval(() => {
-        checkMidnightReset();
-        renderDailyTracker();
-      }, 60000);
+      renderWeightList();
+      updateGoalsBadges();
     });
   </script>
 </body>
