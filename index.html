@@ -936,7 +936,7 @@
     </div>
   </div>
 
-  <!-- SCRIPT UNIFIÉ MODULE FIREBASE & APPLICATION LOGIC -->
+  <!-- INTÉGRATION FIREBASE (RÉALTIME DATABASE SYNCHRONIZATION) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -954,12 +954,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Fonction globale d'écriture en base distante
     window.saveToFirebase = function(path, data) {
       set(ref(db, path), data);
     };
 
-    // Écouteurs temps réel sur les nœuds Firebase pour mettre à jour tous les appareils connectés
     const nodes = [
       { key: 'predictions', render: () => renderPredictions() },
       { key: 'officialResult', render: () => displayOfficialBanner() },
@@ -983,7 +981,7 @@
     });
   </script>
 
-  <!-- SCRIPT PRINCIPAL DES FONCTIONS DE L'APPLICATION -->
+  <!-- LOGIQUE APPLICATIVE PRINCIPALE -->
   <script>
     let currentUser = null;
     let isAdmin = false;
@@ -995,16 +993,41 @@
       'Les deux': { bg: '#a855f7', border: '#9333ea', text: 'text-purple-700', bgLight: 'bg-purple-50', borderClass: 'border-purple-200', dot: 'bg-purple-500' }
     };
 
-    window.statsGoals = JSON.parse(localStorage.getItem('bp_statsGoals')) || { mealsDay: 8, diapersDay: 6 };
-    window.predictions = JSON.parse(localStorage.getItem('bp_predictions')) || [];
+    window.statsGoals = JSON.parse(localStorage.getItem('bp_statsGoals')) || {
+      mealsDay: 8,
+      diapersDay: 6
+    };
+
+    window.predictions = JSON.parse(localStorage.getItem('bp_predictions')) || [
+      { user: "Mamie Chantal", name: "Alice", hobby: "Jardinage & Chant", gender: "Fille", weight: 3.200, height: 49.5, date: "2026-08-15" },
+      { user: "Oncle Lucas", name: "Hugo", hobby: "Football", gender: "Garçon", weight: 3.600, height: 51.0, date: "2026-08-18" }
+    ];
+
     window.officialResult = JSON.parse(localStorage.getItem('bp_officialResult')) || null;
-    window.tempHistory = JSON.parse(localStorage.getItem('bp_tempHistory')) || [];
+
+    window.tempHistory = JSON.parse(localStorage.getItem('bp_tempHistory')) || [
+      { time: "08:00", tempBaby: 36.7, tempIncubator: 31.0 },
+      { time: "12:00", tempBaby: 36.9, tempIncubator: 30.5 }
+    ];
+
     const todayIsoStr = new Date().toISOString().split('T')[0];
-    window.careEntries = JSON.parse(localStorage.getItem('bp_careEntries')) || [];
+    window.careEntries = JSON.parse(localStorage.getItem('bp_careEntries')) || [
+      { date: todayIsoStr, time: "08:00", tempBaby: 36.7, tempIncubator: 31.0, diaper: "Urine", feeding: 60, notes: "Réveil calme, bon biberon.", author: "Infirmière Sophie" }
+    ];
+
     window.dailyArchive = JSON.parse(localStorage.getItem('bp_dailyArchive')) || {};
     window.lastActiveDate = localStorage.getItem('bp_lastActiveDate') || todayIsoStr;
-    window.weightHistory = JSON.parse(localStorage.getItem('bp_weightHistory')) || [];
-    window.agendaEntries = JSON.parse(localStorage.getItem('bp_agendaEntries')) || [];
+
+    window.weightHistory = JSON.parse(localStorage.getItem('bp_weightHistory')) || [
+      { date: "2026-08-01", weight: 3.10 },
+      { date: "2026-08-05", weight: 3.28 }
+    ];
+
+    window.agendaEntries = JSON.parse(localStorage.getItem('bp_agendaEntries')) || [
+      { title: "Planning Travail (Matin)", category: "Travail (Matin)", startDate: "2026-08-20", startTime: "06:00", endDate: "2026-08-20", endTime: "14:00", assignee: "Papa", notes: "Shift du matin", author: "Papa" },
+      { title: "Séance Natation / Sport", category: "Activité Sportive", startDate: "2026-08-21", startTime: "18:00", endDate: "2026-08-21", endTime: "19:30", assignee: "Maman", notes: "Reprise du sport", author: "Maman" },
+      { title: "RDV Pédiatre 1er mois", category: "RDV / Consultation", startDate: "2026-08-22", startTime: "10:00", endDate: "2026-08-22", endTime: "11:00", assignee: "Les deux", notes: "Apporter le carnet de santé", author: "Maman" }
+    ];
 
     let chartTempInstance = null;
     let chartWeightInstance = null;
@@ -1012,6 +1035,7 @@
     let timerInterval = null;
     let timerSeconds = 0;
 
+    // --- FONCTION DE SAUVEGARDE GLOBALE EN TEMPS RÉEL ---
     function saveAllToStorage() {
       localStorage.setItem('bp_predictions', JSON.stringify(window.predictions));
       localStorage.setItem('bp_officialResult', JSON.stringify(window.officialResult));
@@ -1034,6 +1058,7 @@
       }
     }
 
+    // --- NAVIGATION PAR ONGLETS ---
     function switchTab(tabName) {
       ['pronostics', 'maternite', 'agenda'].forEach(tab => {
         const sec = document.getElementById(`section-${tab}`);
@@ -1060,10 +1085,12 @@
       }
     }
 
+    // --- AUTHENTIFICATION ---
     function handleLogin(e) {
       e.preventDefault();
       const username = document.getElementById('usernameInput').value.trim();
       const code = document.getElementById('accessCodeInput').value.trim();
+
       if (!username) return;
 
       currentUser = username;
@@ -1090,6 +1117,7 @@
       document.getElementById('loginForm').reset();
     }
 
+    // --- INITIALISATION DU CALENDRIER FULLCALENDAR ---
     function initFullCalendar() {
       const calendarEl = document.getElementById('fullCalendarContainer');
       if (!calendarEl) return;
@@ -1141,6 +1169,7 @@
         });
     }
 
+    // --- GESTION DE L'AGENDA & SYNCHRONISATION MULTI-APPAREILS ---
     function renderAgendaEntries() {
       const container = document.getElementById('agendaListContainer');
       if (container) {
@@ -1291,6 +1320,7 @@
       document.body.removeChild(link);
     }
 
+    // --- PRONOSTICS & SOINS MATERNITÉ ---
     function renderPredictions() {
       const tbody = document.getElementById('predictionsTableBody');
       if (!tbody) return;
@@ -1498,6 +1528,7 @@
       });
     }
 
+    // --- GRAPHIOUES INTERACTIFS ---
     function initCharts() {
       const ctxTemp = document.getElementById('chartTemp')?.getContext('2d');
       if (ctxTemp && !chartTempInstance) {
@@ -1854,9 +1885,9 @@
       const diaperType = prompt("Type de couche :\n1: Urine\n2: Selles\n3: Urine + Selles", "1");
       if (diaperType === null) return;
 
-      let diaperLabel = "Urine";
-      if (diaperType === "2") diaperLabel = "Selles";
-      if (diaperType === "3") diaperLabel = "Urine + Selles";
+      let typeLabel = "Urine";
+      if (diaperType === "2") typeLabel = "Selles";
+      if (diaperType === "3") typeLabel = "Urine + Selles";
 
       const now = new Date();
       const entry = {
@@ -1864,7 +1895,7 @@
         time: now.toTimeString().substring(0, 5),
         tempBaby: null,
         tempIncubator: null,
-        diaper: diaperLabel,
+        diaper: typeLabel,
         feeding: 0,
         notes: "Ajout rapide Couche",
         author: currentUser || "Parent"
@@ -1878,10 +1909,28 @@
       updateMealsChart();
     }
 
-    function openSubscribeModal() { document.getElementById('subscribeModal').classList.remove('hidden'); }
-    function closeSubscribeModal() { document.getElementById('subscribeModal').classList.add('hidden'); }
-    function openEditStatsModal() { document.getElementById('editStatsModal').classList.remove('hidden'); }
-    function closeEditStatsModal() { document.getElementById('editStatsModal').classList.add('hidden'); }
+    function openSubscribeModal() {
+      document.getElementById('subscribeModal').classList.remove('hidden');
+    }
+
+    function closeSubscribeModal() {
+      document.getElementById('subscribeModal').classList.add('hidden');
+    }
+
+    function selectPlan(plan) {
+      alert(`Merci d'avoir choisi le plan ${plan} ! Redirection vers la passerelle de paiement sécurisée...`);
+      closeSubscribeModal();
+    }
+
+    function openEditStatsModal() {
+      document.getElementById('goalMealsDayInput').value = window.statsGoals.mealsDay || 8;
+      document.getElementById('goalDiapersDayInput').value = window.statsGoals.diapersDay || 6;
+      document.getElementById('editStatsModal').classList.remove('hidden');
+    }
+
+    function closeEditStatsModal() {
+      document.getElementById('editStatsModal').classList.add('hidden');
+    }
 
     function saveStatsGoals(e) {
       e.preventDefault();
@@ -1893,89 +1942,10 @@
     }
 
     function updateGoalsBadges() {
-      const bM = document.getElementById('badgeMealsGoal');
-      const bD = document.getElementById('badgeDiapersGoal');
-      if (bM) bM.innerText = `Obj: ${window.statsGoals.mealsDay}/j`;
-      if (bD) bD.innerText = `Obj: ${window.statsGoals.diapersDay}/j`;
-    }
-
-    function resetDailyTracker() {
-      if (confirm("Réinitialiser les données de la journée en cours ?")) {
-        const today = new Date().toISOString().split('T')[0];
-        window.careEntries = window.careEntries.filter(c => c.date !== today);
-        saveAllToStorage();
-        renderCareEntries();
-        renderDailyTracker();
-        updateMealsChart();
-      }
-    }
-
-    function resetStatsPeriod() {
-      if (confirm("Réinitialiser l'historique complet ?")) {
-        window.careEntries = [];
-        window.dailyArchive = {};
-        saveAllToStorage();
-        renderCareEntries();
-        renderDailyTracker();
-        updateMealsChart();
-      }
-    }
-
-    function toggleTimer() {
-      const btn = document.getElementById('btnStartTimer');
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
-        btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition";
-      } else {
-        timerInterval = setInterval(() => {
-          timerSeconds++;
-          const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-          const s = String(timerSeconds % 60).padStart(2, '0');
-          document.getElementById('timerDisplay').innerText = `${m}:${s}`;
-        }, 1000);
-        btn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
-        btn.className = "px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition";
-      }
-    }
-
-    function resetTimer() {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
-      timerSeconds = 0;
-      document.getElementById('timerDisplay').innerText = "00:00";
-      const btn = document.getElementById('btnStartTimer');
-      btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
-      btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition";
-    }
-
-    function saveTimerToCare() {
-      if (timerSeconds === 0) return alert("Le chronomètre est à 00:00.");
-      const type = document.getElementById('timerType').value;
-      const m = Math.floor(timerSeconds / 60);
-      const s = timerSeconds % 60;
-      const durationStr = `${m}min ${s}s`;
-
-      const now = new Date();
-      const entry = {
-        date: now.toISOString().split('T')[0],
-        time: now.toTimeString().substring(0, 5),
-        tempBaby: null,
-        tempIncubator: null,
-        diaper: "Propre / Rien",
-        feeding: 0,
-        notes: `Chrono : ${type} (${durationStr})`,
-        author: currentUser || "Parent"
-      };
-
-      if (!window.careEntries) window.careEntries = [];
-      window.careEntries.push(entry);
-      saveAllToStorage();
-      renderCareEntries();
-      resetTimer();
+      const mealsBadge = document.getElementById('badgeMealsGoal');
+      const diapersBadge = document.getElementById('badgeDiapersGoal');
+      if (mealsBadge) mealsBadge.innerText = `Obj: ${window.statsGoals.mealsDay}/j`;
+      if (diapersBadge) diapersBadge.innerText = `Obj: ${window.statsGoals.diapersDay}/j`;
     }
   </script>
 </body>
