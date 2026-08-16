@@ -1887,25 +1887,31 @@
       if (elDiapersToday) elDiapersToday.innerText = diapersToday;
       if (elDiapersWeek) elDiapersWeek.innerText = diapersWeek;
       if (elDiapersMonth) elDiapersMonth.innerText = diapersMonth;
+
+      const todayEntries = window.careEntries.filter(c => (c.date || today) === today);
+      renderQuickHistoryList(todayEntries);
+      renderDailyStatsGrid();
     }
 
     function quickAddMeal() {
-      const vol = prompt("Volume du biberon (ml) :", "60");
-      if (vol === null) return;
-      const volumeNum = parseInt(vol) || 0;
-      const now = new Date();
-      const timeStr = now.toTimeString().substring(0, 5);
-      const dateStr = now.toISOString().split('T')[0];
+      checkMidnightReset();
+      const volStr = prompt("Volume du biberon (en ml) :", "90");
+      if (volStr === null) return;
+      const vol = parseInt(volStr) || 0;
 
-      window.careEntries.push({
-        date: dateStr,
-        time: timeStr,
-        feeding: volumeNum,
+      const now = new Date();
+      const entry = {
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().substring(0, 5),
+        tempBaby: null,
+        tempIncubator: null,
         diaper: "Propre / Rien",
+        feeding: vol,
         notes: "Ajout rapide Biberon",
         author: currentUser || "Parent"
-      });
+      };
 
+      window.careEntries.push(entry);
       saveAllToStorage();
       renderCareEntries();
       renderDailyTracker();
@@ -1913,35 +1919,36 @@
     }
 
     function quickAddDiaper() {
-      const type = prompt("Type de couche (1: Urine, 2: Selles, 3: Urine+Selles) :", "1");
-      if (!type) return;
-      let diaperText = "Urine";
-      if (type === "2") diaperText = "Selles";
-      if (type === "3") diaperText = "Urine + Selles";
+      checkMidnightReset();
+      const diaperType = prompt("Type de couche :\n1: Urine\n2: Selles\n3: Urine + Selles", "1");
+      if (diaperType === null) return;
+
+      let typeLabel = "Urine";
+      if (diaperType === "2") typeLabel = "Selles";
+      if (diaperType === "3") typeLabel = "Urine + Selles";
 
       const now = new Date();
-      const timeStr = now.toTimeString().substring(0, 5);
-      const dateStr = now.toISOString().split('T')[0];
-
-      window.careEntries.push({
-        date: dateStr,
-        time: timeStr,
+      const entry = {
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().substring(0, 5),
+        tempBaby: null,
+        tempIncubator: null,
+        diaper: typeLabel,
         feeding: 0,
-        diaper: diaperText,
         notes: "Ajout rapide Couche",
         author: currentUser || "Parent"
-      });
+      };
 
+      window.careEntries.push(entry);
       saveAllToStorage();
       renderCareEntries();
       renderDailyTracker();
       updateMealsChart();
     }
 
-    function resetDailyTracker() {
-      if (confirm("Réinitialiser les données saisies aujourd'hui ?")) {
-        const today = new Date().toISOString().split('T')[0];
-        window.careEntries = window.careEntries.filter(c => c.date !== today);
+    function deleteQuickEntry(careIndex) {
+      if (confirm("Supprimer cette entrée ?")) {
+        window.careEntries.splice(careIndex, 1);
         saveAllToStorage();
         renderCareEntries();
         renderDailyTracker();
@@ -1949,18 +1956,82 @@
       }
     }
 
-    function resetStatsPeriod() {
-      if (confirm("Réinitialiser tout l'historique des soins ?")) {
-        window.careEntries = [];
-        window.dailyArchive = {};
-        saveAllToStorage();
-        renderCareEntries();
-        renderDailyTracker();
-        updateMealsChart();
+    function renderQuickHistoryList(todayEntries) {
+      const container = document.getElementById('quickEntriesHistory');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (todayEntries.length === 0) {
+        container.innerHTML = `<p class="text-slate-400 italic py-2">Aucune saisie aujourd'hui pour le moment.</p>`;
+        return;
+      }
+
+      todayEntries.slice().reverse().forEach(entry => {
+        const originalIndex = window.careEntries.indexOf(entry);
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between bg-white/80 p-2 rounded-xl border border-slate-100 shadow-sm';
+        
+        let label = '';
+        let icon = '';
+
+        if (entry.feeding > 0) {
+          icon = '<i class="fa-solid fa-bottle-droplet text-pink-500"></i>';
+          label = `<strong>Biberon :</strong> ${entry.feeding} ml`;
+        } else if (entry.diaper && entry.diaper !== 'Propre / Rien') {
+          icon = '<i class="fa-solid fa-baby text-blue-500"></i>';
+          label = `<strong>Couche :</strong> ${entry.diaper}`;
+        } else {
+          icon = '<i class="fa-solid fa-notes-medical text-emerald-500"></i>';
+          label = `<strong>Soin :</strong> ${entry.notes || 'Observation'}`;
+        }
+
+        div.innerHTML = `
+          <div class="flex items-center gap-2">
+            ${icon}
+            <span>${label} <span class="text-slate-400">(${entry.time})</span></span>
+          </div>
+          <button onclick="deleteQuickEntry(${originalIndex})" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-xmark"></i></button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderDailyStatsGrid() {
+      const grid = document.getElementById('dailyStatsGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const now = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        const iso = d.toISOString().split('T')[0];
+        const dayLabel = d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' });
+
+        let meals = 0;
+        let diapers = 0;
+
+        window.careEntries.forEach(c => {
+          if ((c.date || iso) === iso) {
+            if (c.feeding > 0) meals++;
+            if (c.diaper && c.diaper !== 'Propre / Rien') diapers++;
+          }
+        });
+
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-2xl border text-center ${iso === todayIsoStr ? 'bg-pink-50/80 border-pink-200' : 'bg-white/60 border-slate-100'}`;
+        card.innerHTML = `
+          <p class="text-[10px] font-extrabold uppercase text-slate-400 mb-1">${dayLabel}</p>
+          <div class="space-y-0.5">
+            <p class="text-xs font-bold text-pink-600"><i class="fa-solid fa-bottle-droplet mr-1"></i>${meals}</p>
+            <p class="text-xs font-bold text-blue-600"><i class="fa-solid fa-baby mr-1"></i>${diapers}</p>
+          </div>
+        `;
+        grid.appendChild(card);
       }
     }
 
-    // --- MODALES OBJECTIFS & ABONNEMENT ---
+    // --- FONCTIONS MODALES & OBJECTIFS ---
     function openEditStatsModal() {
       document.getElementById('goalMealsDayInput').value = window.statsGoals.mealsDay;
       document.getElementById('goalDiapersDayInput').value = window.statsGoals.diapersDay;
@@ -1987,36 +2058,41 @@
       if (bDiapers) bDiapers.innerText = `Obj: ${window.statsGoals.diapersDay}/j`;
     }
 
-    function openSubscribeModal() {
-      document.getElementById('subscribeModal').classList.remove('hidden');
+    function resetStatsPeriod() {
+      if (confirm("Réinitialiser les agrégations de la semaine/mois ? (Vos données de soins ne seront pas effacées).")) {
+        renderDailyTracker();
+        updateMealsChart();
+      }
     }
 
-    function closeSubscribeModal() {
-      document.getElementById('subscribeModal').classList.add('hidden');
+    function resetDailyTracker() {
+      if (confirm("Voulez-vous réinitialiser les saisies de la journée en cours ?")) {
+        const today = new Date().toISOString().split('T')[0];
+        window.careEntries = window.careEntries.filter(c => c.date !== today);
+        saveAllToStorage();
+        renderCareEntries();
+        renderDailyTracker();
+        updateMealsChart();
+      }
     }
 
-    function selectPlan(plan) {
-      alert(`Merci ! Redirection vers la passerelle de paiement sécurisée pour la formule ${plan}.`);
-      closeSubscribeModal();
-    }
-
-    // --- CHRONOMÈTRE ---
+    // --- FONCTIONS DU CHRONOMÈTRE ---
     function toggleTimer() {
       const btn = document.getElementById('btnStartTimer');
       if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
-        btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
-        btn.classList.replace('bg-amber-500', 'bg-emerald-500');
+        btn.innerHTML = `<i class="fa-solid fa-play"></i> Reprendre`;
+        btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition";
       } else {
         timerInterval = setInterval(() => {
           timerSeconds++;
-          const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-          const s = String(timerSeconds % 60).padStart(2, '0');
-          document.getElementById('timerDisplay').innerText = `${m}:${s}`;
+          const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+          const secs = String(timerSeconds % 60).padStart(2, '0');
+          document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
         }, 1000);
         btn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
-        btn.classList.replace('bg-emerald-500', 'bg-amber-500');
+        btn.className = "px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition";
       }
     }
 
@@ -2027,40 +2103,121 @@
       document.getElementById('timerDisplay').innerText = "00:00";
       const btn = document.getElementById('btnStartTimer');
       btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
-      btn.classList.replace('bg-amber-500', 'bg-emerald-500');
+      btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition";
     }
 
     function saveTimerToCare() {
-      if (timerSeconds === 0) return alert("Le chronomètre est à 0.");
-      const type = document.getElementById('timerType').value;
-      const durationMin = Math.round(timerSeconds / 60);
-      const now = new Date();
+      if (timerSeconds === 0) return alert("Le chrono est à 00:00.");
+      const timerType = document.getElementById('timerType').value;
+      const mins = Math.floor(timerSeconds / 60);
+      const secs = timerSeconds % 60;
+      const durationStr = `${mins}m ${secs}s`;
 
-      window.careEntries.push({
+      const now = new Date();
+      const entry = {
         date: now.toISOString().split('T')[0],
         time: now.toTimeString().substring(0, 5),
-        feeding: type.includes('Biberon') ? 60 : 0,
+        tempBaby: null,
+        tempIncubator: null,
         diaper: "Propre / Rien",
-        notes: `Chrono ${type} : ${durationMin} min (${timerSeconds} sec)`,
+        feeding: 0,
+        notes: `Chrono ${timerType} : ${durationStr}`,
         author: currentUser || "Parent"
-      });
+      };
 
+      window.careEntries.push(entry);
       saveAllToStorage();
       renderCareEntries();
-      renderDailyTracker();
       resetTimer();
+      alert(`Session enregistrée dans la fiche de soin (${durationStr}).`);
     }
 
-    // --- INITIALISATION AU CHARGEMENT DE LA PAGE ---
+    // --- MODALE ABONNEMENT ---
+    function openSubscribeModal() {
+      document.getElementById('subscribeModal').classList.remove('hidden');
+    }
+
+    function closeSubscribeModal() {
+      document.getElementById('subscribeModal').classList.add('hidden');
+    }
+
+    function selectPlan(planName) {
+      alert(`Merci ! Redirection vers la passerelle de paiement sécurisée pour le plan ${planName}.`);
+      closeSubscribeModal();
+    }
+
+    // --- RÉSULTAT OFFICIEL ADMIN ---
+    function saveOfficialResults(e) {
+      e.preventDefault();
+      window.officialResult = {
+        name: document.getElementById('officialName').value.trim(),
+        gender: document.getElementById('officialGender').value,
+        weight: parseFloat(document.getElementById('officialWeight').value),
+        height: parseFloat(document.getElementById('officialHeight').value)
+      };
+
+      let bestWinner = "--";
+      let minDiff = Infinity;
+
+      window.predictions.forEach(p => {
+        if (p.gender === window.officialResult.gender) {
+          const diffW = Math.abs(p.weight - window.officialResult.weight);
+          const diffH = Math.abs(p.height - window.officialResult.height);
+          const score = diffW + diffH;
+          if (score < minDiff) {
+            minDiff = score;
+            bestWinner = p.user;
+          }
+        }
+      });
+
+      window.officialResult.winner = bestWinner;
+      saveAllToStorage();
+      displayOfficialBanner();
+    }
+
+    function displayOfficialBanner() {
+      if (!window.officialResult) return;
+      const banner = document.getElementById('resultBanner');
+      if (banner) {
+        banner.classList.remove('hidden');
+        document.getElementById('resBabyName').innerText = `Bienvenue à ${window.officialResult.name} !`;
+        document.getElementById('resBabyDetails').innerText = `${window.officialResult.gender} | ${window.officialResult.weight} kg | ${window.officialResult.height} cm`;
+        document.getElementById('resWinnerName').innerText = window.officialResult.winner || "--";
+      }
+    }
+
+    function traiterFichier(e) {
+      const file = e.target.files[0];
+      if (file) {
+        alert(`Document "${file.name}" importé avec succès. Analyse en cours...`);
+      }
+    }
+
+    // --- INITIALISATION AUTOMATIQUE ---
     window.addEventListener('DOMContentLoaded', () => {
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      const timeStr = now.toTimeString().substring(0, 5);
+
+      if (document.getElementById('careDate')) document.getElementById('careDate').value = todayStr;
+      if (document.getElementById('careTime')) document.getElementById('careTime').value = timeStr;
+      if (document.getElementById('predDate')) document.getElementById('predDate').value = todayStr;
+      if (document.getElementById('agendaStartDate')) document.getElementById('agendaStartDate').value = todayStr;
+      if (document.getElementById('agendaEndDate')) document.getElementById('agendaEndDate').value = todayStr;
+      if (document.getElementById('agendaStartTime')) document.getElementById('agendaStartTime').value = "09:00";
+      if (document.getElementById('agendaEndTime')) document.getElementById('agendaEndTime').value = "10:00";
+      if (document.getElementById('weightPointDate')) document.getElementById('weightPointDate').value = todayStr;
+
       initCharts();
-      renderPredictions();
-      renderCareEntries();
-      renderDailyTracker();
-      renderAgendaEntries();
-      updateGoalsBadges();
+      updateTempChart();
       renderTempList();
+      updateWeightChart();
       renderWeightList();
+      renderDailyTracker();
+      updateMealsChart();
+      updateGoalsBadges();
+      displayOfficialBanner();
     });
   </script>
 </body>
