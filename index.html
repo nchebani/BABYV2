@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BABY PREDICT 2026 - Pro, Suivi Maternité, Finances & Agenda</title>
+  <title>BABY PREDICT 2026 - Pro, Suivi Maternité, Agenda & Finances</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -90,7 +90,7 @@
         <i class="fa-solid fa-baby"></i>
       </div>
       <h1 class="text-2xl font-black text-slate-800 mb-2">BABY PREDICT 2026</h1>
-      <p class="text-sm text-slate-500 mb-6">Connectez-vous pour accéder au tableau de bord, au suivi et aux finances.</p>
+      <p class="text-sm text-slate-500 mb-6">Connectez-vous pour accéder au tableau de bord, à la fiche de soins et aux finances du ménage.</p>
      
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 text-left">
         <div>
@@ -118,7 +118,7 @@
         </div>
         <div>
           <h1 class="font-extrabold text-lg text-slate-800">BABY PREDICT 2026</h1>
-          <p class="text-xs text-slate-500">Suivi Maternité, Finances & Agenda</p>
+          <p class="text-xs text-slate-500">Maternité, Agenda, Finances & Pronostics</p>
         </div>
       </div>
 
@@ -127,13 +127,13 @@
           <i class="fa-solid fa-chart-pie"></i> Pronostics
         </button>
         <button onclick="switchTab('maternite')" id="tab-maternite" class="px-3 py-2 text-sm font-semibold text-slate-600 hover:text-pink-600 transition flex items-center gap-2 whitespace-nowrap">
-          <i class="fa-solid fa-heart-pulse"></i> Soins Maternité
+          <i class="fa-solid fa-heart-pulse"></i> Suivi Maternité
+        </button>
+        <button onclick="switchTab('agenda')" id="tab-agenda" class="px-3 py-2 text-sm font-semibold text-slate-600 hover:text-pink-600 transition flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-calendar-days"></i> Agenda
         </button>
         <button onclick="switchTab('finances')" id="tab-finances" class="px-3 py-2 text-sm font-semibold text-slate-600 hover:text-pink-600 transition flex items-center gap-2 whitespace-nowrap">
           <i class="fa-solid fa-wallet"></i> Finances Ménage
-        </button>
-        <button onclick="switchTab('agenda')" id="tab-agenda" class="px-3 py-2 text-sm font-semibold text-slate-600 hover:text-pink-600 transition flex items-center gap-2 whitespace-nowrap">
-          <i class="fa-solid fa-calendar-days"></i> Agenda Partagé
         </button>
       </nav>
 
@@ -754,171 +754,7 @@
       </div>
     </div>
 
-    <!-- SECTION 3 : FINANCES DU MÉNAGE -->
-    <div id="section-finances" class="hidden space-y-6">
-      
-      <!-- CARTES DE SYNTHÈSE FINANCIÈRE -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="glassmorphism p-5 rounded-2xl border border-emerald-100 shadow-sm">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-xs font-bold text-slate-400 uppercase">Revenus Totaux (Mois)</span>
-            <div class="p-2 bg-emerald-100 text-emerald-600 rounded-xl"><i class="fa-solid fa-sack-dollar"></i></div>
-          </div>
-          <p class="text-2xl font-black text-emerald-600" id="finTotalRevenue">0.00 €</p>
-          <p class="text-xs text-slate-500 mt-1">Cumul Papa + Maman + Autres</p>
-        </div>
-
-        <div class="glassmorphism p-5 rounded-2xl border border-red-100 shadow-sm">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-xs font-bold text-slate-400 uppercase">Charges & Factures</span>
-            <div class="p-2 bg-red-100 text-red-600 rounded-xl"><i class="fa-solid fa-file-invoice-dollar"></i></div>
-          </div>
-          <p class="text-2xl font-black text-red-600" id="finTotalExpenses">0.00 €</p>
-          <p class="text-xs text-slate-500 mt-1">Total factures, courses & abonnements</p>
-        </div>
-
-        <div class="glassmorphism p-5 rounded-2xl border border-blue-100 shadow-sm">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-xs font-bold text-slate-400 uppercase">Reste à Vivre</span>
-            <div class="p-2 bg-blue-100 text-blue-600 rounded-xl"><i class="fa-solid fa-piggy-bank"></i></div>
-          </div>
-          <p class="text-2xl font-black text-blue-600" id="finRemainingBudget">0.00 €</p>
-          <p class="text-xs text-slate-500 mt-1">Épargne / Solde fin de mois</p>
-        </div>
-
-        <div class="glassmorphism p-5 rounded-2xl border border-purple-100 shadow-sm">
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-xs font-bold text-slate-400 uppercase">Taux d'Épargne</span>
-            <div class="p-2 bg-purple-100 text-purple-600 rounded-xl"><i class="fa-solid fa-chart-line"></i></div>
-          </div>
-          <p class="text-2xl font-black text-purple-600" id="finSavingsRate">0 %</p>
-          <p class="text-xs text-slate-500 mt-1">Part des revenus non dépensés</p>
-        </div>
-      </div>
-
-      <!-- FORMULAIRES DE SAISIE REVENUS & CHARGES -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <!-- REVENUS DU MOIS PAR PERSONNE -->
-        <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
-          <div class="flex justify-between items-center">
-            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-              <i class="fa-solid fa-user-tie text-emerald-500"></i> Revenus du Mois par Membre
-            </h3>
-          </div>
-          <form onsubmit="addOrUpdateRevenue(event)" class="space-y-3 bg-white/60 p-4 rounded-2xl border border-slate-200">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Membre / Personne</label>
-                <input type="text" id="revPerson" required placeholder="ex: Papa, Maman..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Montant Net (€)</label>
-                <input type="number" step="0.01" min="0" id="revAmount" required placeholder="2500" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white outline-none">
-              </div>
-            </div>
-            <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
-              Enregistrer / Mettre à jour le revenu
-            </button>
-          </form>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-              <thead>
-                <tr class="border-b border-slate-200 text-slate-400 text-xs uppercase">
-                  <th class="pb-2 font-semibold">Membre</th>
-                  <th class="pb-2 font-semibold">Revenu Net</th>
-                  <th class="pb-2 font-semibold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="revenuesTableBody" class="divide-y divide-slate-100"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- CHARGES & FACTURES (COURSES, ELEC, EAU, GAZ, NETFLIX, VOITURE, ESSENCE, ETC.) -->
-        <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
-          <div class="flex justify-between items-center">
-            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-              <i class="fa-solid fa-receipt text-red-500"></i> Ajouter une Dépense / Facture
-            </h3>
-          </div>
-          <form onsubmit="addExpense(event)" class="space-y-3 bg-white/60 p-4 rounded-2xl border border-slate-200">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Intitulé / Nom</label>
-                <input type="text" id="expTitle" required placeholder="ex: Courses Leclerc, Électricité..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Catégorie</label>
-                <select id="expCategory" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white outline-none">
-                  <option value="🛒 Courses">🛒 Courses / Alimentation</option>
-                  <option value="⚡ Électricité">⚡ Électricité</option>
-                  <option value="💧 Eau">💧 Eau</option>
-                  <option value="🔥 Gaz">🔥 Gaz</option>
-                  <option value="📱 Téléphone / Internet">📱 Téléphone / Internet</option>
-                  <option value="🎬 Netflix / Abonnements">🎬 Netflix / Abonnements</option>
-                  <option value="🏠 Maison / Loyer / Crédit">🏠 Maison / Loyer / Prêt</option>
-                  <option value="🚗 Voiture & Assurance">🚗 Voiture & Assurance</option>
-                  <option value="⛽ Essence / Carburant">⛽ Essence / Carburant</option>
-                  <option value="👶 Bébé & Puériculture">👶 Bébé & Puériculture</option>
-                  <option value="📌 Autre Dépense">📌 Autre Dépense</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Montant (€)</label>
-                <input type="number" step="0.01" min="0" id="expAmount" required placeholder="120.50" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Payé par</label>
-                <select id="expPayer" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white outline-none font-bold">
-                  <option value="Papa">Papa</option>
-                  <option value="Maman">Maman</option>
-                  <option value="Compte Commun">Compte Commun</option>
-                </select>
-              </div>
-            </div>
-
-            <button type="submit" class="w-full py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-xs shadow transition">
-              Ajouter la dépense / facture
-            </button>
-          </form>
-        </div>
-
-      </div>
-
-      <!-- LISTE DÉTAILLÉE DES DÉPENSES & FACTURES DU MOIS -->
-      <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-            <i class="fa-solid fa-list-check text-red-500"></i> Historique des Dépenses & Factures du Mois
-          </h3>
-          <button onclick="clearAllExpenses()" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-xl text-xs border border-red-200 transition">
-            Réinitialiser les dépenses
-          </button>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead>
-              <tr class="border-b border-slate-200 text-slate-400 text-xs uppercase">
-                <th class="pb-3 font-semibold">Intitulé</th>
-                <th class="pb-3 font-semibold">Catégorie</th>
-                <th class="pb-3 font-semibold">Payé par</th>
-                <th class="pb-3 font-semibold">Montant</th>
-                <th class="pb-3 font-semibold text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="expensesTableBody" class="divide-y divide-slate-100"></tbody>
-          </table>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- SECTION 4 : AGENDA PARTAGÉ PARENTS -->
+    <!-- SECTION 3 : AGENDA PARTAGÉ PARENTS -->
     <div id="section-agenda" class="hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
        
@@ -1055,7 +891,204 @@
       </div>
     </div>
 
+    <!-- SECTION 4 : FINANCES DU MÉNAGE -->
+    <div id="section-finances" class="hidden space-y-6">
+      
+      <!-- CARTES RESUME FINANCIER -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="glassmorphism p-5 rounded-2xl border-l-4 border-emerald-500 shadow-sm">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-bold text-slate-400 uppercase">Revenus Totaux (Mois)</span>
+            <i class="fa-solid fa-wallet text-emerald-500 text-lg"></i>
+          </div>
+          <p class="text-2xl font-black text-slate-800" id="finTotalRevenue">0.00 €</p>
+          <p class="text-xs text-slate-500 mt-1">Cumul des salaires / entrées</p>
+        </div>
+
+        <div class="glassmorphism p-5 rounded-2xl border-l-4 border-amber-500 shadow-sm">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-bold text-slate-400 uppercase">Charges & Factures</span>
+            <i class="fa-solid fa-file-invoice-dollar text-amber-500 text-lg"></i>
+          </div>
+          <p class="text-2xl font-black text-slate-800" id="finTotalExpenses">0.00 €</p>
+          <p class="text-xs text-slate-500 mt-1">Courses, eau, gaz, elec, abonnements...</p>
+        </div>
+
+        <div class="glassmorphism p-5 rounded-2xl border-l-4 border-blue-500 shadow-sm">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-bold text-slate-400 uppercase">Reste à la fin du mois</span>
+            <i class="fa-solid fa-piggy-bank text-blue-500 text-lg"></i>
+          </div>
+          <p class="text-2xl font-black text-blue-600" id="finRemainingBudget">0.00 €</p>
+          <p class="text-xs text-slate-500 mt-1">Épargne potentielle / Solde</p>
+        </div>
+
+        <div class="glassmorphism p-5 rounded-2xl border-l-4 border-purple-500 shadow-sm">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-xs font-bold text-slate-400 uppercase">Taux d'effort / Charges</span>
+            <i class="fa-solid fa-chart-pie text-purple-500 text-lg"></i>
+          </div>
+          <p class="text-2xl font-black text-slate-800" id="finExpenseRatio">0 %</p>
+          <p class="text-xs text-slate-500 mt-1">Part des revenus consommée</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- COLONNE GAUCHE : REVENUS DU MOIS DE CHAQUE PARENT -->
+        <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+              <i class="fa-solid fa-hand-holding-dollar text-emerald-500"></i> Revenus Mensuels du Ménage
+            </h3>
+            <button onclick="openAddRevenueModal()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition shadow flex items-center gap-1.5">
+              <i class="fa-solid fa-plus"></i> Ajouter un revenu
+            </button>
+          </div>
+          <p class="text-xs text-slate-500">Saisissez les revenus mensuels nets perçus par chaque membre du foyer.</p>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="border-b border-slate-200 text-slate-400 text-xs uppercase">
+                  <th class="pb-2 font-semibold">Membre / Parent</th>
+                  <th class="pb-2 font-semibold">Intitulé / Source</th>
+                  <th class="pb-2 font-semibold">Montant net</th>
+                  <th class="pb-2 font-semibold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="revenueTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- COLONNE DROITE : GRAPHIQUE REPARTITION DEPENSES -->
+        <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
+          <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+            <i class="fa-solid fa-chart-simple text-purple-500"></i> Répartition des Dépenses par Catégorie
+          </h3>
+          <p class="text-xs text-slate-500">Visualisez le poids de chaque poste de dépense dans le budget mensuel.</p>
+          <div class="h-56 flex items-center justify-center">
+            <canvas id="chartFinances"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SECTION TABLEAU DES CHARGES & FACTURES DU MENAGE -->
+      <div class="glassmorphism p-6 rounded-3xl border border-white/50 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+              <i class="fa-solid fa-receipt text-amber-500"></i> Gestion des Charges, Courses & Factures
+            </h3>
+            <p class="text-xs text-slate-500">Courses, Électricité, Eau, Gaz, Télécom, Netflix, Maison, Voiture, Essence, Assurances...</p>
+          </div>
+          <button onclick="openAddExpenseModal()" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs transition shadow flex items-center gap-2">
+            <i class="fa-solid fa-plus text-sm"></i> Ajouter une charge / facture
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 text-slate-400 text-xs uppercase">
+                <th class="pb-3 font-semibold">Catégorie</th>
+                <th class="pb-3 font-semibold">Intitulé / Fournisseur</th>
+                <th class="pb-3 font-semibold">Fréquence / Type</th>
+                <th class="pb-3 font-semibold">Montant (€)</th>
+                <th class="pb-3 font-semibold">Payé par</th>
+                <th class="pb-3 font-semibold text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="expensesTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
   </main>
+
+  <!-- MODALE AJOUT REVENU -->
+  <div id="addRevenueModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/65 backdrop-blur-md p-4">
+    <div class="glassmorphism p-6 rounded-3xl shadow-2xl max-w-sm w-full border border-white/50 relative">
+      <button onclick="closeAddRevenueModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-lg font-bold"><i class="fa-solid fa-xmark"></i></button>
+      <h3 class="font-bold text-slate-800 text-base mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-hand-holding-dollar text-emerald-500"></i> Ajouter un Revenu
+      </h3>
+      <form onsubmit="saveRevenueEntry(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Membre / Parent</label>
+          <select id="revMember" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white outline-none font-bold">
+            <option value="Papa">Papa</option>
+            <option value="Maman">Maman</option>
+            <option value="Commun / Ménage">Commun / Ménage</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Intitulé (ex: Salaire, Prime...)</label>
+          <input type="text" id="revTitle" required placeholder="Salaire principal" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Montant Net (€)</label>
+          <input type="number" step="0.01" id="revAmount" required placeholder="2500" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none">
+        </div>
+        <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs shadow transition">
+          Enregistrer le revenu
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODALE AJOUT CHARGE / FACTURE -->
+  <div id="addExpenseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/65 backdrop-blur-md p-4">
+    <div class="glassmorphism p-6 rounded-3xl shadow-2xl max-w-md w-full border border-white/50 relative">
+      <button onclick="closeAddExpenseModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-lg font-bold"><i class="fa-solid fa-xmark"></i></button>
+      <h3 class="font-bold text-slate-800 text-base mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-file-invoice-dollar text-amber-500"></i> Ajouter une Charge / Facture
+      </h3>
+      <form onsubmit="saveExpenseEntry(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Catégorie</label>
+          <select id="expCategory" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white outline-none font-bold">
+            <option value="🛒 Courses">🛒 Courses & Alimentation</option>
+            <option value="⚡ Électricité">⚡ Électricité</option>
+            <option value="💧 Eau">💧 Eau</option>
+            <option value="🔥 Gaz">🔥 Gaz</option>
+            <option value="📱 Télécom / Internet">📱 Télécom / Internet</option>
+            <option value="🍿 Netflix & Abonnements">🍿 Netflix & Abonnements</option>
+            <option value="🏠 Maison (Loyer / Prêt)">🏠 Maison (Loyer / Prêt)</option>
+            <option value="🚗 Voiture & Assurance">🚗 Voiture & Assurance</option>
+            <option value="⛽ Essence">⛽ Essence</option>
+            <option value="👶 Bébé & Crèche">👶 Bébé & Crèche</option>
+            <option value="Autre">Autre charge</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Intitulé / Fournisseur</label>
+          <input type="text" id="expTitle" required placeholder="ex: Facture EDF, Carrefour..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Montant (€)</label>
+            <input type="number" step="0.01" id="expAmount" required placeholder="120.00" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Payé par</label>
+            <select id="expPayer" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white outline-none">
+              <option value="Papa">Papa</option>
+              <option value="Maman">Maman</option>
+              <option value="Compte Joint">Compte Joint</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs shadow transition">
+          Ajouter la charge
+        </button>
+      </form>
+    </div>
+  </div>
 
   <!-- MODALE MODIFICATION DES OBJECTIFS STATS -->
   <div id="editStatsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 overflow-y-auto">
@@ -1186,9 +1219,9 @@
       { key: 'tempHistory', render: () => { updateTempChart(); renderTempList(); } },
       { key: 'weightHistory', render: () => { updateWeightChart(); renderWeightList(); } },
       { key: 'agendaEntries', render: () => renderAgendaEntries() },
-      { key: 'statsGoals', render: () => updateGoalsBadges() },
       { key: 'finRevenues', render: () => renderFinances() },
       { key: 'finExpenses', render: () => renderFinances() },
+      { key: 'statsGoals', render: () => updateGoalsBadges() },
       { key: 'notifications', render: () => renderNotifications() }
     ];
 
@@ -1209,6 +1242,7 @@
     let currentUser = null;
     let isAdmin = false;
     let fullCalendarInstance = null;
+    let chartFinancesInstance = null;
 
     const parentColors = {
       'Papa':     { bg: '#3b82f6', border: '#2563eb', text: 'text-blue-700', bgLight: 'bg-blue-50', borderClass: 'border-blue-200', dot: 'bg-blue-500' },
@@ -1254,22 +1288,22 @@
       { title: "RDV Pédiatre 1er mois", category: "RDV Médical / Consultation", startDate: todayIsoStr, startTime: "10:00", endDate: todayIsoStr, endTime: "11:00", assignee: "Les deux", notes: "Apporter le carnet de santé", author: "Maman" }
     ];
 
-    // --- FINANCES DU MÉNAGE ---
+    // Finances du ménage initiales
     window.finRevenues = JSON.parse(localStorage.getItem('bp_finRevenues')) || [
-      { person: "Papa", amount: 2600 },
-      { person: "Maman", amount: 2400 }
+      { id: 1, member: "Papa", title: "Salaire net", amount: 2400 },
+      { id: 2, member: "Maman", title: "Salaire net", amount: 2100 }
     ];
 
     window.finExpenses = JSON.parse(localStorage.getItem('bp_finExpenses')) || [
-      { title: "Courses Leclerc / Bio", category: "🛒 Courses", payer: "Compte Commun", amount: 550 },
-      { title: "Facture Électricité EDF", category: "⚡ Électricité", payer: "Compte Commun", amount: 110 },
-      { title: "Facture Eau", category: "💧 Eau", payer: "Compte Commun", amount: 45 },
-      { title: "Facture Gaz", category: "🔥 Gaz", payer: "Compte Commun", amount: 80 },
-      { title: "Box Internet & Téléphones", category: "📱 Téléphone / Internet", payer: "Papa", amount: 55 },
-      { title: "Abonnement Netflix & Prime", category: "🎬 Netflix / Abonnements", payer: "Maman", amount: 25 },
-      { title: "Crédit Immobilier / Loyer Maison", category: "🏠 Maison / Loyer / Crédit", payer: "Compte Commun", amount: 1100 },
-      { title: "Assurance Auto", category: "🚗 Voiture & Assurance", payer: "Papa", amount: 75 },
-      { title: "Essence / Carburant", category: "⛽ Essence / Carburant", payer: "Maman", amount: 140 }
+      { id: 1, category: "🛒 Courses", title: "Supermarché & Alimentation", amount: 550, payer: "Compte Joint" },
+      { id: 2, category: "⚡ Électricité", title: "Facture EDF mensuelle", amount: 95, payer: "Compte Joint" },
+      { id: 3, category: "💧 Eau", title: "Facture Eau", amount: 35, payer: "Compte Joint" },
+      { id: 4, category: "🔥 Gaz", title: "Chauffage / Gaz", amount: 70, payer: "Compte Joint" },
+      { id: 5, category: "📱 Télécom / Internet", title: "Box Fibre & Mobiles", amount: 65, payer: "Papa" },
+      { id: 6, category: "🍿 Netflix & Abonnements", title: "Streaming / Divertissement", amount: 30, payer: "Maman" },
+      { id: 7, category: "🏠 Maison (Loyer / Prêt)", title: "Crédit immobilier / Loyer", amount: 950, payer: "Compte Joint" },
+      { id: 8, category: "🚗 Voiture & Assurance", title: "Assurance auto", amount: 65, payer: "Papa" },
+      { id: 9, category: "⛽ Essence", title: "Carburant mensuel", amount: 160, payer: "Papa" }
     ];
 
     let chartTempInstance = null;
@@ -1286,11 +1320,11 @@
       localStorage.setItem('bp_tempHistory', JSON.stringify(window.tempHistory));
       localStorage.setItem('bp_weightHistory', JSON.stringify(window.weightHistory));
       localStorage.setItem('bp_agendaEntries', JSON.stringify(window.agendaEntries));
+      localStorage.setItem('bp_finRevenues', JSON.stringify(window.finRevenues));
+      localStorage.setItem('bp_finExpenses', JSON.stringify(window.finExpenses));
       localStorage.setItem('bp_statsGoals', JSON.stringify(window.statsGoals));
       localStorage.setItem('bp_dailyArchive', JSON.stringify(window.dailyArchive));
       localStorage.setItem('bp_notifications', JSON.stringify(window.notifications));
-      localStorage.setItem('bp_finRevenues', JSON.stringify(window.finRevenues));
-      localStorage.setItem('bp_finExpenses', JSON.stringify(window.finExpenses));
 
       if (typeof window.saveToFirebase === 'function') {
         window.saveToFirebase('predictions', window.predictions);
@@ -1299,125 +1333,11 @@
         window.saveToFirebase('tempHistory', window.tempHistory);
         window.saveToFirebase('weightHistory', window.weightHistory);
         window.saveToFirebase('agendaEntries', window.agendaEntries);
+        window.saveToFirebase('finRevenues', window.finRevenues);
+        window.saveToFirebase('finExpenses', window.finExpenses);
         window.saveToFirebase('statsGoals', window.statsGoals);
         window.saveToFirebase('dailyArchive', window.dailyArchive);
         window.saveToFirebase('notifications', window.notifications);
-        window.saveToFirebase('finRevenues', window.finRevenues);
-        window.saveToFirebase('finExpenses', window.finExpenses);
-      }
-    }
-
-    // --- GESTION FINANCES DU MÉNAGE ---
-    function renderFinances() {
-      // 1. Tableau Revenus
-      const revBody = document.getElementById('revenuesTableBody');
-      if (revBody) {
-        revBody.innerHTML = '';
-        window.finRevenues.forEach((rev, idx) => {
-          const tr = document.createElement('tr');
-          tr.className = 'hover:bg-slate-50/50 transition';
-          tr.innerHTML = `
-            <td class="py-2.5 font-bold text-slate-800">${rev.person}</td>
-            <td class="py-2.5 font-mono font-bold text-emerald-600">${Number(rev.amount).toFixed(2)} €</td>
-            <td class="py-2.5 text-right">
-              <button onclick="deleteRevenue(${idx})" class="p-1 text-red-500 hover:bg-red-50 rounded"><i class="fa-solid fa-trash"></i></button>
-            </td>
-          `;
-          revBody.appendChild(tr);
-        });
-      }
-
-      // 2. Tableau Dépenses & Factures
-      const expBody = document.getElementById('expensesTableBody');
-      if (expBody) {
-        expBody.innerHTML = '';
-        window.finExpenses.forEach((exp, idx) => {
-          const tr = document.createElement('tr');
-          tr.className = 'hover:bg-slate-50/50 transition';
-          tr.innerHTML = `
-            <td class="py-2.5 font-semibold text-slate-800">${exp.title}</td>
-            <td class="py-2.5"><span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700">${exp.category}</span></td>
-            <td class="py-2.5 text-xs font-bold text-indigo-600">${exp.payer}</td>
-            <td class="py-2.5 font-mono font-bold text-red-600">${Number(exp.amount).toFixed(2)} €</td>
-            <td class="py-2.5 text-right">
-              <button onclick="deleteExpense(${idx})" class="p-1 text-red-500 hover:bg-red-50 rounded"><i class="fa-solid fa-trash"></i></button>
-            </td>
-          `;
-          expBody.appendChild(tr);
-        });
-      }
-
-      // 3. Calculs Totaux & Reste à vivre
-      const totalRev = window.finRevenues.reduce((acc, r) => acc + (Number(r.amount) || 0), 0);
-      const totalExp = window.finExpenses.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
-      const remaining = totalRev - totalExp;
-      const savingsRate = totalRev > 0 ? Math.max(0, Math.round((remaining / totalRev) * 100)) : 0;
-
-      document.getElementById('finTotalRevenue').innerText = `${totalRev.toFixed(2)} €`;
-      document.getElementById('finTotalExpenses').innerText = `${totalExp.toFixed(2)} €`;
-      
-      const remEl = document.getElementById('finRemainingBudget');
-      remEl.innerText = `${remaining.toFixed(2)} €`;
-      remEl.className = remaining >= 0 ? 'text-2xl font-black text-blue-600' : 'text-2xl font-black text-red-600';
-
-      document.getElementById('finSavingsRate').innerText = `${savingsRate} %`;
-    }
-
-    function addOrUpdateRevenue(e) {
-      e.preventDefault();
-      const person = document.getElementById('revPerson').value.trim();
-      const amount = parseFloat(document.getElementById('revAmount').value) || 0;
-
-      const existing = window.finRevenues.find(r => r.person.toLowerCase() === person.toLowerCase());
-      if (existing) {
-        existing.amount = amount;
-        addNotification(`💶 Revenu mis à jour pour ${person} : ${amount} €`);
-      } else {
-        window.finRevenues.push({ person, amount });
-        addNotification(`💶 Nouveau revenu enregistré pour ${person} : ${amount} €`);
-      }
-
-      saveAllToStorage();
-      renderFinances();
-      document.getElementById('revPerson').value = '';
-      document.getElementById('revAmount').value = '';
-    }
-
-    function deleteRevenue(idx) {
-      window.finRevenues.splice(idx, 1);
-      saveAllToStorage();
-      renderFinances();
-    }
-
-    function addExpense(e) {
-      e.preventDefault();
-      const expense = {
-        title: document.getElementById('expTitle').value.trim(),
-        category: document.getElementById('expCategory').value,
-        payer: document.getElementById('expPayer').value,
-        amount: parseFloat(document.getElementById('expAmount').value) || 0
-      };
-
-      window.finExpenses.push(expense);
-      addNotification(`💸 Dépense / Facture ajoutée : "${expense.title}" (${expense.amount} € - ${expense.category})`);
-      
-      saveAllToStorage();
-      renderFinances();
-      document.getElementById('expTitle').value = '';
-      document.getElementById('expAmount').value = '';
-    }
-
-    function deleteExpense(idx) {
-      window.finExpenses.splice(idx, 1);
-      saveAllToStorage();
-      renderFinances();
-    }
-
-    function clearAllExpenses() {
-      if (confirm("Voulez-vous réinitialiser toutes les dépenses et factures du mois ?")) {
-        window.finExpenses = [];
-        saveAllToStorage();
-        renderFinances();
       }
     }
 
@@ -1538,7 +1458,7 @@
 
     // --- NAVIGATION PAR ONGLETS ---
     function switchTab(tabName) {
-      ['pronostics', 'maternite', 'finances', 'agenda'].forEach(tab => {
+      ['pronostics', 'maternite', 'agenda', 'finances'].forEach(tab => {
         const sec = document.getElementById(`section-${tab}`);
         const btn = document.getElementById(`tab-${tab}`);
         if (sec) sec.classList.add('hidden');
@@ -1550,10 +1470,6 @@
       if (activeSec) activeSec.classList.remove('hidden');
       if (activeBtn) activeBtn.classList.add('active-tab');
 
-      if (tabName === 'finances') {
-        renderFinances();
-      }
-
       if (tabName === 'agenda') {
         setTimeout(() => {
           if (!fullCalendarInstance) {
@@ -1564,6 +1480,171 @@
           }
         }, 100);
       }
+      if (tabName === 'finances') {
+        renderFinances();
+      }
+    }
+
+    // --- GESTION DES FINANCES DU MÉNAGE ---
+    function renderFinances() {
+      // 1. Tableau des revenus
+      const revBody = document.getElementById('revenueTableBody');
+      if (revBody) {
+        revBody.innerHTML = '';
+        let totalRev = 0;
+        (window.finRevenues || []).forEach((rev, idx) => {
+          totalRev += parseFloat(rev.amount) || 0;
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-50/50 transition';
+          tr.innerHTML = `
+            <td class="py-2.5 font-bold text-slate-800">${rev.member}</td>
+            <td class="py-2.5 text-slate-600">${rev.title}</td>
+            <td class="py-2.5 font-mono font-bold text-emerald-600">${parseFloat(rev.amount).toFixed(2)} €</td>
+            <td class="py-2.5 text-right">
+              <button onclick="deleteRevenue(${idx})" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          `;
+          revBody.appendChild(tr);
+        });
+        document.getElementById('finTotalRevenue').innerText = `${totalRev.toFixed(2)} €`;
+      }
+
+      // 2. Tableau des charges / factures
+      const expBody = document.getElementById('expensesTableBody');
+      if (expBody) {
+        expBody.innerHTML = '';
+        let totalExp = 0;
+        const catTotals = {};
+
+        (window.finExpenses || []).forEach((exp, idx) => {
+          const amt = parseFloat(exp.amount) || 0;
+          totalExp += amt;
+          catTotals[exp.category] = (catTotals[exp.category] || 0) + amt;
+
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-50/50 transition';
+          tr.innerHTML = `
+            <td class="py-2.5 font-bold text-slate-800">${exp.category}</td>
+            <td class="py-2.5 text-slate-600">${exp.title}</td>
+            <td class="py-2.5 text-xs text-slate-500 font-semibold">Mensuel</td>
+            <td class="py-2.5 font-mono font-bold text-amber-600">${amt.toFixed(2)} €</td>
+            <td class="py-2.5 text-xs font-bold text-slate-600">${exp.payer}</td>
+            <td class="py-2.5 text-right">
+              <button onclick="deleteExpense(${idx})" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          `;
+          expBody.appendChild(tr);
+        });
+
+        document.getElementById('finTotalExpenses').innerText = `${totalExp.toFixed(2)} €`;
+
+        // Calcul reste à vivre
+        const totalRevVal = (window.finRevenues || []).reduce((acc, r) => acc + (parseFloat(r.amount) || 0), 0);
+        const remaining = totalRevVal - totalExp;
+        const remEl = document.getElementById('finRemainingBudget');
+        remEl.innerText = `${remaining.toFixed(2)} €`;
+        remEl.className = remaining >= 0 ? "text-2xl font-black text-blue-600" : "text-2xl font-black text-red-600";
+
+        // Ratio charges / revenus
+        const ratio = totalRevVal > 0 ? Math.round((totalExp / totalRevVal) * 100) : 0;
+        document.getElementById('finExpenseRatio').innerText = `${ratio} %`;
+
+        // Mise à jour du graphique des dépenses
+        updateFinancesChart(catTotals);
+      }
+    }
+
+    function openAddRevenueModal() {
+      document.getElementById('addRevenueModal').classList.remove('hidden');
+    }
+    function closeAddRevenueModal() {
+      document.getElementById('addRevenueModal').classList.add('hidden');
+    }
+
+    function saveRevenueEntry(e) {
+      e.preventDefault();
+      const entry = {
+        id: Date.now(),
+        member: document.getElementById('revMember').value,
+        title: document.getElementById('revTitle').value.trim(),
+        amount: parseFloat(document.getElementById('revAmount').value)
+      };
+      if (!window.finRevenues) window.finRevenues = [];
+      window.finRevenues.push(entry);
+      addNotification(`💰 Nouveau revenu ajouté (${entry.member} : ${entry.amount} €)`);
+      saveAllToStorage();
+      renderFinances();
+      closeAddRevenueModal();
+      e.target.reset();
+    }
+
+    function deleteRevenue(idx) {
+      if (confirm("Supprimer ce revenu ?")) {
+        window.finRevenues.splice(idx, 1);
+        saveAllToStorage();
+        renderFinances();
+      }
+    }
+
+    function openAddExpenseModal() {
+      document.getElementById('addExpenseModal').classList.remove('hidden');
+    }
+    function closeAddExpenseModal() {
+      document.getElementById('addExpenseModal').classList.add('hidden');
+    }
+
+    function saveExpenseEntry(e) {
+      e.preventDefault();
+      const entry = {
+        id: Date.now(),
+        category: document.getElementById('expCategory').value,
+        title: document.getElementById('expTitle').value.trim(),
+        amount: parseFloat(document.getElementById('expAmount').value),
+        payer: document.getElementById('expPayer').value
+      };
+      if (!window.finExpenses) window.finExpenses = [];
+      window.finExpenses.push(entry);
+      addNotification(`🧾 Nouvelle charge ajoutée (${entry.category} : ${entry.amount} €)`);
+      saveAllToStorage();
+      renderFinances();
+      closeAddExpenseModal();
+      e.target.reset();
+    }
+
+    function deleteExpense(idx) {
+      if (confirm("Supprimer cette charge / facture ?")) {
+        window.finExpenses.splice(idx, 1);
+        saveAllToStorage();
+        renderFinances();
+      }
+    }
+
+    function updateFinancesChart(catTotals) {
+      const ctx = document.getElementById('chartFinances');
+      if (!ctx) return;
+
+      const labels = Object.keys(catTotals);
+      const data = Object.values(catTotals);
+
+      if (chartFinancesInstance) chartFinancesInstance.destroy();
+
+      chartFinancesInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels.length > 0 ? labels : ['Aucune dépense'],
+          datasets: [{
+            data: data.length > 0 ? data : [1],
+            backgroundColor: ['#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#f43f5e', '#64748b']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+          }
+        }
+      });
     }
 
     // --- AUTHENTIFICATION ---
@@ -2005,291 +2086,230 @@
       if (!window.careEntries || window.careEntries.length === 0) return alert("Aucune donnée à exporter.");
       let csv = "Date,Heure,Temp_Bebe,Temp_Couveuse,Couche,Repas_ml,Observations,Auteur\n";
       window.careEntries.forEach(c => {
-        csv += `"${c.date}","${c.time}","${c.tempBaby || ''}","${c.tempIncubator || ''}","${c.diaper}","${c.feeding}","${c.notes || ''}","${c.author}"\n`;
+        csv += `"${c.date || ''}","${c.time || ''}","${c.tempBaby || ''}","${c.tempIncubator || ''}","${c.diaper || ''}","${c.feeding || 0}","${(c.notes || '').replace(/"/g, '""')}","${c.author || ''}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'fiches_de_soins.csv';
+      link.setAttribute('download', 'suivi_soins_bebe.csv');
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     }
 
     function exportCareExcel() {
       if (!window.careEntries || window.careEntries.length === 0) return alert("Aucune donnée à exporter.");
       const ws = XLSX.utils.json_to_sheet(window.careEntries);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Fiche Soins");
-      XLSX.writeFile(wb, "fiches_de_soins.xlsx");
+      XLSX.utils.book_append_sheet(wb, ws, "Soins Maternité");
+      XLSX.writeFile(wb, "suivi_soins_bebe.xlsx");
     }
 
     function exportCarePDF() {
-      const element = document.getElementById('careJournalContainer');
+      const element = document.getElementById('section-maternite');
       element.classList.add('pdf-compact');
-      html2pdf().from(element).save('fiche_soins_maternite.pdf').then(() => {
+      const opt = {
+        margin: 10,
+        filename: 'fiche_soins_maternite.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().from(element).set(opt).save().then(() => {
         element.classList.remove('pdf-compact');
       });
     }
 
-    // --- INITIALISATION DES GRAPHIQUES ---
-    function initCharts() {
-      const ctxTemp = document.getElementById('chartTemp')?.getContext('2d');
-      if (ctxTemp) {
-        chartTempInstance = new Chart(ctxTemp, {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [
-              { label: 'T° Bébé (°C)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.3 },
-              { label: 'T° Couveuse (°C)', data: [], borderColor: '#f59e0b', borderDash: [4, 4], fill: false, tension: 0.3 }
-            ]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
-      }
-
-      const ctxWeight = document.getElementById('chartWeight')?.getContext('2d');
-      if (ctxWeight) {
-        chartWeightInstance = new Chart(ctxWeight, {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [{ label: 'Poids (kg)', data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.2 }]
-          },
-          options: { responsive: true, maintainAspectRatio: false }
-        });
-      }
-
-      const ctxMeals = document.getElementById('chartMeals')?.getContext('2d');
-      if (ctxMeals) {
-        chartMealsInstance = new Chart(ctxMeals, {
-          type: 'bar',
-          data: {
-            labels: [],
-            datasets: [
-              { label: 'Biberons (nb)', data: [], backgroundColor: '#ec4899', borderRadius: 6, yAxisID: 'y' },
-              { label: 'Couches (nb)', data: [], backgroundColor: '#3b82f6', borderRadius: 6, yAxisID: 'y' }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: { beginAtZero: true, ticks: { precision: 0 } }
-            }
-          }
-        });
-      }
-    }
-
-    function updateTempChart() {
-      if (!chartTempInstance) return;
-      chartTempInstance.data.labels = window.tempHistory.map(p => p.time);
-      chartTempInstance.data.datasets[0].data = window.tempHistory.map(p => p.tempBaby);
-      chartTempInstance.data.datasets[1].data = window.tempHistory.map(p => p.tempIncubator);
-      chartTempInstance.update();
-    }
-
-    function renderTempList() {
-      const container = document.getElementById('tempPointsList');
-      if (!container) return;
-      container.innerHTML = '';
-      window.tempHistory.forEach((p, idx) => {
-        const div = document.createElement('div');
-        div.className = 'flex justify-between items-center bg-white/70 p-2 rounded-xl border border-slate-100';
-        div.innerHTML = `<span><strong>${p.time}</strong> : Bébé ${p.tempBaby}°C ${p.tempIncubator ? `(Couv. ${p.tempIncubator}°C)` : ''}</span>
-          <button onclick="deleteTempPoint(${idx})" class="text-red-500 hover:text-red-700 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>`;
-        container.appendChild(div);
-      });
-      if (window.tempHistory.length > 0) {
-        const last = window.tempHistory[window.tempHistory.length - 1];
-        const el = document.getElementById('statLastTemp');
-        if (el) el.innerText = `${last.tempBaby} °C`;
-      }
-    }
-
-    function addTempPoint(e) {
-      e.preventDefault();
-      const time = document.getElementById('tempPointTime').value;
-      const baby = parseFloat(document.getElementById('tempPointBaby').value);
-      const inc = parseFloat(document.getElementById('tempPointIncubator').value) || null;
-      window.tempHistory.push({ time, tempBaby: baby, tempIncubator: inc });
-      saveAllToStorage();
-      updateTempChart();
-      renderTempList();
-    }
-
-    function deleteTempPoint(idx) {
-      window.tempHistory.splice(idx, 1);
-      saveAllToStorage();
-      updateTempChart();
-      renderTempList();
-    }
-
-    function updateWeightChart() {
-      if (!chartWeightInstance) return;
-      chartWeightInstance.data.labels = window.weightHistory.map(p => p.date);
-      chartWeightInstance.data.datasets[0].data = window.weightHistory.map(p => p.weight);
-      chartWeightInstance.update();
-    }
-
-    function renderWeightList() {
-      const container = document.getElementById('weightPointsList');
-      if (!container) return;
-      container.innerHTML = '';
-      window.weightHistory.forEach((p, idx) => {
-        const div = document.createElement('div');
-        div.className = 'flex justify-between items-center bg-white/70 p-2 rounded-xl border border-slate-100';
-        div.innerHTML = `<span><strong>${p.date}</strong> : ${p.weight} kg</span>
-          <button onclick="deleteWeightPoint(${idx})" class="text-red-500 hover:text-red-700 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>`;
-        container.appendChild(div);
-      });
-      if (window.weightHistory.length > 0) {
-        const last = window.weightHistory[window.weightHistory.length - 1];
-        const el = document.getElementById('statCurrentWeight');
-        if (el) el.innerText = `${last.weight} kg`;
-      }
-    }
-
-    function addWeightPoint(e) {
-      e.preventDefault();
-      const date = document.getElementById('weightPointDate').value;
-      const weight = parseFloat(document.getElementById('weightPointVal').value);
-      window.weightHistory.push({ date, weight });
-      window.weightHistory.sort((a,b) => new Date(a.date) - new Date(b.date));
-      saveAllToStorage();
-      updateWeightChart();
-      renderWeightList();
-    }
-
-    function deleteWeightPoint(idx) {
-      window.weightHistory.splice(idx, 1);
-      saveAllToStorage();
-      updateWeightChart();
-      renderWeightList();
-    }
-
-    function updateMealsChart() {
-      if (!chartMealsInstance) return;
-
-      const mode = document.getElementById('mealsChartMode')?.value || 'day';
-      let labels = [];
-      let mealsData = [];
-      let diapersData = [];
-
-      const now = new Date();
-
-      if (mode === 'day') {
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date(now);
-          d.setDate(now.getDate() - i);
-          const iso = d.toISOString().split('T')[0];
-          labels.push(d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }));
-
-          let meals = 0, diapers = 0;
-          window.careEntries.forEach(c => {
-            if ((c.date || iso) === iso) {
-              if (c.feeding > 0) meals++;
-              if (c.diaper && c.diaper !== 'Propre / Rien') diapers++;
-            }
-          });
-          mealsData.push(meals);
-          diapersData.push(diapers);
-        }
-      }
-
-      chartMealsInstance.data.labels = labels;
-      chartMealsInstance.data.datasets[0].data = mealsData;
-      chartMealsInstance.data.datasets[1].data = diapersData;
-      chartMealsInstance.update();
-    }
-
+    // --- SUIVI QUOTIDIEN DIRECT ---
     function renderDailyTracker() {
-      const today = new Date().toISOString().split('T')[0];
-      const todayEntries = (window.careEntries || []).filter(c => c.date === today);
+      const todayStr = new Date().toISOString().split('T')[0];
+      const dateEl = document.getElementById('currentTrackingDate');
+      if (dateEl) dateEl.innerText = `Date du jour : ${new Date().toLocaleDateString('fr-FR')}`;
 
-      let totalMeals = 0;
-      let totalVol = 0;
-      let totalDiapers = 0;
+      const todayEntries = (window.careEntries || []).filter(c => c.date === todayStr);
+      let totalMealsToday = 0;
+      let totalVolToday = 0;
+      let totalDiapersToday = 0;
 
       const historyContainer = document.getElementById('quickEntriesHistory');
       if (historyContainer) historyContainer.innerHTML = '';
 
       todayEntries.forEach(c => {
         if (c.feeding > 0) {
-          totalMeals++;
-          totalVol += c.feeding;
+          totalMealsToday++;
+          totalVolToday += c.feeding;
         }
         if (c.diaper && c.diaper !== 'Propre / Rien') {
-          totalDiapers++;
+          totalDiapersToday++;
         }
 
         if (historyContainer) {
-          const div = document.createElement('div');
-          div.className = 'flex justify-between items-center bg-white/70 p-2 rounded-xl border border-slate-100';
-          div.innerHTML = `<span><strong>${c.time}</strong> : ${c.feeding > 0 ? `Biberon ${c.feeding}ml` : ''} ${c.diaper && c.diaper !== 'Propre / Rien' ? `Couche (${c.diaper})` : ''} ${c.notes ? `- ${c.notes}` : ''}</span><span class="text-[10px] text-slate-400 font-bold">${c.author}</span>`;
-          historyContainer.appendChild(div);
+          const row = document.createElement('div');
+          row.className = 'flex justify-between items-center p-2 rounded-xl bg-white/60 border border-slate-100';
+          row.innerHTML = `
+            <span><strong class="text-slate-800">${c.time}</strong> : ${c.feeding > 0 ? `Biberon ${c.feeding}ml` : ''} ${c.diaper && c.diaper !== 'Propre / Rien' ? `Couche (${c.diaper})` : ''} ${c.notes ? `- ${c.notes}` : ''}</span>
+            <span class="text-[10px] text-slate-400 font-bold">${c.author || 'Parent'}</span>
+          `;
+          historyContainer.appendChild(row);
         }
       });
 
-      document.getElementById('quickMealCount').innerText = totalMeals;
-      document.getElementById('quickMealVolume').innerText = totalVol;
-      document.getElementById('quickDiaperCount').innerText = totalDiapers;
-      document.getElementById('currentTrackingDate').innerText = `Date du jour : ${new Date().toLocaleDateString('fr-FR')}`;
+      document.getElementById('quickMealCount').innerText = totalMealsToday;
+      document.getElementById('quickMealVolume').innerText = totalVolToday;
+      document.getElementById('quickDiaperCount').innerText = totalDiapersToday;
+
+      // Stats globales bas et température / poids
+      document.getElementById('statMealsToday').innerText = totalMealsToday;
+      document.getElementById('statMealsVolToday').innerText = `${totalVolToday} ml`;
+      document.getElementById('statDiapersToday').innerText = totalDiapersToday;
+
+      if (window.tempHistory && window.tempHistory.length > 0) {
+        const lastT = window.tempHistory[window.tempHistory.length - 1];
+        document.getElementById('statLastTemp').innerText = `${lastT.tempBaby} °C`;
+        const tempStatus = document.getElementById('statTempStatus');
+        const cardTemp = document.getElementById('cardTempStatus');
+        if (lastT.tempBaby > 38.0) {
+          tempStatus.innerText = "⚠️ Fièvre détectée !";
+          tempStatus.className = "text-xs font-bold mt-1 text-red-600";
+          cardTemp.className = "glassmorphism p-4 rounded-2xl border border-red-300 bg-red-50/50 transition duration-300";
+        } else if (lastT.tempBaby < 36.0) {
+          tempStatus.innerText = "⚠️ Hypothermie !";
+          tempStatus.className = "text-xs font-bold mt-1 text-blue-600";
+          cardTemp.className = "glassmorphism p-4 rounded-2xl border border-blue-300 bg-blue-50/50 transition duration-300";
+        } else {
+          tempStatus.innerText = "Statut : Normal";
+          tempStatus.className = "text-xs font-bold mt-1 text-emerald-600";
+          cardTemp.className = "glassmorphism p-4 rounded-2xl border border-slate-200 transition duration-300";
+        }
+      }
+
+      if (window.weightHistory && window.weightHistory.length > 0) {
+        const lastW = window.weightHistory[window.weightHistory.length - 1];
+        document.getElementById('statCurrentWeight').innerText = `${lastW.weight} kg`;
+        if (window.weightHistory.length > 1) {
+          const prevW = window.weightHistory[window.weightHistory.length - 2];
+          const diff = (lastW.weight - prevW.weight).toFixed(2);
+          document.getElementById('statWeightDiff').innerText = `${diff >= 0 ? '+' : ''}${diff} kg par rapport à la mesure préc.`;
+        }
+      }
+
+      renderDailyStatsGrid();
     }
 
     function quickAddMeal() {
-      const today = new Date().toISOString().split('T')[0];
-      const nowTime = new Date().toTimeString().substring(0, 5);
+      const vol = prompt("Volume du biberon (en ml) :", "60");
+      if (vol === null) return;
+      const ml = parseInt(vol) || 60;
+      const now = new Date();
       const entry = {
-        date: today,
-        time: nowTime,
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().substring(0, 5),
         tempBaby: null,
         tempIncubator: null,
-        diaper: 'Propre / Rien',
-        feeding: 90,
-        notes: 'Biberon rapide (suivi direct)',
-        author: currentUser || 'Parent'
+        diaper: "Propre / Rien",
+        feeding: ml,
+        notes: "Ajout rapide Biberon",
+        author: currentUser || "Parent"
       };
       window.careEntries.push(entry);
+      addNotification(`🍼 Biberon rapide enregistré : ${ml} ml`);
       saveAllToStorage();
       renderCareEntries();
       renderDailyTracker();
       updateMealsChart();
       updateParentWelcomeSummary();
-      addNotification(`🍼 Biberon rapide de 90 ml enregistré par ${entry.author}`);
     }
 
     function quickAddDiaper() {
-      const today = new Date().toISOString().split('T')[0];
-      const nowTime = new Date().toTimeString().substring(0, 5);
+      const typeDiaper = prompt("Type de couche (Urine, Selles, Urine + Selles) :", "Urine");
+      if (typeDiaper === null) return;
+      const now = new Date();
       const entry = {
-        date: today,
-        time: nowTime,
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().substring(0, 5),
         tempBaby: null,
         tempIncubator: null,
-        diaper: 'Urine + Selles',
+        diaper: typeDiaper,
         feeding: 0,
-        notes: 'Changement de couche rapide',
-        author: currentUser || 'Parent'
+        notes: "Changement de couche rapide",
+        author: currentUser || "Parent"
       };
       window.careEntries.push(entry);
+      addNotification(`👶 Couche changée (${typeDiaper})`);
       saveAllToStorage();
       renderCareEntries();
       renderDailyTracker();
-      updateMealsChart();
       updateParentWelcomeSummary();
-      addNotification(`👶 Couche changée enregistrée par ${entry.author}`);
     }
 
     function resetDailyTracker() {
-      if (confirm("Voulez-vous réinitialiser les entrées de la journée en cours ?")) {
-        const today = new Date().toISOString().split('T')[0];
-        window.careEntries = window.careEntries.filter(c => c.date !== today);
+      if (confirm("Archiver et réinitialiser les compteurs de la journée en cours ?")) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todayEntries = (window.careEntries || []).filter(c => c.date === todayStr);
+        let countM = 0, volM = 0, countD = 0;
+        todayEntries.forEach(c => {
+          if (c.feeding > 0) { countM++; volM += c.feeding; }
+          if (c.diaper && c.diaper !== 'Propre / Rien') { countD++; }
+        });
+
+        if (!window.dailyArchive) window.dailyArchive = {};
+        window.dailyArchive[todayStr] = { meals: countM, volume: volM, diapers: countD };
+
+        // Supprime les entrées du jour
+        window.careEntries = window.careEntries.filter(c => c.date !== todayStr);
         saveAllToStorage();
         renderCareEntries();
         renderDailyTracker();
         updateMealsChart();
-        updateParentWelcomeSummary();
+        addNotification(`🔄 La journée du ${todayStr} a été réinitialisée.`);
+      }
+    }
+
+    function resetStatsPeriod() {
+      if (confirm("Réinitialiser l'historique des archives de la semaine ?")) {
+        window.dailyArchive = {};
+        saveAllToStorage();
+        renderDailyTracker();
+        updateMealsChart();
+        alert("Période réinitialisée avec succès.");
+      }
+    }
+
+    function renderDailyStatsGrid() {
+      const grid = document.getElementById('dailyStatsGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const now = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        const dStr = d.toISOString().split('T')[0];
+        const label = d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+
+        // Calcule depuis les archives ou les careEntries
+        let mCount = 0, mVol = 0, dCount = 0;
+        if (window.dailyArchive && window.dailyArchive[dStr]) {
+          mCount = window.dailyArchive[dStr].meals || 0;
+          mVol = window.dailyArchive[dStr].volume || 0;
+          dCount = window.dailyArchive[dStr].diapers || 0;
+        }
+
+        (window.careEntries || []).filter(c => c.date === dStr).forEach(c => {
+          if (c.feeding > 0) { mCount++; mVol += c.feeding; }
+          if (c.diaper && c.diaper !== 'Propre / Rien') { dCount++; }
+        });
+
+        const card = document.createElement('div');
+        card.className = `p-3 rounded-2xl border ${dStr === todayIsoStr ? 'bg-pink-50/80 border-pink-300 shadow-sm' : 'bg-white/60 border-slate-200'}`;
+        card.innerHTML = `
+          <p class="text-[11px] font-bold text-slate-500 mb-1">${label}</p>
+          <div class="space-y-0.5 text-xs">
+            <p class="text-slate-700">🍼 <strong>${mCount}</strong> (${mVol}ml)</p>
+            <p class="text-slate-700">👶 <strong>${dCount}</strong> couches</p>
+          </div>
+        `;
+        grid.appendChild(card);
       }
     }
 
@@ -2298,31 +2318,32 @@
       const timerEl = document.getElementById('nextFeedingTimer');
       if (!timerEl) return;
 
-      if (feedingEntries.length > 0) {
-        const last = feedingEntries[feedingEntries.length - 1];
-        timerEl.innerText = `Dernier repas : ${last.feeding} ml à ${last.time} (${last.date || 'Aujourd\'hui'})`;
-      } else {
-        timerEl.innerText = `Dernier repas enregistré : --:--`;
+      if (feedingEntries.length === 0) {
+        timerEl.innerText = "Dernier repas enregistré : Aucun";
+        return;
       }
+
+      const last = feedingEntries[feedingEntries.length - 1];
+      timerEl.innerText = `Dernier repas : ${last.feeding} ml à ${last.time} (${last.date || 'Aujourd\'hui'})`;
     }
 
-    // Chronomètre
+    // --- CHRONOMÈTRE ---
     function toggleTimer() {
       const btn = document.getElementById('btnStartTimer');
       if (!timerInterval) {
+        btn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
+        btn.className = "px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition";
         timerInterval = setInterval(() => {
           timerSeconds++;
-          const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-          const secs = String(timerSeconds % 60).padStart(2, '0');
-          document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
+          const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+          const s = String(timerSeconds % 60).padStart(2, '0');
+          document.getElementById('timerDisplay').innerText = `${m}:${s}`;
         }, 1000);
-        btn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
-        btn.className = 'px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition';
       } else {
         clearInterval(timerInterval);
         timerInterval = null;
         btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
-        btn.className = 'px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition';
+        btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition";
       }
     }
 
@@ -2332,113 +2353,316 @@
       document.getElementById('timerDisplay').innerText = "00:00";
       const btn = document.getElementById('btnStartTimer');
       btn.innerHTML = `<i class="fa-solid fa-play"></i> Démarrer`;
-      btn.className = 'px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition';
+      btn.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow transition";
     }
 
     function saveTimerToCare() {
+      if (timerSeconds === 0) return alert("Le chronomètre est à 00:00.");
       const type = document.getElementById('timerType').value;
       const mins = Math.floor(timerSeconds / 60);
       const secs = timerSeconds % 60;
-      const timeStr = `${mins}m ${secs}s`;
+      const durationStr = `${mins} min ${secs} sec`;
 
-      const today = new Date().toISOString().split('T')[0];
-      const nowTime = new Date().toTimeString().substring(0, 5);
-
+      const now = new Date();
       const entry = {
-        date: today,
-        time: nowTime,
+        date: now.toISOString().split('T')[0],
+        time: now.toTimeString().substring(0, 5),
         tempBaby: null,
         tempIncubator: null,
-        diaper: 'Propre / Rien',
-        feeding: type.includes('Repas') ? 90 : 0,
-        notes: `Chronomètre [${type}] : durée ${timeStr}`,
-        author: currentUser || 'Parent'
+        diaper: "Propre / Rien",
+        feeding: type.includes('Repas') ? Math.max(30, mins * 15) : 0,
+        notes: `Chrono [${type}] : Durée ${durationStr}`,
+        author: currentUser || "Parent"
       };
 
       window.careEntries.push(entry);
+      addNotification(`⏱️ Chrono enregistré (${type} : ${durationStr})`);
       saveAllToStorage();
       renderCareEntries();
       renderDailyTracker();
-      updateMealsChart();
       updateParentWelcomeSummary();
-      addNotification(`⏱️ Chrono enregistré (${type} : ${timeStr}) par ${entry.author}`);
       resetTimer();
+      alert(`Chrono de ${durationStr} enregistré avec succès dans les soins !`);
     }
 
+    // --- GRAPHIQUES ET COURBES INTERACTIVES ---
+    function updateMealsChart() {
+      const ctx = document.getElementById('chartMeals');
+      if (!ctx) return;
+
+      const labels = [];
+      const mealsData = [];
+      const diapersData = [];
+
+      const now = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        const dStr = d.toISOString().split('T')[0];
+        labels.push(d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }));
+
+        let mCount = 0, dCount = 0;
+        if (window.dailyArchive && window.dailyArchive[dStr]) {
+          mCount += window.dailyArchive[dStr].meals || 0;
+          dCount += window.dailyArchive[dStr].diapers || 0;
+        }
+        (window.careEntries || []).filter(c => c.date === dStr).forEach(c => {
+          if (c.feeding > 0) mCount++;
+          if (c.diaper && c.diaper !== 'Propre / Rien') dCount++;
+        });
+
+        mealsData.push(mCount);
+        diapersData.push(dCount);
+      }
+
+      if (chartMealsInstance) chartMealsInstance.destroy();
+
+      chartMealsInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Biberons / Repas', data: mealsData, backgroundColor: '#ec4899', borderRadius: 6 },
+            { label: 'Couches', data: diapersData, backgroundColor: '#3b82f6', borderRadius: 6 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+          plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } }
+        }
+      });
+
+      const avgM = (mealsData.reduce((a,b) => a+b, 0) / 7).toFixed(1);
+      const avgD = (diapersData.reduce((a,b) => a+b, 0) / 7).toFixed(1);
+      document.getElementById('avgMealsPeriod').innerText = `${avgM} / jour`;
+      document.getElementById('avgDiapersPeriod').innerText = `${avgD} / jour`;
+    }
+
+    function updateTempChart() {
+      const ctx = document.getElementById('chartTemp');
+      if (!ctx) return;
+
+      const labels = (window.tempHistory || []).map(t => t.time);
+      const dataBaby = (window.tempHistory || []).map(t => t.tempBaby);
+      const dataInc = (window.tempHistory || []).map(t => t.tempIncubator || null);
+
+      if (chartTempInstance) chartTempInstance.destroy();
+
+      chartTempInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'T° Bébé (°C)', data: dataBaby, borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.3, borderWidth: 2 },
+            { label: 'T° Couveuse (°C)', data: dataInc, borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.3, borderWidth: 2, borderDash: [4, 4] }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { min: 34, max: 41 } },
+          plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } }
+        }
+      });
+    }
+
+    function renderTempList() {
+      const list = document.getElementById('tempPointsList');
+      if (!list) return;
+      list.innerHTML = '';
+      (window.tempHistory || []).forEach((t, idx) => {
+        const item = document.createElement('div');
+        item.className = 'flex justify-between items-center p-2 rounded-xl bg-white/70 border border-slate-100';
+        item.innerHTML = `
+          <span><strong>${t.time}</strong> - Bébé : <strong class="text-red-500">${t.tempBaby}°C</strong> ${t.tempIncubator ? `(Couv: ${t.tempIncubator}°C)` : ''}</span>
+          <button onclick="deleteTempPoint(${idx})" class="text-red-500 hover:text-red-700 font-bold px-1.5"><i class="fa-solid fa-trash text-xs"></i></button>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function addTempPoint(e) {
+      e.preventDefault();
+      const time = document.getElementById('tempPointTime').value.trim();
+      const tempBaby = parseFloat(document.getElementById('tempPointBaby').value);
+      const tempIncubator = parseFloat(document.getElementById('tempPointIncubator').value) || null;
+
+      if (!window.tempHistory) window.tempHistory = [];
+      window.tempHistory.push({ time, tempBaby, tempIncubator });
+      addNotification(`🌡️ Température ajoutée : ${tempBaby}°C à ${time}`);
+      saveAllToStorage();
+      updateTempChart();
+      renderTempList();
+      renderDailyTracker();
+      e.target.reset();
+      document.getElementById('tempPointTime').value = new Date().toTimeString().substring(0, 5);
+    }
+
+    function deleteTempPoint(idx) {
+      window.tempHistory.splice(idx, 1);
+      saveAllToStorage();
+      updateTempChart();
+      renderTempList();
+      renderDailyTracker();
+    }
+
+    function updateWeightChart() {
+      const ctx = document.getElementById('chartWeight');
+      if (!ctx) return;
+
+      const labels = (window.weightHistory || []).map(w => w.date);
+      const dataW = (window.weightHistory || []).map(w => w.weight);
+
+      if (chartWeightInstance) chartWeightInstance.destroy();
+
+      chartWeightInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{ label: 'Poids Bébé (kg)', data: dataW, borderColor: '#3b82f6', backgroundColor: '#3b82f6', tension: 0.3, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 2 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function renderWeightList() {
+      const list = document.getElementById('weightPointsList');
+      if (!list) return;
+      list.innerHTML = '';
+      (window.weightHistory || []).forEach((w, idx) => {
+        const item = document.createElement('div');
+        item.className = 'flex justify-between items-center p-2 rounded-xl bg-white/70 border border-slate-100';
+        item.innerHTML = `
+          <span><strong>${w.date}</strong> : <strong class="text-blue-600">${w.weight} kg</strong></span>
+          <button onclick="deleteWeightPoint(${idx})" class="text-red-500 hover:text-red-700 font-bold px-1.5"><i class="fa-solid fa-trash text-xs"></i></button>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function addWeightPoint(e) {
+      e.preventDefault();
+      const date = document.getElementById('weightPointDate').value;
+      const weight = parseFloat(document.getElementById('weightPointVal').value);
+
+      if (!window.weightHistory) window.weightHistory = [];
+      window.weightHistory.push({ date, weight });
+      addNotification(`⚖️ Pesée ajoutée : ${weight} kg le ${date}`);
+      saveAllToStorage();
+      updateWeightChart();
+      renderWeightList();
+      renderDailyTracker();
+      e.target.reset();
+      document.getElementById('weightPointDate').value = new Date().toISOString().split('T')[0];
+    }
+
+    function deleteWeightPoint(idx) {
+      window.weightHistory.splice(idx, 1);
+      saveAllToStorage();
+      updateWeightChart();
+      renderWeightList();
+      renderDailyTracker();
+    }
+
+    // --- MODIFICATION DES OBJECTIFS & ABONNEMENTS ---
     function openEditStatsModal() {
-      document.getElementById('goalMealsDayInput').value = window.statsGoals.mealsDay;
-      document.getElementById('goalDiapersDayInput').value = window.statsGoals.diapersDay;
+      document.getElementById('goalMealsDayInput').value = window.statsGoals.mealsDay || 8;
+      document.getElementById('goalDiapersDayInput').value = window.statsGoals.diapersDay || 6;
       document.getElementById('editStatsModal').classList.remove('hidden');
     }
-
     function closeEditStatsModal() {
       document.getElementById('editStatsModal').classList.add('hidden');
     }
 
     function saveStatsGoals(e) {
       e.preventDefault();
-      window.statsGoals.mealsDay = parseInt(document.getElementById('goalMealsDayInput').value) || 8;
-      window.statsGoals.diapersDay = parseInt(document.getElementById('goalDiapersDayInput').value) || 6;
+      window.statsGoals.mealsDay = parseInt(document.getElementById('goalMealsDayInput').value);
+      window.statsGoals.diapersDay = parseInt(document.getElementById('goalDiapersDayInput').value);
       saveAllToStorage();
       updateGoalsBadges();
       closeEditStatsModal();
+      addNotification(`⚙️ Objectifs quotidiens mis à jour.`);
     }
 
     function updateGoalsBadges() {
-      const bMeals = document.getElementById('badgeMealsGoal');
-      const bDiapers = document.getElementById('badgeDiapersGoal');
-      if (bMeals) bMeals.innerText = `Obj: ${window.statsGoals.mealsDay}/j`;
-      if (bDiapers) bDiapers.innerText = `Obj: ${window.statsGoals.diapersDay}/j`;
+      const mBadge = document.getElementById('badgeMealsGoal');
+      const dBadge = document.getElementById('badgeDiapersGoal');
+      if (mBadge) mBadge.innerText = `Obj: ${window.statsGoals.mealsDay || 8}/j`;
+      if (dBadge) dBadge.innerText = `Obj: ${window.statsGoals.diapersDay || 6}/j`;
     }
 
     function openSubscribeModal() {
       document.getElementById('subscribeModal').classList.remove('hidden');
     }
-
     function closeSubscribeModal() {
       document.getElementById('subscribeModal').classList.add('hidden');
     }
-
-    function selectPlan(planName) {
-      alert(`Merci pour votre souscription au plan ${planName} ! Les fonctions Premium sont maintenant activées.`);
+    function selectPlan(plan) {
+      alert(`Merci pour votre choix ! Redirection vers la plateforme de paiement sécurisée pour la formule : ${plan}.`);
       closeSubscribeModal();
-      addNotification(`✨ Abonnement ${planName} activé avec succès !`);
+      addNotification(`👑 Tentative d'abonnement au plan ${plan}.`);
     }
 
     function traiterFichier(e) {
       const file = e.target.files[0];
       if (!file) return;
-      addNotification(`📁 Document importé avec succès : ${file.name}`);
-      alert(`Document "${file.name}" importé et analysé avec succès !`);
-    }
-
-    function resetStatsPeriod() {
-      alert("Période initialisée.");
+      alert(`Fichier "${file.name}" importé et analysé avec succès par l'assistant intelligent.`);
+      addNotification(`📁 Fichier importé : ${file.name}`);
     }
 
     function saveOfficialResults(e) {
       e.preventDefault();
-      const name = document.getElementById('officialName').value;
+      const name = document.getElementById('officialName').value.trim();
       const gender = document.getElementById('officialGender').value;
       const weight = parseFloat(document.getElementById('officialWeight').value);
       const height = parseFloat(document.getElementById('officialHeight').value);
 
-      window.officialResult = { name, gender, weight, height, date: new Date().toLocaleDateString('fr-FR') };
+      // Calcul du gagnant
+      let closestUser = "Personne";
+      let minDiff = 999999;
+
+      (window.predictions || []).forEach(p => {
+        let diff = Math.abs(p.weight - weight) * 2 + Math.abs(p.height - height) * 0.5;
+        if (p.gender === gender) diff -= 1; // Bonus bon sexe
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestUser = p.user;
+        }
+      });
+
+      window.officialResult = { name, gender, weight, height, winner: closestUser, date: new Date().toLocaleDateString('fr-FR') };
       saveAllToStorage();
       displayOfficialBanner();
-      addNotification(`🎉 Naissance officielle de ${name} enregistrée !`);
+      addNotification(`🎉 Naissance officielle publiée ! Bébé s'appelle ${name}. Gagnant : ${closestUser}`);
+      alert(`Résultats enregistrés ! Le grand gagnant du pronostic est : ${closestUser}`);
     }
 
     function displayOfficialBanner() {
       if (!window.officialResult) return;
       const res = window.officialResult;
-      document.getElementById('resBabyName').innerText = `Bébé ${res.name} est arrivé(e) !`;
-      document.getElementById('resBabyDetails').innerText = `Né(e) le ${res.date} | ${res.weight} kg | ${res.height} cm | Sexe : ${res.gender}`;
+      document.getElementById('resBabyName').innerText = `Bébé ${res.name} est né(e) !`;
+      document.getElementById('resBabyDetails').innerText = `Sexe : ${res.gender} | Poids : ${res.weight} kg | Taille : ${res.height} cm (Le ${res.date})`;
+      document.getElementById('resWinnerName').innerText = res.winner;
       document.getElementById('resultBanner').classList.remove('hidden');
     }
 
+    // Initialisation au chargement de la page
     window.onload = function() {
-      initCharts();
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('predDate').value = todayStr;
+      document.getElementById('careDate').value = todayStr;
+      document.getElementById('careTime').value = new Date().toTimeString().substring(0, 5);
+      document.getElementById('agendaStartDate').value = todayStr;
+      document.getElementById('agendaEndDate').value = todayStr;
+      document.getElementById('weightPointDate').value = todayStr;
+      document.getElementById('tempPointTime').value = new Date().toTimeString().substring(0, 5);
+
       renderPredictions();
       renderCareEntries();
       renderDailyTracker();
@@ -2446,12 +2670,11 @@
       renderTempList();
       updateWeightChart();
       renderWeightList();
-      updateMealsChart();
       renderAgendaEntries();
       renderFinances();
       updateGoalsBadges();
       renderNotifications();
-      if (window.officialResult) displayOfficialBanner();
+      displayOfficialBanner();
     };
   </script>
 </body>
