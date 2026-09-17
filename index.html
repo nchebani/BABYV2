@@ -71,6 +71,14 @@
       border: none !important;
       cursor: pointer;
     }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+      100% { transform: scale(0.95); opacity: 1; }
+    }
+    .notify-pulse {
+      animation: pulse-ring 2s infinite ease-in-out;
+    }
   </style>
 </head>
 <body class="bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 min-h-screen text-slate-800 font-sans pb-12">
@@ -87,7 +95,7 @@
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 text-left">
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Votre Prénom / Pseudo</label>
-          <input type="text" id="usernameInput" required placeholder="ex: Julie, Oncle Marc..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-400 bg-white/80">
+          <input type="text" id="usernameInput" required placeholder="ex: Papa, Maman, Julie..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-400 bg-white/80">
         </div>
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Code d'accès</label>
@@ -127,6 +135,25 @@
       </nav>
 
       <div class="flex items-center gap-3 text-sm">
+        <!-- BOUTON DE NOTIFICATION AVEC BADGE -->
+        <div class="relative">
+          <button onclick="toggleNotificationPanel()" class="p-2.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl shadow-sm border border-slate-200 relative transition">
+            <i class="fa-solid fa-bell text-base"></i>
+            <span id="notifBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">0</span>
+          </button>
+          
+          <!-- PANNEAU DE NOTIFICATIONS DROPDOWN -->
+          <div id="notifPanel" class="hidden absolute right-0 mt-3 w-80 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200 p-4 z-50 text-xs">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
+              <span class="font-extrabold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-bell text-pink-500"></i> Notifications récentes</span>
+              <button onclick="clearNotifications()" class="text-[10px] text-pink-600 font-bold hover:underline">Effacer</button>
+            </div>
+            <div id="notifList" class="space-y-2 max-h-60 overflow-y-auto">
+              <p class="text-slate-400 italic text-center py-2">Aucune nouvelle notification</p>
+            </div>
+          </div>
+        </div>
+
         <button onclick="openSubscribeModal()" class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition flex items-center gap-2 text-xs">
           <i class="fa-solid fa-crown text-amber-200"></i>
           <span>S'abonner</span>
@@ -144,6 +171,28 @@
 
   <!-- CONTENU PRINCIPAL -->
   <main class="max-w-6xl mx-auto px-4 mt-6">
+
+    <!-- BANNIÈRE DE BIENVENUE NOTIFICATION DE CONNEXION PARENT -->
+    <div id="parentWelcomeBanner" class="hidden mb-6 glassmorphism p-5 rounded-3xl border-2 border-pink-300 bg-gradient-to-r from-pink-100/90 via-purple-100/90 to-indigo-100/90 shadow-lg transition">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-start gap-3.5">
+          <div class="p-3 bg-pink-500 text-white rounded-2xl text-xl shadow-md mt-0.5">
+            <i class="fa-solid fa-heart-pulse"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-extrabold text-slate-800 text-base flex items-center gap-2">
+              <span>Bonjour <span id="welcomeParentName" class="text-pink-600">Parent</span> !</span> 
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-pink-200 text-pink-800">Résumé Bébé</span>
+            </h3>
+            <p class="text-xs text-slate-700" id="welcomeFeedingInfo"><i class="fa-solid fa-bottle-droplet text-pink-500 mr-1"></i> Chargement des repas...</p>
+            <p class="text-xs text-slate-700" id="welcomeAppointmentInfo"><i class="fa-solid fa-calendar-day text-indigo-500 mr-1"></i> Chargement des rendez-vous de la semaine...</p>
+          </div>
+        </div>
+        <button onclick="document.getElementById('parentWelcomeBanner').classList.add('hidden')" class="px-3 py-1.5 bg-white/80 hover:bg-white text-slate-600 text-xs font-bold rounded-xl border border-slate-200 self-end md:self-center transition">
+          Fermer
+        </button>
+      </div>
+    </div>
 
     <!-- BANNIÈRE PROMOTIONNELLE -->
     <div class="glassmorphism p-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-amber-500 text-white mb-6 shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
@@ -720,13 +769,15 @@
 
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Intitulé de l'activité / RDV</label>
-              <input type="text" id="agendaTitle" required placeholder="ex: RDV Dentiste, Séance Fitness, Poste du matin..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
+              <input type="text" id="agendaTitle" required placeholder="ex: RDV Médical, Repas de famille, Dentiste..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Catégorie</label>
               <select id="agendaCategory" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-300 outline-none">
-                <option value="RDV / Consultation"> RDV / Consultation Médicale ou Pro</option>
+                <option value="RDV Médical / Consultation"> RDV Médical / Consultation</option>
+                <option value="Repas de famille"> Repas de famille / Sortie</option>
+                <option value="RDV / Consultation"> RDV Pro / Consultation</option>
                 <option value="Activité Sportive"> Activité Sportive / Loisir</option>
                 <option value="Travail (Matin)"> Travail - Matin</option>
                 <option value="Travail (Midi)"> Travail - Midi</option>
@@ -795,6 +846,8 @@
                 <label class="text-xs font-bold text-slate-500 uppercase">Filtrer :</label>
                 <select id="agendaFilterCat" onchange="renderAgendaEntries()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold bg-white outline-none">
                   <option value="TOUS">Toutes les catégories</option>
+                  <option value="RDV Médical / Consultation"> RDV Médical / Consultation</option>
+                  <option value="Repas de famille"> Repas de famille</option>
                   <option value="RDV / Consultation"> RDV / Consultation</option>
                   <option value="Activité Sportive"> Sport / Loisir</option>
                   <option value="Travail (Matin)"> Travail - Matin</option>
@@ -966,7 +1019,8 @@
       { key: 'tempHistory', render: () => { updateTempChart(); renderTempList(); } },
       { key: 'weightHistory', render: () => { updateWeightChart(); renderWeightList(); } },
       { key: 'agendaEntries', render: () => renderAgendaEntries() },
-      { key: 'statsGoals', render: () => updateGoalsBadges() }
+      { key: 'statsGoals', render: () => updateGoalsBadges() },
+      { key: 'notifications', render: () => renderNotifications() }
     ];
 
     nodes.forEach(node => {
@@ -998,6 +1052,8 @@
       diapersDay: 6
     };
 
+    window.notifications = JSON.parse(localStorage.getItem('bp_notifications')) || [];
+
     window.predictions = JSON.parse(localStorage.getItem('bp_predictions')) || [
       { user: "Mamie Chantal", name: "Alice", hobby: "Jardinage & Chant", gender: "Fille", weight: 3.200, height: 49.5, date: "2026-08-15" },
       { user: "Oncle Lucas", name: "Hugo", hobby: "Football", gender: "Garçon", weight: 3.600, height: 51.0, date: "2026-08-18" }
@@ -1026,7 +1082,7 @@
     window.agendaEntries = JSON.parse(localStorage.getItem('bp_agendaEntries')) || [
       { title: "Planning Travail (Matin)", category: "Travail (Matin)", startDate: "2026-08-20", startTime: "06:00", endDate: "2026-08-20", endTime: "14:00", assignee: "Papa", notes: "Shift du matin", author: "Papa" },
       { title: "Séance Natation / Sport", category: "Activité Sportive", startDate: "2026-08-21", startTime: "18:00", endDate: "2026-08-21", endTime: "19:30", assignee: "Maman", notes: "Reprise du sport", author: "Maman" },
-      { title: "RDV Pédiatre 1er mois", category: "RDV / Consultation", startDate: "2026-08-22", startTime: "10:00", endDate: "2026-08-22", endTime: "11:00", assignee: "Les deux", notes: "Apporter le carnet de santé", author: "Maman" }
+      { title: "RDV Pédiatre 1er mois", category: "RDV Médical / Consultation", startDate: todayIsoStr, startTime: "10:00", endDate: todayIsoStr, endTime: "11:00", assignee: "Les deux", notes: "Apporter le carnet de santé", author: "Maman" }
     ];
 
     let chartTempInstance = null;
@@ -1045,6 +1101,7 @@
       localStorage.setItem('bp_agendaEntries', JSON.stringify(window.agendaEntries));
       localStorage.setItem('bp_statsGoals', JSON.stringify(window.statsGoals));
       localStorage.setItem('bp_dailyArchive', JSON.stringify(window.dailyArchive));
+      localStorage.setItem('bp_notifications', JSON.stringify(window.notifications));
 
       if (typeof window.saveToFirebase === 'function') {
         window.saveToFirebase('predictions', window.predictions);
@@ -1055,7 +1112,123 @@
         window.saveToFirebase('agendaEntries', window.agendaEntries);
         window.saveToFirebase('statsGoals', window.statsGoals);
         window.saveToFirebase('dailyArchive', window.dailyArchive);
+        window.saveToFirebase('notifications', window.notifications);
       }
+    }
+
+    // --- SYSTÈME DE NOTIFICATIONS ---
+    function addNotification(text, type = 'info') {
+      if (!window.notifications) window.notifications = [];
+      const notif = {
+        id: Date.now(),
+        text: text,
+        time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        date: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
+        type: type
+      };
+      window.notifications.unshift(notif);
+      if (window.notifications.length > 20) window.notifications.pop();
+      saveAllToStorage();
+      renderNotifications();
+    }
+
+    function renderNotifications() {
+      const list = document.getElementById('notifList');
+      const badge = document.getElementById('notifBadge');
+      if (!list) return;
+
+      const notifs = window.notifications || [];
+      if (badge) {
+        if (notifs.length > 0) {
+          badge.innerText = notifs.length;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+
+      if (notifs.length === 0) {
+        list.innerHTML = `<p class="text-slate-400 italic text-center py-2">Aucune nouvelle notification</p>`;
+        return;
+      }
+
+      list.innerHTML = '';
+      notifs.forEach(n => {
+        const item = document.createElement('div');
+        item.className = 'p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-0.5 hover:bg-slate-100 transition';
+        item.innerHTML = `
+          <div class="flex justify-between items-center text-[10px] text-slate-400 font-semibold">
+            <span>${n.date} à ${n.time}</span>
+            <i class="fa-solid fa-circle-info text-pink-500"></i>
+          </div>
+          <p class="text-xs text-slate-700 font-medium">${n.text}</p>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function toggleNotificationPanel() {
+      const panel = document.getElementById('notifPanel');
+      if (panel) panel.classList.toggle('hidden');
+    }
+
+    function clearNotifications() {
+      window.notifications = [];
+      saveAllToStorage();
+      renderNotifications();
+    }
+
+    // --- MISE À JOUR BANNIÈRE ACCUEIL PARENT & BÉBÉ ---
+    function updateParentWelcomeSummary() {
+      if (!currentUser) return;
+
+      const welcomeBanner = document.getElementById('parentWelcomeBanner');
+      const nameEl = document.getElementById('welcomeParentName');
+      const feedingEl = document.getElementById('welcomeFeedingInfo');
+      const apptEl = document.getElementById('welcomeAppointmentInfo');
+
+      if (nameEl) nameEl.innerText = currentUser;
+
+      // 1. Calcul repas
+      const feedingEntries = (window.careEntries || []).filter(c => c.feeding > 0);
+      if (feedingEntries.length > 0) {
+        const lastFeeding = feedingEntries[feedingEntries.length - 1];
+        const intervalHours = parseInt(document.getElementById('feedingInterval')?.value || 3);
+        
+        let nextFeedingStr = "";
+        if (lastFeeding.date && lastFeeding.time) {
+          const partsD = lastFeeding.date.split('-');
+          const partsT = lastFeeding.time.split(':');
+          const lastDate = new Date(partsD[0], partsD[1]-1, partsD[2], partsT[0], partsT[1]);
+          const nextDate = new Date(lastDate.getTime() + intervalHours * 3600000);
+          nextFeedingStr = nextDate.toTimeString().substring(0, 5);
+        }
+
+        feedingEl.innerHTML = `<i class="fa-solid fa-bottle-droplet text-pink-500 mr-1.5"></i><strong>Dernier repas :</strong> ${lastFeeding.feeding} ml à <strong>${lastFeeding.time}</strong> (${lastFeeding.date || 'Aujourd\'hui'}). <span class="text-pink-600 font-bold ml-1">Prochain repas prévu vers ${nextFeedingStr || '--:--'}</span>.`;
+      } else {
+        feedingEl.innerHTML = `<i class="fa-solid fa-bottle-droplet text-pink-500 mr-1.5"></i>Aucun repas enregistré aujourd'hui pour le moment.`;
+      }
+
+      // 2. Calcul Rendez-vous de la semaine
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      const endOfWeek = new Date(now);
+      endOfWeek.setDate(now.getDate() + 7);
+
+      const weekEvents = (window.agendaEntries || []).filter(e => {
+        if (!e.startDate) return false;
+        const eDate = new Date(e.startDate);
+        return eDate >= now.setHours(0,0,0,0) && eDate <= endOfWeek;
+      }).sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+
+      if (weekEvents.length > 0) {
+        const nextEv = weekEvents[0];
+        apptEl.innerHTML = `<i class="fa-solid fa-calendar-check text-indigo-500 mr-1.5"></i><strong>Prochain évènement cette semaine (${weekEvents.length} prévu(s)) :</strong> <span class="font-bold text-indigo-700">${nextEv.title}</span> le <strong>${nextEv.startDate}</strong> à <strong>${nextEv.startTime}</strong> (${nextEv.assignee}).`;
+      } else {
+        apptEl.innerHTML = `<i class="fa-solid fa-calendar-xmark text-slate-400 mr-1.5"></i>Aucun rendez-vous ou événement prévu au cours des 7 prochains jours.`;
+      }
+
+      if (welcomeBanner) welcomeBanner.classList.remove('hidden');
     }
 
     // --- NAVIGATION PAR ONGLETS ---
@@ -1108,6 +1281,10 @@
       renderDailyTracker();
       renderAgendaEntries();
       updateGoalsBadges();
+      renderNotifications();
+      updateParentWelcomeSummary();
+
+      addNotification(`Connexion de ${currentUser} à l'application.`);
     }
 
     function logout() {
@@ -1115,6 +1292,7 @@
       isAdmin = false;
       document.getElementById('loginPage').classList.remove('hidden');
       document.getElementById('loginForm').reset();
+      document.getElementById('parentWelcomeBanner').classList.add('hidden');
     }
 
     // --- INITIALISATION DU CALENDRIER FULLCALENDAR ---
@@ -1239,12 +1417,15 @@
 
       if (editIdx >= 0) {
         window.agendaEntries[editIdx] = entry;
+        addNotification(`✏️ Événement modifié par ${entry.author} : "${entry.title}" (${entry.startDate})`);
       } else {
         window.agendaEntries.push(entry);
+        addNotification(`📅 Nouveau RDV/Événement ajouté par ${entry.author} : "${entry.title}" le ${entry.startDate} à ${entry.startTime}`);
       }
 
       saveAllToStorage();
       renderAgendaEntries();
+      updateParentWelcomeSummary();
       cancelAgendaEdit();
     }
 
@@ -1283,9 +1464,12 @@
 
     function deleteAgendaEntry(index) {
       if (confirm("Voulez-vous supprimer cet événement de l'agenda ?")) {
+        const deleted = window.agendaEntries[index];
         window.agendaEntries.splice(index, 1);
+        addNotification(`🗑️ Événement supprimé : "${deleted?.title}" par ${currentUser || 'Parent'}`);
         saveAllToStorage();
         renderAgendaEntries();
+        updateParentWelcomeSummary();
       }
     }
 
@@ -1382,6 +1566,7 @@
         window.predictions[editIdx] = pred;
       } else {
         window.predictions.push(pred);
+        addNotification(`🎯 Nouveau pronostic enregistré par ${user} !`);
       }
 
       saveAllToStorage();
@@ -1469,12 +1654,18 @@
         window.careEntries[editIdx] = entry;
       } else {
         window.careEntries.push(entry);
+        if (entry.feeding > 0) {
+          addNotification(`🍼 Repas enregistré par ${entry.author} : ${entry.feeding} ml à ${entry.time}`);
+        } else {
+          addNotification(`📝 Soin/Observation enregistré(e) par ${entry.author}`);
+        }
       }
 
       saveAllToStorage();
       renderCareEntries();
       renderDailyTracker();
       updateMealsChart();
+      updateParentWelcomeSummary();
       cancelCareEdit();
     }
 
@@ -1496,6 +1687,7 @@
         renderCareEntries();
         renderDailyTracker();
         updateMealsChart();
+        updateParentWelcomeSummary();
       }
     }
 
@@ -1790,7 +1982,7 @@
       }
 
       const lastFeeding = feedingEntries[feedingEntries.length - 1];
-      const intervalHours = parseInt(document.getElementById('feedingInterval').value) || 3;
+      const intervalHours = parseInt(document.getElementById('feedingInterval')?.value || 3);
 
       if (lastFeeding.date && lastFeeding.time) {
         const lastDateParts = lastFeeding.date.split('-');
@@ -1912,10 +2104,12 @@
       };
 
       window.careEntries.push(entry);
+      addNotification(`🍼 Biberon rapide (${vol} ml) ajouté par ${entry.author}`);
       saveAllToStorage();
       renderCareEntries();
       renderDailyTracker();
       updateMealsChart();
+      updateParentWelcomeSummary();
     }
 
     function quickAddDiaper() {
@@ -1940,6 +2134,7 @@
       };
 
       window.careEntries.push(entry);
+      addNotification(`👶 Couche rapide (${typeLabel}) changée par ${entry.author}`);
       saveAllToStorage();
       renderCareEntries();
       renderDailyTracker();
@@ -1953,6 +2148,7 @@
         renderCareEntries();
         renderDailyTracker();
         updateMealsChart();
+        updateParentWelcomeSummary();
       }
     }
 
@@ -2073,6 +2269,7 @@
         renderCareEntries();
         renderDailyTracker();
         updateMealsChart();
+        updateParentWelcomeSummary();
       }
     }
 
@@ -2126,6 +2323,7 @@
       };
 
       window.careEntries.push(entry);
+      addNotification(`⏱️ Chrono enregistré par ${entry.author} : ${timerType} (${durationStr})`);
       saveAllToStorage();
       renderCareEntries();
       resetTimer();
@@ -2141,83 +2339,30 @@
       document.getElementById('subscribeModal').classList.add('hidden');
     }
 
-    function selectPlan(planName) {
-      alert(`Merci ! Redirection vers la passerelle de paiement sécurisée pour le plan ${planName}.`);
+    function selectPlan(planType) {
+      alert(`Merci d'avoir choisi la formule ${planType} ! Redirection vers la page de paiement sécurisée...`);
       closeSubscribeModal();
     }
 
-    // --- RÉSULTAT OFFICIEL ADMIN ---
-    function saveOfficialResults(e) {
-      e.preventDefault();
-      window.officialResult = {
-        name: document.getElementById('officialName').value.trim(),
-        gender: document.getElementById('officialGender').value,
-        weight: parseFloat(document.getElementById('officialWeight').value),
-        height: parseFloat(document.getElementById('officialHeight').value)
-      };
-
-      let bestWinner = "--";
-      let minDiff = Infinity;
-
-      window.predictions.forEach(p => {
-        if (p.gender === window.officialResult.gender) {
-          const diffW = Math.abs(p.weight - window.officialResult.weight);
-          const diffH = Math.abs(p.height - window.officialResult.height);
-          const score = diffW + diffH;
-          if (score < minDiff) {
-            minDiff = score;
-            bestWinner = p.user;
-          }
-        }
-      });
-
-      window.officialResult.winner = bestWinner;
-      saveAllToStorage();
-      displayOfficialBanner();
-    }
-
-    function displayOfficialBanner() {
-      if (!window.officialResult) return;
-      const banner = document.getElementById('resultBanner');
-      if (banner) {
-        banner.classList.remove('hidden');
-        document.getElementById('resBabyName').innerText = `Bienvenue à ${window.officialResult.name} !`;
-        document.getElementById('resBabyDetails').innerText = `${window.officialResult.gender} | ${window.officialResult.weight} kg | ${window.officialResult.height} cm`;
-        document.getElementById('resWinnerName').innerText = window.officialResult.winner || "--";
-      }
-    }
-
-    function traiterFichier(e) {
-      const file = e.target.files[0];
-      if (file) {
-        alert(`Document "${file.name}" importé avec succès. Analyse en cours...`);
-      }
-    }
-
-    // --- INITIALISATION AUTOMATIQUE ---
+    // --- DÉMARRAGE DE L'APPLICATION ---
     window.addEventListener('DOMContentLoaded', () => {
-      const now = new Date();
-      const todayStr = now.toISOString().split('T')[0];
-      const timeStr = now.toTimeString().substring(0, 5);
+      initCharts();
+      renderPredictions();
+      renderCareEntries();
+      renderDailyTracker();
+      renderTempList();
+      renderWeightList();
+      updateGoalsBadges();
+      renderNotifications();
 
-      if (document.getElementById('careDate')) document.getElementById('careDate').value = todayStr;
-      if (document.getElementById('careTime')) document.getElementById('careTime').value = timeStr;
+      const todayStr = new Date().toISOString().split('T')[0];
       if (document.getElementById('predDate')) document.getElementById('predDate').value = todayStr;
+      if (document.getElementById('careDate')) document.getElementById('careDate').value = todayStr;
+      if (document.getElementById('careTime')) document.getElementById('careTime').value = new Date().toTimeString().substring(0, 5);
       if (document.getElementById('agendaStartDate')) document.getElementById('agendaStartDate').value = todayStr;
       if (document.getElementById('agendaEndDate')) document.getElementById('agendaEndDate').value = todayStr;
       if (document.getElementById('agendaStartTime')) document.getElementById('agendaStartTime').value = "09:00";
       if (document.getElementById('agendaEndTime')) document.getElementById('agendaEndTime').value = "10:00";
-      if (document.getElementById('weightPointDate')) document.getElementById('weightPointDate').value = todayStr;
-
-      initCharts();
-      updateTempChart();
-      renderTempList();
-      updateWeightChart();
-      renderWeightList();
-      renderDailyTracker();
-      updateMealsChart();
-      updateGoalsBadges();
-      displayOfficialBanner();
     });
   </script>
 </body>
